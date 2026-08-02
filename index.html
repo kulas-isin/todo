@@ -23,7 +23,7 @@
     body { margin: 0; font-family: system-ui, sans-serif; }
     canvas.confetti { position: fixed; inset: 0; pointer-events: none; opacity: 0; }
   </style>
-  <link rel="stylesheet" href="assets/styles.css?v=7">
+  <link rel="stylesheet" href="assets/styles.css?v=8">
 </head>
 <body>
   <a class="skip-link" href="#groups">跳到清單</a>
@@ -91,6 +91,7 @@
             <div class="pop__panel" id="morePanel" role="menu" hidden>
               <button type="button" role="menuitem" id="installBtn" hidden><svg class="ico"><use href="#i-install"/></svg>安裝到主畫面</button>
               <button type="button" role="menuitem" id="notifyBtn"><svg class="ico"><use href="#i-bell"/></svg><span id="notifyLabel">提醒：關</span></button>
+              <button type="button" role="menuitem" id="testNagBtn"><svg class="ico"><use href="#i-sparkles"/></svg>試罵一次</button>
               <button type="button" role="menuitem" id="toneBtn"><svg class="ico"><use href="#i-tone"/></svg><span id="toneLabel">語氣：毒舌</span></button>
               <button type="button" role="menuitem" id="shareBtn"><svg class="ico"><use href="#i-share"/></svg>產生今日成果卡</button>
               <button type="button" role="menuitem" id="exportBtn"><svg class="ico"><use href="#i-download"/></svg>匯出備份</button>
@@ -377,6 +378,6 @@
     <button type="button" id="toastAction" class="toast__action" hidden>復原</button>
   </div>
 
-  <script src="assets/app.js?v=7"></script>
+  <script src="assets/app.js?v=8"></script>
 </body>
 </html>

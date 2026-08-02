@@ -50,7 +50,7 @@
     'shareBtn', 'shareBtn2', 'exportBtn', 'importBtn', 'importFile', 'clearDoneBtn', 'clearAllBtn',
     'fabBtn', 'confetti', 'toast', 'toastText', 'toastAction', 'installBtn',
     'mascot', 'mascotSay', 'creditScore', 'limitFill', 'limitText', 'backfillBtn',
-    'toneBtn', 'toneLabel', 'nagDialog', 'nagText', 'nagMain', 'nagAlt', 'notifyBtn', 'notifyLabel',
+    'toneBtn', 'toneLabel', 'nagDialog', 'nagText', 'nagMain', 'nagAlt', 'notifyBtn', 'notifyLabel', 'testNagBtn',
     'editDialog', 'editForm', 'dialogTitle', 'fTitle', 'fNote', 'fDue', 'fCategory', 'categoryList',
     'cancelBtn', 'cancelBtn2', 'saveBtn',
     'shareDialog', 'shareCanvas', 'shareClose', 'shareCopy', 'shareSave'
@@ -1435,6 +1435,26 @@
     } catch (err) { /* 不支援就算了 */ }
   }
 
+  /* 立刻發一則真通知，驗證整條鏈路有沒有通（不受排程與開關影響） */
+  async function testNag() {
+    if (!('Notification' in window)) { toast('這個瀏覽器不支援通知。'); return; }
+    let perm = Notification.permission;
+    if (perm === 'default') perm = await Notification.requestPermission();
+    if (perm !== 'granted') {
+      toast(perm === 'denied' ? '通知被封鎖了。要開請到瀏覽器設定解除。' : '沒拿到通知權限。');
+      return;
+    }
+    const today = todayIso();
+    const overdue = state.todos.filter((t) => !t.done && t.due && t.due < today).length;
+    const todayDue = state.todos.filter((t) => !t.done && t.due === today).length;
+    const n = overdue + todayDue;
+    const body = n > 0
+      ? say('notif_evening', { n })
+      : (prefs.tone === 'savage' ? '測試收到。目前沒有欠帳，我暫時沒話罵你。' : '測試收到，通知是通的。');
+    showNag(body);
+    toast('測試通知已發出。沒看到的話，檢查系統層的通知設定。');
+  }
+
   function renderNotifyLabel() {
     el.notifyLabel.textContent = '提醒：' + (prefs.notify.on ? '開' : '關');
   }
@@ -1693,6 +1713,7 @@
     el.backfillBtn.addEventListener('click', () => openDialog(null, true));
 
     el.notifyBtn.addEventListener('click', toggleNotify);
+    el.testNagBtn.addEventListener('click', testNag);
 
     el.toneBtn.addEventListener('click', () => {
       prefs.tone = TONES[(TONES.indexOf(prefs.tone) + 1) % TONES.length];
