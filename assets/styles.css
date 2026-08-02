@@ -206,6 +206,16 @@ button { cursor: pointer; }
   padding: clamp(20px, 4vw, 36px) clamp(16px, 4vw, 26px) 130px;
 }
 
+/* 安裝到主畫面後沒有瀏覽器列，需要自己讓開狀態列與底部指示條 */
+@media (display-mode: standalone) {
+  .app {
+    padding-top: calc(clamp(20px, 4vw, 36px) + env(safe-area-inset-top));
+    padding-bottom: calc(130px + env(safe-area-inset-bottom));
+  }
+  .fab { bottom: calc(26px + env(safe-area-inset-bottom)); }
+  .toast { bottom: calc(26px + env(safe-area-inset-bottom)); }
+}
+
 /* ---------- 標頭 ---------- */
 .hero { margin-bottom: 22px; }
 

@@ -40,7 +40,7 @@
     'quickForm', 'quickInput', 'detailBtn', 'searchInput', 'sortSelect',
     'paletteBtn', 'palettePanel', 'themeBtn', 'moreBtn', 'morePanel',
     'shareBtn', 'shareBtn2', 'exportBtn', 'importBtn', 'importFile', 'clearDoneBtn', 'clearAllBtn',
-    'fabBtn', 'confetti', 'toast', 'toastText', 'toastAction',
+    'fabBtn', 'confetti', 'toast', 'toastText', 'toastAction', 'installBtn',
     'editDialog', 'editForm', 'dialogTitle', 'fTitle', 'fNote', 'fDue', 'fCategory', 'categoryList',
     'cancelBtn', 'cancelBtn2', 'saveBtn',
     'shareDialog', 'shareCanvas', 'shareClose', 'shareCopy', 'shareSave'
@@ -1232,11 +1232,68 @@
     });
   }
 
+  /* ---------- PWA：安裝與離線 ---------- */
+
+  function setupPwa() {
+    // 桌機／Android：攔截安裝提示，改由選單觸發
+    let deferredPrompt = null;
+    const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      el.installBtn.hidden = false;
+    });
+
+    // iOS Safari 沒有 beforeinstallprompt，改成顯示操作說明
+    const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    if (isIos && !standalone) el.installBtn.hidden = false;
+
+    el.installBtn.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        deferredPrompt = null;
+        el.installBtn.hidden = true;
+        if (outcome === 'accepted') toast('已加入主畫面，之後離線也能用。');
+        return;
+      }
+      toast(isIos ? '點下方的分享鈕，選「加入主畫面」。' : '這個瀏覽器需要從網址列的安裝圖示加入。');
+    });
+
+    window.addEventListener('appinstalled', () => {
+      el.installBtn.hidden = true;
+      toast('安裝完成，打勾勾已經在你的主畫面上了。');
+    });
+
+    if (!('serviceWorker' in navigator)) return;
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch((err) => console.warn('Service worker 註冊失敗：', err));
+    });
+
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (refreshing) return;
+      refreshing = true;
+      // 已經有舊版在跑才需要提示；首次安裝不打擾
+      if (document.visibilityState === 'visible' && navigator.serviceWorker.controller) {
+        toast('已更新到新版本，重新整理即可套用。');
+      }
+    });
+  }
+
   /* ---------- 啟動 ---------- */
 
   load();
   applyAppearance();
   setupEvents();
   setupDragAndDrop();
+  setupPwa();
   render();
+
+  // 主畫面捷徑：?action=new / ?action=share
+  const action = new URLSearchParams(location.search).get('action');
+  if (action === 'new') openDialog(null);
+  else if (action === 'share') openShare();
+  if (action) history.replaceState(null, '', location.pathname);
 })();

@@ -34,6 +34,20 @@
 
 足跡紀錄獨立於待辦本身，就算刪掉已完成的項目，歷史也不會消失。
 
+## 安裝成 App（PWA）
+
+打勾勾是一個 PWA，可以裝到手機或桌機的主畫面，開起來沒有網址列，**離線也能完整使用**。
+
+- **iPhone / iPad**：用 Safari 開啟 → 點下方分享鈕 → 「加入主畫面」
+- **Android / Chrome / Edge**：右上角選單會出現「安裝到主畫面」，或用網址列的安裝圖示
+- **桌機**：同上，安裝後會像獨立 App 一樣有自己的視窗
+
+長按主畫面圖示還有兩個捷徑：**新增約定**、**今日成果卡**。
+
+離線能力由 Service Worker 提供：應用外殼採快取優先（背景自動更新），頁面本身採網路優先，斷網時回落到快取。有新版本時畫面會提示重新整理。
+
+> 改動 `assets/` 或 `index.html` 後，記得把 `sw.js` 裡的 `VERSION` 加一，使用者才會拿到新版。
+
 ## 其他功能
 
 - **新增／編輯／刪除**，含標題、備註、到期日、優先度（高／中／低）、分類
@@ -63,9 +77,13 @@
 ## 檔案結構
 
 ```
-index.html          畫面結構 + 內嵌 SVG 圖示集
-assets/styles.css   設計代幣（三組色盤 × 明暗）與所有樣式
-assets/app.js       應用邏輯：狀態、儲存、分組、足跡、彩帶、成果卡
+index.html            畫面結構 + 內嵌 SVG 圖示集 + 保底樣式
+assets/styles.css     設計代幣（三組色盤 × 明暗）與所有樣式
+assets/app.js         應用邏輯：狀態、儲存、分組、足跡、彩帶、成果卡、PWA
+manifest.webmanifest  PWA 設定（名稱、圖示、捷徑、顯示模式）
+sw.js                 Service Worker：離線快取
+icons/                主畫面圖示（含 maskable 與 apple-touch-icon）
+.nojekyll             讓 GitHub Pages 直接提供靜態檔
 ```
 
 ## 設計
