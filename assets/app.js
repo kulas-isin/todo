@@ -918,7 +918,8 @@
       return;
     }
     try {
-      const blob = await new Promise((res) => el.shareCanvas.toBlob(res, 'image/png'));
+      // Safari 會在 await 之後判定使用者手勢已過期，因此直接把 Promise 交給 ClipboardItem
+      const blob = new Promise((res) => el.shareCanvas.toBlob(res, 'image/png'));
       await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
       toast('已複製圖片到剪貼簿。');
     } catch (err) {
