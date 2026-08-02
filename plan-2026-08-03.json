@@ -1,0 +1,261 @@
+{
+  "version": 2,
+  "app": "pinky",
+  "exportedAt": "2026-08-02T01:00:00.000Z",
+  "todos": [
+    {
+      "id": "plan-01-0803",
+      "title": "欣晨 狀態範圍界定／回簽",
+      "note": "預估 1H",
+      "done": false,
+      "priority": "normal",
+      "category": "欣晨",
+      "due": "2026-08-03",
+      "createdAt": 1785632401000,
+      "doneAt": null
+    },
+    {
+      "id": "plan-02-0803",
+      "title": "欣晨快遞 一詞調整後 spec 提報",
+      "note": "預估 3H",
+      "done": false,
+      "priority": "normal",
+      "category": "欣晨",
+      "due": "2026-08-03",
+      "createdAt": 1785632402000,
+      "doneAt": null
+    },
+    {
+      "id": "plan-03-0803",
+      "title": "時大 首頁／舊用戶轉移規格補上",
+      "note": "預估 2H・STAR MUSIC 規格三章之一",
+      "done": false,
+      "priority": "normal",
+      "category": "STAR MUSIC",
+      "due": "2026-08-03",
+      "createdAt": 1785632403000,
+      "doneAt": null
+    },
+    {
+      "id": "plan-04-0803",
+      "title": "維特魯威 2 案",
+      "note": "預估 2H",
+      "done": false,
+      "priority": "normal",
+      "category": "維特魯威",
+      "due": "2026-08-03",
+      "createdAt": 1785632404000,
+      "doneAt": null
+    },
+    {
+      "id": "plan-05-0803",
+      "title": "提供防代打卡方案（定案）",
+      "note": "需他人回應，建議一早先發出",
+      "done": false,
+      "priority": "high",
+      "category": "防代打卡",
+      "due": "2026-08-03",
+      "createdAt": 1785632405000,
+      "doneAt": null
+    },
+    {
+      "id": "plan-06-0803",
+      "title": "防代打卡方案的工時",
+      "note": "",
+      "done": false,
+      "priority": "normal",
+      "category": "防代打卡",
+      "due": "2026-08-03",
+      "createdAt": 1785632406000,
+      "doneAt": null
+    },
+    {
+      "id": "plan-07-0803",
+      "title": "皮拉提斯提供的時程 → Peter",
+      "note": "需他人回應，建議一早先發出",
+      "done": false,
+      "priority": "high",
+      "category": "皮拉提斯",
+      "due": "2026-08-03",
+      "createdAt": 1785632407000,
+      "doneAt": null
+    },
+    {
+      "id": "plan-08-0803",
+      "title": "銀髮大致時程（v2，是否 9/15）",
+      "note": "需他人回應，建議一早先發出",
+      "done": false,
+      "priority": "high",
+      "category": "銀髮",
+      "due": "2026-08-03",
+      "createdAt": 1785632408000,
+      "doneAt": null
+    },
+    {
+      "id": "plan-09-0803",
+      "title": "沂平更新正式站 前端 → Leah",
+      "note": "需他人回應，建議一早先發出",
+      "done": false,
+      "priority": "high",
+      "category": "沂平",
+      "due": "2026-08-03",
+      "createdAt": 1785632409000,
+      "doneAt": null
+    },
+    {
+      "id": "plan-10-0803",
+      "title": "普陽 裝主機／群組聯繫 IT",
+      "note": "預估 1H",
+      "done": false,
+      "priority": "normal",
+      "category": "普陽",
+      "due": "2026-08-04",
+      "createdAt": 1785632410000,
+      "doneAt": null
+    },
+    {
+      "id": "plan-11-0803",
+      "title": "約定普陽 排測試時間",
+      "note": "預估 0.5H",
+      "done": false,
+      "priority": "normal",
+      "category": "普陽",
+      "due": "2026-08-04",
+      "createdAt": 1785632411000,
+      "doneAt": null
+    },
+    {
+      "id": "plan-12-0803",
+      "title": "整理規格書定案（掃描驗證）",
+      "note": "預估 0.5H",
+      "done": false,
+      "priority": "normal",
+      "category": "普陽",
+      "due": "2026-08-04",
+      "createdAt": 1785632412000,
+      "doneAt": null
+    },
+    {
+      "id": "plan-13-0803",
+      "title": "STAR MUSIC 分配進度",
+      "note": "預估 2H",
+      "done": false,
+      "priority": "normal",
+      "category": "STAR MUSIC",
+      "due": "2026-08-04",
+      "createdAt": 1785632413000,
+      "doneAt": null
+    },
+    {
+      "id": "plan-14-0803",
+      "title": "補規格 APP ＋ 播放頁規格",
+      "note": "預估 2H・STAR MUSIC 規格三章之二",
+      "done": false,
+      "priority": "normal",
+      "category": "STAR MUSIC",
+      "due": "2026-08-04",
+      "createdAt": 1785632414000,
+      "doneAt": null
+    },
+    {
+      "id": "plan-15-0803",
+      "title": "安寶 v3 定案企劃",
+      "note": "",
+      "done": false,
+      "priority": "high",
+      "category": "安寶",
+      "due": "2026-08-04",
+      "createdAt": 1785632415000,
+      "doneAt": null
+    },
+    {
+      "id": "plan-16-0803",
+      "title": "微調：驗收／時程提供／工程師評估工時",
+      "note": "預估 1.5H",
+      "done": false,
+      "priority": "normal",
+      "category": "",
+      "due": "2026-08-04",
+      "createdAt": 1785632416000,
+      "doneAt": null
+    },
+    {
+      "id": "plan-17-0803",
+      "title": "普陽討論項目（定案）",
+      "note": "預估 1H",
+      "done": false,
+      "priority": "high",
+      "category": "普陽",
+      "due": "2026-08-05",
+      "createdAt": 1785632417000,
+      "doneAt": null
+    },
+    {
+      "id": "plan-18-0803",
+      "title": "剩餘項目（報表、集中上傳、每 API）",
+      "note": "預估 1.5H",
+      "done": false,
+      "priority": "normal",
+      "category": "普陽",
+      "due": "2026-08-05",
+      "createdAt": 1785632418000,
+      "doneAt": null
+    },
+    {
+      "id": "plan-19-0803",
+      "title": "未列項目 製作規格",
+      "note": "",
+      "done": false,
+      "priority": "normal",
+      "category": "普陽",
+      "due": "2026-08-05",
+      "createdAt": 1785632419000,
+      "doneAt": null
+    },
+    {
+      "id": "plan-20-0803",
+      "title": "沂平專案分派任務 → Leah",
+      "note": "預估 0.5H・需 Leah",
+      "done": false,
+      "priority": "normal",
+      "category": "沂平",
+      "due": "2026-08-05",
+      "createdAt": 1785632420000,
+      "doneAt": null
+    },
+    {
+      "id": "plan-21-0803",
+      "title": "讚美之泉 開會結案、提供原始碼",
+      "note": "預估 1H",
+      "done": false,
+      "priority": "normal",
+      "category": "讚美之泉",
+      "due": "2026-08-05",
+      "createdAt": 1785632421000,
+      "doneAt": null
+    },
+    {
+      "id": "plan-22-0803",
+      "title": "STAR MUSIC 測試情境完整 APP 端",
+      "note": "預估 2H",
+      "done": false,
+      "priority": "normal",
+      "category": "STAR MUSIC",
+      "due": "2026-08-05",
+      "createdAt": 1785632422000,
+      "doneAt": null
+    },
+    {
+      "id": "plan-23-0803",
+      "title": "STAR MUSIC 補規格・後台（翻譯／離線規格抓漏規則）",
+      "note": "STAR MUSIC 規格三章之三",
+      "done": false,
+      "priority": "normal",
+      "category": "STAR MUSIC",
+      "due": "2026-08-05",
+      "createdAt": 1785632423000,
+      "doneAt": null
+    }
+  ],
+  "history": {}
+}
