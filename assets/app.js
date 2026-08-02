@@ -23,14 +23,17 @@
   const CHEERS = ['約定達成', '說到做到', '又守住一個約定', '漂亮，繼續保持', '這一勾，值得'];
   const HEAT_WEEKS = 17;
   const VIEWS = ['today', 'list', 'trail'];
+  const TONES = ['savage', 'coach', 'soft'];
+  const TONE_LABEL = { savage: '毒舌', coach: '教練', soft: '溫柔' };
   const PAGES = ['all'].concat(GROUP_ORDER);
   const PAGE_SIZE = 20;
 
   let state = { todos: [], history: {} };
-  let prefs = { view: 'today', page: 'all', category: '', sort: 'manual', theme: null, palette: 'cream', collapsed: ['done'] };
+  let prefs = { view: 'today', page: 'all', category: '', sort: 'manual', theme: null, palette: 'cream', collapsed: ['done'], tone: 'savage' };
   let pageIndex = 0;
   let query = '';
   let editingId = null;
+  let backfillMode = false;
   let undoSnapshot = null;
   let toastTimer = null;
   let cheerIndex = 0;
@@ -46,6 +49,8 @@
     'paletteBtn', 'palettePanel', 'themeBtn', 'moreBtn', 'morePanel',
     'shareBtn', 'shareBtn2', 'exportBtn', 'importBtn', 'importFile', 'clearDoneBtn', 'clearAllBtn',
     'fabBtn', 'confetti', 'toast', 'toastText', 'toastAction', 'installBtn',
+    'mascot', 'mascotSay', 'creditScore', 'limitFill', 'limitText', 'backfillBtn',
+    'toneBtn', 'toneLabel', 'nagDialog', 'nagText', 'nagMain', 'nagAlt',
     'editDialog', 'editForm', 'dialogTitle', 'fTitle', 'fNote', 'fDue', 'fCategory', 'categoryList',
     'cancelBtn', 'cancelBtn2', 'saveBtn',
     'shareDialog', 'shareCanvas', 'shareClose', 'shareCopy', 'shareSave'
@@ -60,6 +65,7 @@
         const data = JSON.parse(raw);
         state.todos = Array.isArray(data.todos) ? data.todos.map(normalize).filter(Boolean) : [];
         state.history = data.history && typeof data.history === 'object' ? data.history : {};
+        state.credit = data.credit && typeof data.credit.score === 'number' ? data.credit : null;
       }
     } catch (err) {
       console.warn('讀取資料失敗，改用空清單。', err);
@@ -73,11 +79,15 @@
     if (!VIEWS.includes(prefs.view)) prefs.view = 'today';
     if (!PAGES.includes(prefs.page)) prefs.page = 'all';
     if (!Array.isArray(prefs.collapsed)) prefs.collapsed = ['done'];
+    if (!TONES.includes(prefs.tone)) prefs.tone = 'savage';
+    if (!state.credit || typeof state.credit.score !== 'number') {
+      state.credit = { score: 70, settledUntil: todayIso(), bankruptAsked: '' };
+    }
   }
 
   function save() {
     try {
-      localStorage.setItem(STORE_KEY, JSON.stringify({ version: 2, todos: state.todos, history: state.history }));
+      localStorage.setItem(STORE_KEY, JSON.stringify({ version: 3, todos: state.todos, history: state.history, credit: state.credit }));
     } catch (err) {
       toast('儲存失敗，瀏覽器儲存空間可能已滿。');
       console.error(err);
@@ -99,7 +109,8 @@
       category: typeof t.category === 'string' ? t.category.slice(0, 30) : '',
       due: isIsoDate(t.due) ? t.due : '',
       createdAt: Number(t.createdAt) || Date.now(),
-      doneAt: Number(t.doneAt) || null
+      doneAt: Number(t.doneAt) || null,
+      reschedules: Number(t.reschedules) || 0
     };
   }
 
@@ -191,6 +202,161 @@
     return out;
   }
 
+  /* ---------- 信用系統 ---------- */
+
+  function creditLimit(score) {
+    if (score >= 85) return 18;
+    if (score >= 70) return 12;
+    if (score >= 55) return 8;
+    if (score >= 40) return 5;
+    return 3;
+  }
+
+  function activeCount() {
+    return state.todos.filter((t) => !t.done).length;
+  }
+
+  function applyCredit(delta) {
+    state.credit.score = Math.max(0, Math.min(100, state.credit.score + delta));
+  }
+
+  /* 逾期是負債：每過一天，依逾期件數扣分（單日上限 3 分） */
+  function settleCredit() {
+    const today = todayIso();
+    let cursor = state.credit.settledUntil || today;
+    if (cursor >= today) { state.credit.settledUntil = today; return; }
+    let days = 0;
+    while (cursor < today && days < 30) { cursor = shiftIso(cursor, 1); days++; }
+    const overdue = state.todos.filter((t) => !t.done && t.due && t.due < today).length;
+    if (overdue > 0 && days > 0) applyCredit(-Math.min(3, overdue) * days);
+    state.credit.settledUntil = today;
+    save();
+  }
+
+  function moodFor(score) {
+    if (score >= 85) return 'proud';
+    if (score >= 60) return 'normal';
+    if (score >= 40) return 'squint';
+    return 'angry';
+  }
+
+  /* ---------- 勾勾的語氣引擎：每句話都引用本人的帳 ---------- */
+
+  const LINES = {
+    savage: {
+      greet_clean: ['喲，帳面乾淨。難得。', '今天還沒欠債。保持，別讓我開口。'],
+      greet_over: ['{n} 筆呆帳掛著。裝死不會讓它消失。', '逾期 {n} 件。你的小指記得，你倒是忘了。', '帳單在這，{n} 筆逾期。先還債再許願。'],
+      greet_todaydue: ['今天 {n} 件到期。話是你自己說的。', '{n} 個約定今天到期。我看著。'],
+      add_over: ['超貸了。你的信用只撐 {limit} 件，這是第 {count} 件。先扣 3 分。', '又借？額度 {limit} 件早就滿了。−3 分，記帳。'],
+      add_debt: ['又許願。你上一筆呆帳「{title}」躺 {days} 天了。', '先還舊債再開新票，這道理要我教？'],
+      resched: ['「{title}」改期第 {n} 次。我都幫你數著。', '延到 {due}。這句話你上次也說過。'],
+      done_ontime: ['說到做到，+{pts}。算你行。', '準時。這才叫約定。+{pts}。'],
+      done_late: ['遲到總比賴帳好。+1，下次準時。'],
+      backfill: ['有做就記，這才像帳。+1。', '沒列在單上也做了？行，記上。+1。'],
+      abandon: ['承認不會做，扣得少。這叫誠實。', '放掉了。比拖著爛掉體面。'],
+      allclear: ['今天的帳清了。你今天配得上這個名字。', '全勾完。少見，多來幾次。']
+    },
+    coach: {
+      greet_clean: ['帳面乾淨，今天照計畫走。', '沒有逾期，狀態不錯。'],
+      greet_over: ['有 {n} 件逾期，先處理它們再開新的。', '{n} 筆逾期在累積利息，優先清掉。'],
+      greet_todaydue: ['今天 {n} 件到期，逐一擊破。'],
+      add_over: ['超過額度了（{limit} 件）。建議先完成或放棄舊項目。−3 分。'],
+      add_debt: ['提醒：「{title}」已擱置 {days} 天，先處理它更好。'],
+      resched: ['「{title}」第 {n} 次改期。想一下是不是拆小一點。'],
+      done_ontime: ['準時完成，+{pts}。'],
+      done_late: ['補上了，+1。下次抓前一點的時間。'],
+      backfill: ['已補記，+1。有做的事都該被算進來。'],
+      abandon: ['放棄也是決策。清單乾淨了。'],
+      allclear: ['今日全數達成，漂亮。']
+    },
+    soft: {
+      greet_clean: ['今天沒有欠著的事，安心開始吧。'],
+      greet_over: ['有 {n} 件過期的小約定在等你，慢慢來。'],
+      greet_todaydue: ['今天有 {n} 件到期，一件一件來就好。'],
+      add_over: ['手上的約定有點多了（額度 {limit} 件），要不要先收個尾？'],
+      add_debt: ['「{title}」等你 {days} 天了，別忘了它。'],
+      resched: ['「{title}」再延一次沒關係，記得回來。'],
+      done_ontime: ['做到了，+{pts}，給自己一點掌聲。'],
+      done_late: ['雖然晚了，還是做完了，+1。'],
+      backfill: ['把做過的事記下來，+1。'],
+      abandon: ['放下也是一種整理。'],
+      allclear: ['今天的約定都完成了，好好休息。']
+    }
+  };
+
+  let lineSeed = 0;
+  function say(context, vars) {
+    const pool = (LINES[prefs.tone] || LINES.savage)[context] || LINES.savage[context] || [''];
+    let line = pool[lineSeed++ % pool.length];
+    for (const [k, v] of Object.entries(vars || {})) line = line.split('{' + k + '}').join(String(v));
+    return line;
+  }
+
+  function renderCredit() {
+    const score = state.credit.score;
+    const limit = creditLimit(score);
+    const active = activeCount();
+    el.creditScore.textContent = score;
+    el.mascot.dataset.mood = moodFor(score);
+    el.limitText.textContent = '進行中 ' + active + '／額度 ' + limit;
+    el.limitFill.style.width = Math.min(100, Math.round((active / limit) * 100)) + '%';
+    el.limitFill.classList.toggle('is-over', active > limit);
+
+    const today = todayIso();
+    const overN = state.todos.filter((t) => !t.done && t.due && t.due < today).length;
+    const todayDue = state.todos.filter((t) => !t.done && t.due === today).length;
+    const doneToday = state.todos.some((t) => t.done && t.doneAt && toIso(new Date(t.doneAt)) === today);
+    if (overN) el.mascotSay.textContent = say('greet_over', { n: overN });
+    else if (todayDue) el.mascotSay.textContent = say('greet_todaydue', { n: todayDue });
+    else if (doneToday) el.mascotSay.textContent = say('allclear');
+    else el.mascotSay.textContent = say('greet_clean');
+  }
+
+  function oldestDebt() {
+    const today = todayIso();
+    const over = state.todos.filter((t) => !t.done && t.due && t.due < today)
+      .sort((a, b) => (a.due < b.due ? -1 : 1));
+    return over[0] || null;
+  }
+
+  /* ---------- 追討對話框 ---------- */
+
+  let nagHandlers = null;
+  function openNag(text, mainLabel, altLabel, onMain, onAlt) {
+    el.nagText.textContent = text;
+    el.nagMain.textContent = mainLabel;
+    el.nagAlt.textContent = altLabel;
+    nagHandlers = { onMain, onAlt };
+    el.nagDialog.showModal();
+  }
+
+  /* 分數見底：破產重整——留最急的 3 件，其餘放棄（可復原） */
+  function maybeBankrupt() {
+    const today = todayIso();
+    if (state.credit.score >= 20) return;
+    if (state.credit.bankruptAsked === today) return;
+    const active = state.todos.filter((t) => !t.done);
+    if (active.length <= 3) return;
+    state.credit.bankruptAsked = today;
+    save();
+    const keepN = 3;
+    openNag(
+      '信用見底（' + state.credit.score + ' 分）。重整方案：留最急的 ' + keepN + ' 件，其餘 ' + (active.length - keepN) + ' 件放棄（可復原），分數重設為 50。簽吧。',
+      '接受重整', '再撐一天',
+      () => {
+        const sorted = active.slice().sort((a, b) => {
+          const ad = a.due || '9999-99-99', bd = b.due || '9999-99-99';
+          return ad < bd ? -1 : ad > bd ? 1 : 0;
+        });
+        const keep = new Set(sorted.slice(0, keepN).map((t) => t.id));
+        const dropIds = active.filter((t) => !keep.has(t.id)).map((t) => t.id);
+        state.credit.score = 50;
+        removeTodos(dropIds, '破產重整完成：放棄 ' + dropIds.length + ' 件，留 ' + keepN + ' 件。');
+      },
+      () => {}
+    );
+  }
+
   /* ---------- 足跡紀錄 ---------- */
 
   function bumpHistory(todo, delta) {
@@ -228,8 +394,22 @@
   function addTodo(fields) {
     const todo = normalize(Object.assign({ createdAt: Date.now() }, fields));
     if (!todo || !todo.title) return null;
+    const wasActive = activeCount();
+    const limit = creditLimit(state.credit.score);
     state.todos.unshift(todo);
     if (prefs.page === 'done') { prefs.page = 'all'; savePrefs(); }
+
+    if (!todo.done) {
+      if (wasActive >= limit) {
+        applyCredit(-3);
+        toast(say('add_over', { limit, count: wasActive + 1 }));
+      } else {
+        const debt = oldestDebt();
+        if (debt && debt.id !== todo.id) {
+          toast(say('add_debt', { title: debt.title.slice(0, 12), days: -daysFromToday(debt.due) }));
+        }
+      }
+    }
     save();
     render();
     return todo;
@@ -249,6 +429,10 @@
     t.done = !t.done;
     t.doneAt = t.done ? Date.now() : null;
     bumpHistory(t, t.done ? 1 : -1);
+    const today = todayIso();
+    const onTime = t.due && today <= t.due;
+    const pts = t.due ? (onTime ? 2 : 1) : 1;
+    applyCredit(t.done ? pts : -pts);
     save();
 
     if (t.done) {
@@ -258,7 +442,7 @@
         const r = node.getBoundingClientRect();
         celebrate(r.left + 40, r.top + r.height / 2, allTodayCleared() ? 120 : 34);
       }
-      toast(CHEERS[cheerIndex++ % CHEERS.length] + '！');
+      toast(onTime || !t.due ? say('done_ontime', { pts }) : say('done_late'));
       setTimeout(render, 260);
     } else {
       render();
@@ -335,6 +519,7 @@
 
   function render() {
     applyView();
+    renderCredit();
     renderHero();
     renderProgress();
     renderTiles();
@@ -1071,10 +1256,11 @@
 
   /* ---------- 對話框 ---------- */
 
-  function openDialog(id) {
+  function openDialog(id, backfill) {
     editingId = id || null;
+    backfillMode = !!backfill && !id;
     const t = id ? state.todos.find((x) => x.id === id) : null;
-    el.dialogTitle.textContent = t ? '編輯約定' : '新的約定';
+    el.dialogTitle.textContent = t ? '編輯約定' : backfillMode ? '補記：我已經做了…' : '新的約定';
     el.fTitle.value = t ? t.title : el.quickInput.value.trim();
     el.fNote.value = t ? t.note : '';
     el.fDue.value = t ? t.due : '';
@@ -1097,8 +1283,46 @@
       category: el.fCategory.value.trim()
     };
     if (editingId) {
-      updateTodo(editingId, fields);
-      toast('已更新。');
+      const before = state.todos.find((x) => x.id === editingId);
+      const rescheduled = before && before.due && fields.due && before.due !== fields.due;
+      if (rescheduled) {
+        before.reschedules = (before.reschedules || 0) + 1;
+        const n = before.reschedules;
+        applyCredit(n >= 2 ? -2 : -1);
+        const id = editingId;
+        updateTodo(id, fields);
+        if (n >= 3) {
+          openNag(
+            '「' + before.title.slice(0, 20) + '」第 ' + n + ' 次改期了。要不要承認你根本不會做？誠實放棄扣 1 分，繼續拖扣 4 分。',
+            '誠實放棄（−1）', '繼續拖（−4）',
+            () => {
+              applyCredit(-1);
+              toast(say('abandon'));
+              removeTodos([id], '已放棄「' + before.title.slice(0, 12) + '」。');
+            },
+            () => {
+              applyCredit(-4);
+              save();
+              render();
+            }
+          );
+        } else {
+          toast(say('resched', { title: before.title.slice(0, 12), n, due: fields.due }));
+        }
+      } else {
+        updateTodo(editingId, fields);
+        toast('已更新。');
+      }
+    } else if (backfillMode) {
+      const t = addTodo(Object.assign({ done: true, doneAt: Date.now() }, fields));
+      if (t) {
+        bumpHistory(t, 1);
+        applyCredit(1);
+        save();
+        render();
+        toast(say('backfill'));
+      }
+      el.quickInput.value = '';
     } else {
       addTodo(Object.assign({ done: false }, fields));
       el.quickInput.value = '';
@@ -1111,7 +1335,7 @@
 
   function exportJson() {
     const payload = JSON.stringify(
-      { version: 2, app: 'pinky', exportedAt: new Date().toISOString(), todos: state.todos, history: state.history },
+      { version: 3, app: 'pinky', exportedAt: new Date().toISOString(), todos: state.todos, history: state.history, credit: state.credit },
       null, 2
     );
     const blob = new Blob([payload], { type: 'application/json' });
@@ -1281,6 +1505,26 @@
 
     el.detailBtn.addEventListener('click', () => openDialog(null));
     el.fabBtn.addEventListener('click', () => openDialog(null));
+    el.backfillBtn.addEventListener('click', () => openDialog(null, true));
+
+    el.toneBtn.addEventListener('click', () => {
+      prefs.tone = TONES[(TONES.indexOf(prefs.tone) + 1) % TONES.length];
+      savePrefs();
+      el.toneLabel.textContent = '語氣：' + TONE_LABEL[prefs.tone];
+      renderCredit();
+      toast(prefs.tone === 'savage' ? '毒舌模式。自己選的。' : prefs.tone === 'coach' ? '教練模式。' : '溫柔模式。');
+    });
+
+    el.nagMain.addEventListener('click', () => {
+      el.nagDialog.close();
+      if (nagHandlers && nagHandlers.onMain) nagHandlers.onMain();
+      nagHandlers = null;
+    });
+    el.nagAlt.addEventListener('click', () => {
+      el.nagDialog.close();
+      if (nagHandlers && nagHandlers.onAlt) nagHandlers.onAlt();
+      nagHandlers = null;
+    });
 
     document.querySelectorAll('.tile').forEach((btn) => {
       btn.addEventListener('click', () => goto('list', btn.dataset.page));
@@ -1299,7 +1543,7 @@
       editingId = null;
       el.editDialog.close();
     }));
-    el.editDialog.addEventListener('close', () => { editingId = null; });
+    el.editDialog.addEventListener('close', () => { editingId = null; backfillMode = false; });
 
     el.editForm.querySelectorAll('.quickdates button').forEach((b) => {
       b.addEventListener('click', () => {
@@ -1368,7 +1612,7 @@
     let lastDay = todayIso();
     setInterval(() => {
       const now = todayIso();
-      if (now !== lastDay) { lastDay = now; render(); }
+      if (now !== lastDay) { lastDay = now; settleCredit(); render(); maybeBankrupt(); }
     }, 60000);
 
     window.addEventListener('storage', (e) => {
@@ -1431,11 +1675,14 @@
   /* ---------- 啟動 ---------- */
 
   load();
+  settleCredit();
   applyAppearance();
   setupEvents();
   setupDragAndDrop();
   setupPwa();
+  el.toneLabel.textContent = '語氣：' + TONE_LABEL[prefs.tone];
   render();
+  maybeBankrupt();
 
   // 主畫面捷徑：?action=new / ?action=share
   const action = new URLSearchParams(location.search).get('action');

@@ -428,6 +428,105 @@ button { cursor: pointer; }
   font-variant-numeric: tabular-nums;
 }
 
+/* ---------- 信用卡片與吉祥物「勾勾」 ---------- */
+.credit {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+  margin-bottom: 14px;
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.mascot { width: 72px; height: 72px; flex: none; }
+.mascot--sm { width: 56px; height: 56px; }
+.mascot__body { fill: var(--brand); }
+.mascot__check {
+  fill: none;
+  stroke: rgba(255, 255, 255, .5);
+  stroke-width: 9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.mascot__eye { fill: #fff; }
+.mascot__stroke {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+.mascot g { display: none; }
+.mascot[data-mood="normal"] .m-normal,
+.mascot[data-mood="proud"] .m-proud,
+.mascot[data-mood="squint"] .m-squint,
+.mascot[data-mood="angry"] .m-angry { display: block; }
+.mascot[data-mood="angry"] .mascot__body { fill: var(--danger); }
+.mascot[data-mood="squint"] .mascot__body { fill: var(--accent); }
+
+.credit__body { flex: 1; min-width: 0; }
+.bubble {
+  position: relative;
+  margin: 0 0 10px;
+  padding: 10px 14px;
+  font-size: 14px;
+  line-height: 1.6;
+  background: var(--surface-2);
+  border-radius: 4px 16px 16px 16px;
+  word-break: break-word;
+}
+.bubble::before {
+  content: "";
+  position: absolute;
+  left: -7px; top: 10px;
+  border: 7px solid transparent;
+  border-right-color: var(--surface-2);
+  border-left: 0;
+}
+
+.credit__meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 12.5px;
+  color: var(--dim);
+}
+.credit__score b {
+  font-size: 16px;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.limitbar {
+  flex: 1;
+  min-width: 70px;
+  height: 8px;
+  background: var(--surface-2);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.limitbar i {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--brand);
+  border-radius: 999px;
+  transition: width .4s var(--ease), background-color .3s var(--ease);
+}
+.limitbar i.is-over { background: var(--danger); }
+.credit__limit { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* ---------- 追討對話框 ---------- */
+.sheet--nag { width: min(400px, calc(100vw - 32px)); padding: 22px; }
+.nag__row {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+.nag__row p { margin: 4px 0 0; font-size: 15px; line-height: 1.7; }
+
 /* ---------- 狀態磚 ---------- */
 .tiles {
   display: grid;

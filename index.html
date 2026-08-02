@@ -23,7 +23,7 @@
     body { margin: 0; font-family: system-ui, sans-serif; }
     canvas.confetti { position: fixed; inset: 0; pointer-events: none; opacity: 0; }
   </style>
-  <link rel="stylesheet" href="assets/styles.css?v=5">
+  <link rel="stylesheet" href="assets/styles.css?v=6">
 </head>
 <body>
   <a class="skip-link" href="#groups">跳到清單</a>
@@ -57,6 +57,7 @@
     <symbol id="i-flame" viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></symbol>
     <symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
     <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 2v13"/><path d="m16 6-4-4-4 4"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></symbol>
+    <symbol id="i-tone" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M12 7v3"/><path d="M12 13.5h.01"/></symbol>
     <symbol id="i-install" viewBox="0 0 24 24"><path d="M12 13V2"/><path d="m8 9 4 4 4-4"/><path d="M20.38 12.21a10 10 0 1 1-16.76 0"/></symbol>
     <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
   </svg>
@@ -88,6 +89,7 @@
             </button>
             <div class="pop__panel" id="morePanel" role="menu" hidden>
               <button type="button" role="menuitem" id="installBtn" hidden><svg class="ico"><use href="#i-install"/></svg>安裝到主畫面</button>
+              <button type="button" role="menuitem" id="toneBtn"><svg class="ico"><use href="#i-tone"/></svg><span id="toneLabel">語氣：毒舌</span></button>
               <button type="button" role="menuitem" id="shareBtn"><svg class="ico"><use href="#i-share"/></svg>產生今日成果卡</button>
               <button type="button" role="menuitem" id="exportBtn"><svg class="ico"><use href="#i-download"/></svg>匯出備份</button>
               <button type="button" role="menuitem" id="importBtn"><svg class="ico"><use href="#i-upload"/></svg>匯入備份</button>
@@ -133,6 +135,38 @@
         </div>
       </section>
 
+      <section class="credit" aria-label="信用">
+        <svg class="mascot" id="mascot" data-mood="normal" viewBox="0 0 120 120" aria-hidden="true">
+          <rect x="14" y="18" width="92" height="88" rx="30" class="mascot__body"/>
+          <path d="M44 66l12 12 22-24" class="mascot__check"/>
+          <g class="m-normal">
+            <circle cx="46" cy="46" r="5.5" class="mascot__eye"/>
+            <circle cx="74" cy="46" r="5.5" class="mascot__eye"/>
+          </g>
+          <g class="m-proud">
+            <path d="M40 46q6-7 12 0" class="mascot__stroke"/>
+            <path d="M68 46q6-7 12 0" class="mascot__stroke"/>
+          </g>
+          <g class="m-squint">
+            <path d="M40 44h12" class="mascot__stroke"/>
+            <path d="M68 44h12" class="mascot__stroke"/>
+          </g>
+          <g class="m-angry">
+            <path d="M39 40l13 5M81 40l-13 5" class="mascot__stroke"/>
+            <circle cx="46" cy="50" r="4.5" class="mascot__eye"/>
+            <circle cx="74" cy="50" r="4.5" class="mascot__eye"/>
+          </g>
+        </svg>
+        <div class="credit__body">
+          <p class="bubble" id="mascotSay">…</p>
+          <div class="credit__meta">
+            <span class="credit__score">信用 <b id="creditScore">70</b></span>
+            <div class="limitbar" title="進行中／額度"><i id="limitFill"></i></div>
+            <span class="credit__limit" id="limitText"></span>
+          </div>
+        </div>
+      </section>
+
       <section class="tiles" aria-label="狀態總覽">
         <button type="button" class="tile" data-page="all" data-tone="brand">
           <span class="tile__ico"><svg class="ico"><use href="#i-list"/></svg></span>
@@ -159,6 +193,7 @@
       <section class="compose">
         <form id="quickForm" autocomplete="off">
           <input type="text" id="quickInput" placeholder="今天想跟自己約定什麼？" aria-label="新增待辦事項">
+          <button type="button" class="compose__more" id="backfillBtn" title="記下已經做完、但沒列在清單上的事">補記</button>
           <button type="button" class="compose__more" id="detailBtn" title="填寫完整欄位">詳細</button>
           <button type="submit" class="compose__go" aria-label="新增">
             <svg class="ico"><use href="#i-plus"/></svg>
@@ -314,6 +349,25 @@
     </div>
   </dialog>
 
+  <dialog id="nagDialog" class="sheet sheet--nag">
+    <div class="nag__row">
+      <svg class="mascot mascot--sm" data-mood="angry" viewBox="0 0 120 120" aria-hidden="true">
+        <rect x="14" y="18" width="92" height="88" rx="30" class="mascot__body"/>
+        <path d="M44 66l12 12 22-24" class="mascot__check"/>
+        <g class="m-angry">
+          <path d="M39 40l13 5M81 40l-13 5" class="mascot__stroke"/>
+          <circle cx="46" cy="50" r="4.5" class="mascot__eye"/>
+          <circle cx="74" cy="50" r="4.5" class="mascot__eye"/>
+        </g>
+      </svg>
+      <p id="nagText"></p>
+    </div>
+    <div class="sheet__actions">
+      <button type="button" class="btn" id="nagAlt"></button>
+      <button type="button" class="btn btn--primary" id="nagMain"></button>
+    </div>
+  </dialog>
+
   <input type="file" id="importFile" accept="application/json,.json" hidden>
 
   <div class="toast" id="toast" role="status" aria-live="polite" hidden>
@@ -321,6 +375,6 @@
     <button type="button" id="toastAction" class="toast__action" hidden>復原</button>
   </div>
 
-  <script src="assets/app.js?v=5"></script>
+  <script src="assets/app.js?v=6"></script>
 </body>
 </html>
