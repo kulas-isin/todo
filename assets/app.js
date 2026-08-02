@@ -1,9 +1,12 @@
-/* 我的待辦清單 — 零依賴、資料存在瀏覽器 localStorage 的單頁應用 */
+/* =========================================================
+   打勾勾 Pinky — 跟自己打勾勾，說到做到
+   零依賴單頁應用，資料存在瀏覽器 localStorage
+   ========================================================= */
 (function () {
   'use strict';
 
-  const STORE_KEY = 'my-todo-app/v1';
-  const PREF_KEY = 'my-todo-app/prefs';
+  const STORE_KEY = 'pinky/v1';
+  const PREF_KEY = 'pinky/prefs';
   const PRIORITY_ORDER = { high: 0, normal: 1, low: 2 };
   const PRIORITY_LABEL = { high: '高', normal: '中', low: '低' };
   const PRIORITY_ALIAS = {
@@ -11,53 +14,37 @@
     '中': 'normal', 'normal': 'normal', 'n': 'normal',
     '低': 'low', 'low': 'low', 'l': 'low'
   };
+  const PALETTES = ['cream', 'pastel', 'lime'];
+  const GROUP_ORDER = ['overdue', 'today', 'tomorrow', 'week', 'later', 'someday', 'done'];
+  const GROUP_LABEL = {
+    overdue: '已逾期', today: '今天', tomorrow: '明天',
+    week: '本週稍後', later: '之後', someday: '未排定', done: '已完成'
+  };
+  const CHEERS = ['約定達成', '說到做到', '又守住一個約定', '漂亮，繼續保持', '這一勾，值得'];
+  const HEAT_WEEKS = 17;
 
-  /** @type {{todos: Array}} */
-  let state = { todos: [] };
-  let prefs = { filter: 'all', category: '', sort: 'manual', theme: null };
+  let state = { todos: [], history: {} };
+  let prefs = { filter: 'all', category: '', sort: 'manual', theme: null, palette: 'cream', collapsed: ['done'] };
   let query = '';
   let editingId = null;
   let undoSnapshot = null;
   let toastTimer = null;
+  let cheerIndex = 0;
 
-  const $ = (sel) => document.querySelector(sel);
-  const el = {
-    list: $('#list'),
-    empty: $('#empty'),
-    quickForm: $('#quickForm'),
-    quickInput: $('#quickInput'),
-    detailBtn: $('#detailBtn'),
-    searchInput: $('#searchInput'),
-    categorySelect: $('#categorySelect'),
-    categoryList: $('#categoryList'),
-    sortSelect: $('#sortSelect'),
-    filters: $('.filters'),
-    dialog: $('#editDialog'),
-    form: $('#editForm'),
-    dialogTitle: $('#dialogTitle'),
-    fTitle: $('#fTitle'),
-    fNote: $('#fNote'),
-    fDue: $('#fDue'),
-    fPriority: $('#fPriority'),
-    fCategory: $('#fCategory'),
-    cancelBtn: $('#cancelBtn'),
-    themeBtn: $('#themeBtn'),
-    themeIcon: $('#themeIcon'),
-    moreBtn: $('#moreBtn'),
-    morePanel: $('#morePanel'),
-    exportBtn: $('#exportBtn'),
-    importBtn: $('#importBtn'),
-    importFile: $('#importFile'),
-    clearDoneBtn: $('#clearDoneBtn'),
-    clearAllBtn: $('#clearAllBtn'),
-    toast: $('#toast'),
-    toastText: $('#toastText'),
-    toastAction: $('#toastAction'),
-    statActive: $('#statActive'),
-    statToday: $('#statToday'),
-    statOverdue: $('#statOverdue'),
-    statDone: $('#statDone')
-  };
+  const $ = (s) => document.querySelector(s);
+  const el = {};
+  [
+    'dateLine', 'greeting', 'heroSub', 'progPct', 'progHint', 'ringBar', 'ringLabel',
+    'tAll', 'tToday', 'tOver', 'tDone', 'cats', 'groups', 'empty',
+    'streakNum', 'keepRate', 'totalDone', 'heatmap', 'trailRange',
+    'quickForm', 'quickInput', 'detailBtn', 'searchInput', 'sortSelect',
+    'paletteBtn', 'palettePanel', 'themeBtn', 'moreBtn', 'morePanel',
+    'shareBtn', 'shareBtn2', 'exportBtn', 'importBtn', 'importFile', 'clearDoneBtn', 'clearAllBtn',
+    'fabBtn', 'confetti', 'toast', 'toastText', 'toastAction',
+    'editDialog', 'editForm', 'dialogTitle', 'fTitle', 'fNote', 'fDue', 'fCategory', 'categoryList',
+    'cancelBtn', 'cancelBtn2', 'saveBtn',
+    'shareDialog', 'shareCanvas', 'shareClose', 'shareCopy', 'shareSave'
+  ].forEach((id) => { el[id] = document.getElementById(id); });
 
   /* ---------- 儲存 ---------- */
 
@@ -66,7 +53,8 @@
       const raw = localStorage.getItem(STORE_KEY);
       if (raw) {
         const data = JSON.parse(raw);
-        if (Array.isArray(data.todos)) state.todos = data.todos.map(normalize).filter(Boolean);
+        state.todos = Array.isArray(data.todos) ? data.todos.map(normalize).filter(Boolean) : [];
+        state.history = data.history && typeof data.history === 'object' ? data.history : {};
       }
     } catch (err) {
       console.warn('讀取資料失敗，改用空清單。', err);
@@ -74,14 +62,16 @@
     try {
       const raw = localStorage.getItem(PREF_KEY);
       if (raw) Object.assign(prefs, JSON.parse(raw));
-    } catch (err) {
-      console.warn('讀取偏好設定失敗。', err);
-    }
+    } catch (err) { /* 用預設值 */ }
+
+    if (!PALETTES.includes(prefs.palette)) prefs.palette = 'cream';
+    if (!['all', 'today', 'overdue', 'done'].includes(prefs.filter)) prefs.filter = 'all';
+    if (!Array.isArray(prefs.collapsed)) prefs.collapsed = ['done'];
   }
 
   function save() {
     try {
-      localStorage.setItem(STORE_KEY, JSON.stringify({ version: 1, todos: state.todos }));
+      localStorage.setItem(STORE_KEY, JSON.stringify({ version: 2, todos: state.todos, history: state.history }));
     } catch (err) {
       toast('儲存失敗，瀏覽器儲存空間可能已滿。');
       console.error(err);
@@ -89,9 +79,7 @@
   }
 
   function savePrefs() {
-    try {
-      localStorage.setItem(PREF_KEY, JSON.stringify(prefs));
-    } catch (err) { /* 偏好設定存不了不影響使用 */ }
+    try { localStorage.setItem(PREF_KEY, JSON.stringify(prefs)); } catch (err) { /* 忽略 */ }
   }
 
   function normalize(t) {
@@ -114,18 +102,12 @@
     return 'id-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
   }
 
-  /* ---------- 日期工具 ---------- */
+  /* ---------- 日期 ---------- */
 
-  function todayIso() {
-    const d = new Date();
-    return toIso(d);
-  }
+  const toIso = (d) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
-  function toIso(d) {
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${d.getFullYear()}-${m}-${day}`;
-  }
+  const todayIso = () => toIso(new Date());
 
   function isIsoDate(s) {
     if (typeof s !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
@@ -134,39 +116,48 @@
     return dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === d;
   }
 
-  function daysFromToday(iso) {
+  function fromIso(iso) {
     const [y, m, d] = iso.split('-').map(Number);
-    const target = new Date(y, m - 1, d);
+    return new Date(y, m - 1, d);
+  }
+
+  function shiftIso(iso, days) {
+    const d = fromIso(iso);
+    d.setDate(d.getDate() + days);
+    return toIso(d);
+  }
+
+  function daysFromToday(iso) {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    return Math.round((target - today) / 86400000);
+    return Math.round((fromIso(iso) - today) / 86400000);
   }
 
   function dueLabel(iso) {
     const diff = daysFromToday(iso);
-    if (diff === 0) return '今天到期';
-    if (diff === 1) return '明天到期';
-    if (diff === 2) return '後天到期';
+    if (diff === 0) return '今天';
+    if (diff === 1) return '明天';
+    if (diff === 2) return '後天';
+    if (diff === -1) return '昨天到期';
     if (diff < 0) return `逾期 ${-diff} 天`;
-    if (diff <= 7) return `${diff} 天後（${iso.slice(5)}）`;
-    return iso;
+    if (diff <= 7) return `${diff} 天後`;
+    return iso.slice(5).replace('-', '/');
   }
 
-  /* ---------- 快速輸入語法解析 ---------- */
+  /* ---------- 快速輸入語法 ---------- */
 
   function parseRelativeDate(token) {
     const t = token.trim();
-    const shift = { '今天': 0, 'today': 0, '明天': 1, 'tomorrow': 1, '後天': 2, '后天': 2, '下週': 7, '下周': 7 };
-    if (Object.prototype.hasOwnProperty.call(shift, t.toLowerCase()) || Object.prototype.hasOwnProperty.call(shift, t)) {
-      const d = new Date();
-      d.setDate(d.getDate() + (shift[t] !== undefined ? shift[t] : shift[t.toLowerCase()]));
-      return toIso(d);
-    }
+    const shift = {
+      '今天': 0, 'today': 0, '明天': 1, 'tomorrow': 1,
+      '後天': 2, '后天': 2, '下週': 7, '下周': 7, '一週後': 7
+    };
+    const key = Object.prototype.hasOwnProperty.call(shift, t) ? t : t.toLowerCase();
+    if (Object.prototype.hasOwnProperty.call(shift, key)) return shiftIso(todayIso(), shift[key]);
     if (isIsoDate(t)) return t;
     const md = t.match(/^(\d{1,2})[-/](\d{1,2})$/);
     if (md) {
-      const now = new Date();
-      const iso = `${now.getFullYear()}-${md[1].padStart(2, '0')}-${md[2].padStart(2, '0')}`;
+      const iso = `${new Date().getFullYear()}-${md[1].padStart(2, '0')}-${md[2].padStart(2, '0')}`;
       return isIsoDate(iso) ? iso : '';
     }
     return '';
@@ -174,17 +165,14 @@
 
   function parseQuick(raw) {
     const out = { title: '', note: '', priority: 'normal', category: '', due: '' };
-    const title = raw
+    out.title = raw
       .replace(/(?:^|\s)!([^\s]+)/g, (m, p) => {
         const mapped = PRIORITY_ALIAS[p.toLowerCase()];
         if (!mapped) return m;
         out.priority = mapped;
         return ' ';
       })
-      .replace(/(?:^|\s)#([^\s]+)/g, (m, c) => {
-        out.category = c.slice(0, 30);
-        return ' ';
-      })
+      .replace(/(?:^|\s)#([^\s]+)/g, (m, c) => { out.category = c.slice(0, 30); return ' '; })
       .replace(/(?:^|\s)@([^\s]+)/g, (m, d) => {
         const iso = parseRelativeDate(d);
         if (!iso) return m;
@@ -192,9 +180,41 @@
         return ' ';
       })
       .replace(/\s{2,}/g, ' ')
-      .trim();
-    out.title = title.slice(0, 200);
+      .trim()
+      .slice(0, 200);
     return out;
+  }
+
+  /* ---------- 足跡紀錄 ---------- */
+
+  function bumpHistory(todo, delta) {
+    const day = todayIso();
+    const h = state.history[day] || { done: 0, withDue: 0, onTime: 0 };
+    h.done = Math.max(0, h.done + delta);
+    if (todo.due) {
+      h.withDue = Math.max(0, h.withDue + delta);
+      if (day <= todo.due) h.onTime = Math.max(0, h.onTime + delta);
+    }
+    if (h.done === 0 && h.withDue === 0) delete state.history[day];
+    else state.history[day] = h;
+  }
+
+  function trailStats() {
+    let total = 0, withDue = 0, onTime = 0;
+    for (const k of Object.keys(state.history)) {
+      const h = state.history[k];
+      total += h.done || 0;
+      withDue += h.withDue || 0;
+      onTime += h.onTime || 0;
+    }
+    let streak = 0;
+    let cursor = todayIso();
+    if (!(state.history[cursor] && state.history[cursor].done > 0)) cursor = shiftIso(cursor, -1);
+    while (state.history[cursor] && state.history[cursor].done > 0) {
+      streak++;
+      cursor = shiftIso(cursor, -1);
+    }
+    return { total, withDue, onTime, streak, rate: withDue ? Math.round((onTime / withDue) * 100) : null };
   }
 
   /* ---------- 資料操作 ---------- */
@@ -203,6 +223,7 @@
     const todo = normalize(Object.assign({ createdAt: Date.now() }, fields));
     if (!todo || !todo.title) return null;
     state.todos.unshift(todo);
+    if (prefs.filter === 'done') { prefs.filter = 'all'; savePrefs(); }
     save();
     render();
     return todo;
@@ -221,20 +242,40 @@
     if (!t) return;
     t.done = !t.done;
     t.doneAt = t.done ? Date.now() : null;
+    bumpHistory(t, t.done ? 1 : -1);
     save();
-    render();
+
+    if (t.done) {
+      const node = el.groups.querySelector(`[data-id="${CSS.escape(id)}"]`);
+      if (node) {
+        node.classList.add('just-done');
+        const r = node.getBoundingClientRect();
+        celebrate(r.left + 40, r.top + r.height / 2, allTodayCleared() ? 120 : 34);
+      }
+      toast(CHEERS[cheerIndex++ % CHEERS.length] + '！');
+      setTimeout(render, 260);
+    } else {
+      render();
+    }
+  }
+
+  function allTodayCleared() {
+    const today = todayIso();
+    const due = state.todos.filter((t) => t.due === today);
+    return due.length > 0 && due.every((t) => t.done);
   }
 
   function removeTodos(ids, message) {
     const set = new Set(ids);
     if (!set.size) return;
-    undoSnapshot = state.todos.slice();
+    undoSnapshot = { todos: state.todos.slice(), history: JSON.parse(JSON.stringify(state.history)) };
     state.todos = state.todos.filter((t) => !set.has(t.id));
     save();
     render();
     toast(message, '復原', () => {
       if (!undoSnapshot) return;
-      state.todos = undoSnapshot;
+      state.todos = undoSnapshot.todos;
+      state.history = undoSnapshot.history;
       undoSnapshot = null;
       save();
       render();
@@ -242,29 +283,22 @@
     });
   }
 
-  /* ---------- 篩選與排序 ---------- */
+  /* ---------- 篩選與分組 ---------- */
 
   function visibleTodos() {
     const today = todayIso();
     const q = query.trim().toLowerCase();
     let list = state.todos.filter((t) => {
-      switch (prefs.filter) {
-        case 'active': if (t.done) return false; break;
-        case 'done': if (!t.done) return false; break;
-        case 'today': if (t.done || t.due !== today) return false; break;
-        case 'overdue': if (t.done || !t.due || t.due >= today) return false; break;
-      }
+      if (prefs.filter === 'today' && (t.done || t.due !== today)) return false;
+      if (prefs.filter === 'overdue' && (t.done || !t.due || t.due >= today)) return false;
+      if (prefs.filter === 'done' && !t.done) return false;
       if (prefs.category && t.category !== prefs.category) return false;
-      if (q) {
-        const hay = `${t.title} ${t.note} ${t.category}`.toLowerCase();
-        if (!hay.includes(q)) return false;
-      }
+      if (q && !`${t.title} ${t.note} ${t.category}`.toLowerCase().includes(q)) return false;
       return true;
     });
 
     if (prefs.sort !== 'manual') {
       list = list.slice().sort((a, b) => {
-        if (a.done !== b.done) return a.done ? 1 : -1;
         if (prefs.sort === 'due') {
           if (!a.due && !b.due) return b.createdAt - a.createdAt;
           if (!a.due) return 1;
@@ -274,199 +308,649 @@
         }
         if (prefs.sort === 'priority') {
           const d = PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority];
-          if (d !== 0) return d;
-          return b.createdAt - a.createdAt;
+          return d !== 0 ? d : b.createdAt - a.createdAt;
         }
-        return b.createdAt - a.createdAt; // created
+        return b.createdAt - a.createdAt;
       });
     }
     return list;
   }
 
-  /* ---------- 畫面繪製 ---------- */
+  function groupOf(t) {
+    if (t.done) return 'done';
+    if (!t.due) return 'someday';
+    const d = daysFromToday(t.due);
+    if (d < 0) return 'overdue';
+    if (d === 0) return 'today';
+    if (d === 1) return 'tomorrow';
+    if (d <= 7) return 'week';
+    return 'later';
+  }
+
+  /* ---------- 繪製 ---------- */
 
   function render() {
-    renderStats();
+    renderHero();
+    renderProgress();
+    renderTiles();
     renderCategories();
     renderList();
-    document.querySelectorAll('.chip[data-filter]').forEach((btn) => {
-      const on = btn.dataset.filter === prefs.filter;
-      btn.classList.toggle('is-active', on);
-      btn.setAttribute('aria-selected', String(on));
-    });
+    renderTrail();
     el.sortSelect.value = prefs.sort;
   }
 
-  function renderStats() {
+  function renderHero() {
+    const now = new Date();
+    const week = ['日', '一', '二', '三', '四', '五', '六'][now.getDay()];
+    el.dateLine.textContent = `${now.getFullYear()} 年 ${now.getMonth() + 1} 月 ${now.getDate()} 日 · 星期${week}`;
+
+    const h = now.getHours();
+    el.greeting.textContent = h < 5 ? '夜深了' : h < 11 ? '早安' : h < 14 ? '午安' : h < 18 ? '午後好' : '晚安';
+
     const today = todayIso();
-    let active = 0, dueToday = 0, overdue = 0, done = 0;
+    const left = state.todos.filter((t) => !t.done && t.due && t.due <= today).length;
+    const active = state.todos.filter((t) => !t.done).length;
+    el.heroSub.textContent = '';
+    if (!state.todos.length) {
+      el.heroSub.textContent = '寫下第一個跟自己的約定吧。';
+    } else if (left > 0) {
+      el.heroSub.append('今天還有 ', bold(left), ' 個約定等你打勾。');
+    } else if (active > 0) {
+      el.heroSub.append('今天的約定都完成了，還有 ', bold(active), ' 個排在後面。');
+    } else {
+      el.heroSub.textContent = '清單全空，難得的輕鬆一天。';
+    }
+  }
+
+  function bold(text) {
+    const b = document.createElement('b');
+    b.textContent = String(text);
+    return b;
+  }
+
+  function renderProgress() {
+    const today = todayIso();
+    const scope = state.todos.filter((t) => (t.due && t.due <= today) || (t.done && t.doneAt && toIso(new Date(t.doneAt)) === today));
+    const done = scope.filter((t) => t.done).length;
+    const total = scope.length;
+    const pct = total ? Math.round((done / total) * 100) : 0;
+
+    el.progPct.textContent = pct;
+    el.ringLabel.textContent = `${done}/${total}`;
+    el.ringBar.style.strokeDashoffset = String(314.16 * (1 - (total ? done / total : 0)));
+    el.progHint.textContent = !total
+      ? '今天還沒有排定的約定'
+      : done === total ? '今天的約定全部達成！' : `還差 ${total - done} 個就完成今天`;
+  }
+
+  function renderTiles() {
+    const today = todayIso();
+    let all = 0, todayN = 0, over = 0, done = 0;
     for (const t of state.todos) {
       if (t.done) { done++; continue; }
-      active++;
-      if (t.due === today) dueToday++;
-      else if (t.due && t.due < today) overdue++;
+      all++;
+      if (t.due === today) todayN++;
+      else if (t.due && t.due < today) over++;
     }
-    el.statActive.textContent = active;
-    el.statToday.textContent = dueToday;
-    el.statOverdue.textContent = overdue;
-    el.statDone.textContent = done;
+    el.tAll.textContent = all;
+    el.tToday.textContent = todayN;
+    el.tOver.textContent = over;
+    el.tDone.textContent = done;
+
+    document.querySelectorAll('.tile').forEach((btn) => {
+      const on = btn.dataset.filter === prefs.filter;
+      btn.classList.toggle('is-on', on);
+      btn.setAttribute('aria-pressed', String(on));
+    });
   }
 
   function renderCategories() {
-    const cats = [...new Set(state.todos.map((t) => t.category).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'zh-Hant'));
+    const cats = [...new Set(state.todos.map((t) => t.category).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b, 'zh-Hant'));
     if (prefs.category && !cats.includes(prefs.category)) prefs.category = '';
 
-    el.categorySelect.textContent = '';
-    const all = document.createElement('option');
-    all.value = '';
-    all.textContent = '所有分類';
-    el.categorySelect.appendChild(all);
-    for (const c of cats) {
-      const opt = document.createElement('option');
-      opt.value = c;
-      opt.textContent = c;
-      el.categorySelect.appendChild(opt);
-    }
-    el.categorySelect.value = prefs.category;
-
+    el.cats.textContent = '';
     el.categoryList.textContent = '';
+    if (!cats.length) return;
+
+    el.cats.appendChild(catChip('全部分類', ''));
     for (const c of cats) {
+      el.cats.appendChild(catChip(c, c));
       const opt = document.createElement('option');
       opt.value = c;
       el.categoryList.appendChild(opt);
     }
   }
 
+  function catChip(label, value) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'cat' + (prefs.category === value ? ' is-on' : '');
+    b.textContent = label;
+    b.setAttribute('aria-pressed', String(prefs.category === value));
+    b.addEventListener('click', () => {
+      prefs.category = prefs.category === value ? '' : value;
+      savePrefs();
+      render();
+    });
+    return b;
+  }
+
   function renderList() {
     const items = visibleTodos();
-    el.list.textContent = '';
+    el.groups.textContent = '';
 
     if (!items.length) {
       el.empty.hidden = false;
-      el.empty.textContent = state.todos.length
-        ? '這個條件下沒有項目。'
-        : '還沒有任何待辦事項，從上面新增第一筆吧！';
+      el.empty.textContent = '';
+      const mark = document.createElement('strong');
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('class', 'ico');
+      const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+      use.setAttribute('href', state.todos.length ? '#i-search' : '#i-inbox');
+      svg.appendChild(use);
+      mark.appendChild(svg);
+      el.empty.appendChild(mark);
+      el.empty.append(state.todos.length ? '這個條件下沒有項目。' : '還沒有任何約定，從上面寫下第一個吧。');
       return;
     }
     el.empty.hidden = true;
 
-    const today = todayIso();
+    const buckets = new Map();
+    for (const t of items) {
+      const g = groupOf(t);
+      if (!buckets.has(g)) buckets.set(g, []);
+      buckets.get(g).push(t);
+    }
+
     const frag = document.createDocumentFragment();
-    for (const t of items) frag.appendChild(buildItem(t, today));
-    el.list.appendChild(frag);
+    for (const key of GROUP_ORDER) {
+      const list = buckets.get(key);
+      if (!list || !list.length) continue;
+      frag.appendChild(buildGroup(key, list));
+    }
+    el.groups.appendChild(frag);
   }
 
-  function buildItem(t, today) {
+  function buildGroup(key, items) {
+    const collapsed = prefs.collapsed.includes(key);
+    const sec = document.createElement('section');
+    sec.className = `group group--${key}${collapsed ? ' is-collapsed' : ''}`;
+
+    const head = document.createElement('button');
+    head.type = 'button';
+    head.className = 'group__head';
+    head.setAttribute('aria-expanded', String(!collapsed));
+
+    const title = document.createElement('span');
+    title.className = 'group__title';
+    title.textContent = GROUP_LABEL[key];
+    const count = document.createElement('span');
+    count.className = 'group__count';
+    count.textContent = items.length;
+
+    const chev = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    chev.setAttribute('class', 'ico');
+    const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+    use.setAttribute('href', '#i-chevron');
+    chev.appendChild(use);
+
+    head.append(title, count, chev);
+    head.addEventListener('click', () => {
+      const i = prefs.collapsed.indexOf(key);
+      if (i >= 0) prefs.collapsed.splice(i, 1);
+      else prefs.collapsed.push(key);
+      savePrefs();
+      render();
+    });
+
+    const ul = document.createElement('ul');
+    ul.className = 'list';
+    items.forEach((t, i) => {
+      const li = buildTask(t);
+      li.style.animationDelay = `${Math.min(i, 8) * 25}ms`;
+      ul.appendChild(li);
+    });
+
+    sec.append(head, ul);
+    return sec;
+  }
+
+  function buildTask(t) {
     const li = document.createElement('li');
-    li.className = `item pri-${t.priority}${t.done ? ' is-done' : ''}`;
+    li.className = `task task--${t.priority}${t.done ? ' is-done' : ''}`;
     li.dataset.id = t.id;
     if (prefs.sort === 'manual') li.draggable = true;
 
-    const handle = document.createElement('button');
-    handle.type = 'button';
-    handle.className = 'item__handle';
-    handle.textContent = '⠿';
-    handle.setAttribute('aria-label', '拖曳排序');
-    handle.tabIndex = -1;
-    handle.hidden = prefs.sort !== 'manual';
-    li.appendChild(handle);
-
-    const check = document.createElement('input');
-    check.type = 'checkbox';
-    check.className = 'item__check';
-    check.checked = t.done;
-    check.setAttribute('aria-label', `標記「${t.title}」為${t.done ? '未完成' : '已完成'}`);
-    check.addEventListener('change', () => toggleDone(t.id));
-    li.appendChild(check);
+    const zone = document.createElement('div');
+    zone.className = 'task__zone';
+    const check = document.createElement('button');
+    check.type = 'button';
+    check.className = 'task__check';
+    check.setAttribute('aria-pressed', String(t.done));
+    check.setAttribute('aria-label', `${t.done ? '取消完成' : '完成'}「${t.title}」`);
+    check.appendChild(icon('#i-check'));
+    check.addEventListener('click', () => toggleDone(t.id));
+    zone.appendChild(check);
 
     const body = document.createElement('div');
-    body.className = 'item__body';
-
+    body.className = 'task__body';
     const title = document.createElement('p');
-    title.className = 'item__title';
+    title.className = 'task__title';
     title.textContent = t.title;
     body.appendChild(title);
 
     if (t.note) {
       const note = document.createElement('p');
-      note.className = 'item__note';
+      note.className = 'task__note';
       note.textContent = t.note;
       body.appendChild(note);
     }
 
     const meta = document.createElement('div');
-    meta.className = 'item__meta';
+    meta.className = 'task__meta';
+    const today = todayIso();
     if (t.due) {
-      const overdue = !t.done && t.due < today;
+      const over = !t.done && t.due < today;
       const isToday = !t.done && t.due === today;
-      meta.appendChild(tag(
-        `📅 ${dueLabel(t.due)}`,
-        overdue ? 'tag--overdue' : isToday ? 'tag--due-today' : ''
-      ));
+      meta.appendChild(pill(dueLabel(t.due), over ? 'pill--over' : isToday ? 'pill--today' : 'pill--due',
+        over ? '#i-alarm' : '#i-clock'));
     }
     if (t.priority !== 'normal') {
-      meta.appendChild(tag(`${t.priority === 'high' ? '🔺' : '🔻'} ${PRIORITY_LABEL[t.priority]}優先`,
-        t.priority === 'high' ? 'tag--pri-high' : ''));
+      meta.appendChild(pill(PRIORITY_LABEL[t.priority], t.priority === 'high' ? 'pill--high' : 'pill--low', '#i-flag'));
     }
-    if (t.category) meta.appendChild(tag(`# ${t.category}`));
+    if (t.category) meta.appendChild(pill(t.category, '', '#i-tag'));
     if (meta.children.length) body.appendChild(meta);
 
-    li.appendChild(body);
-
     const actions = document.createElement('div');
-    actions.className = 'item__actions';
-    actions.appendChild(iconButton('✏️', `編輯「${t.title}」`, () => openDialog(t.id)));
-    actions.appendChild(iconButton('🗑️', `刪除「${t.title}」`, () => removeTodos([t.id], '已刪除 1 個項目。')));
-    li.appendChild(actions);
+    actions.className = 'task__actions';
+    if (prefs.sort === 'manual') {
+      const grip = actionBtn('#i-grip', '拖曳排序', null);
+      grip.classList.add('task__drag');
+      actions.appendChild(grip);
+    }
+    actions.appendChild(actionBtn('#i-edit', `編輯「${t.title}」`, () => openDialog(t.id)));
+    const del = actionBtn('#i-trash', `刪除「${t.title}」`, () => removeTodos([t.id], '已刪除 1 個項目。'));
+    del.classList.add('act-del');
+    actions.appendChild(del);
 
+    li.append(zone, body, actions);
     return li;
   }
 
-  function tag(text, extra) {
+  function icon(href) {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('class', 'ico');
+    const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+    use.setAttribute('href', href);
+    svg.appendChild(use);
+    return svg;
+  }
+
+  function pill(text, cls, iconHref) {
     const s = document.createElement('span');
-    s.className = 'tag' + (extra ? ' ' + extra : '');
-    s.textContent = text;
+    s.className = 'pill' + (cls ? ' ' + cls : '');
+    if (iconHref) s.appendChild(icon(iconHref));
+    s.append(text);
     return s;
   }
 
-  function iconButton(glyph, label, onClick) {
+  function actionBtn(href, label, onClick) {
     const b = document.createElement('button');
     b.type = 'button';
-    b.textContent = glyph;
     b.title = label;
     b.setAttribute('aria-label', label);
-    b.addEventListener('click', onClick);
+    b.appendChild(icon(href));
+    if (onClick) b.addEventListener('click', onClick);
     return b;
   }
 
-  /* ---------- 對話框（新增／編輯） ---------- */
+  /* ---------- 足跡面板 ---------- */
+
+  function renderTrail() {
+    const s = trailStats();
+    el.streakNum.textContent = s.streak;
+    el.keepRate.textContent = s.rate === null ? '—' : s.rate + '%';
+    el.totalDone.textContent = s.total;
+
+    const today = todayIso();
+    let start = shiftIso(today, -(HEAT_WEEKS * 7 - 1));
+    start = shiftIso(start, -fromIso(start).getDay());
+
+    el.heatmap.textContent = '';
+    const frag = document.createDocumentFragment();
+    let cursor = start;
+    while (cursor <= today) {
+      const n = (state.history[cursor] && state.history[cursor].done) || 0;
+      const cell = document.createElement('i');
+      cell.dataset.lv = n === 0 ? 0 : n <= 2 ? 1 : n <= 4 ? 2 : n <= 7 ? 3 : 4;
+      cell.title = `${cursor}　完成 ${n} 件`;
+      if (cursor === today) cell.classList.add('is-today');
+      frag.appendChild(cell);
+      cursor = shiftIso(cursor, 1);
+    }
+    el.heatmap.appendChild(frag);
+    el.trailRange.textContent = `近 ${HEAT_WEEKS} 週`;
+    el.heatmap.scrollLeft = el.heatmap.scrollWidth;
+  }
+
+  /* ---------- 慶祝彩帶 ---------- */
+
+  function celebrate(x, y, count) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const cv = el.confetti;
+    const ctx = cv.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    cv.width = window.innerWidth * dpr;
+    cv.height = window.innerHeight * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const css = getComputedStyle(document.documentElement);
+    const colors = ['--brand', '--accent', '--ok', '--danger'].map((v) => css.getPropertyValue(v).trim() || '#888');
+
+    const parts = [];
+    for (let i = 0; i < count; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const sp = 3 + Math.random() * 7;
+      parts.push({
+        x, y,
+        vx: Math.cos(a) * sp,
+        vy: Math.sin(a) * sp - 3,
+        w: 5 + Math.random() * 6,
+        h: 3 + Math.random() * 5,
+        rot: Math.random() * Math.PI,
+        vr: (Math.random() - .5) * .3,
+        color: colors[i % colors.length],
+        life: 1
+      });
+    }
+
+    cv.classList.add('is-on');
+    let raf;
+    const tick = () => {
+      ctx.clearRect(0, 0, cv.width, cv.height);
+      let alive = false;
+      for (const p of parts) {
+        p.vy += .22;
+        p.vx *= .995;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rot += p.vr;
+        p.life -= .012;
+        if (p.life <= 0) continue;
+        alive = true;
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, Math.min(1, p.life * 1.6));
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        ctx.restore();
+      }
+      if (alive) raf = requestAnimationFrame(tick);
+      else {
+        cancelAnimationFrame(raf);
+        cv.classList.remove('is-on');
+        ctx.clearRect(0, 0, cv.width, cv.height);
+      }
+    };
+    tick();
+  }
+
+  /* ---------- 今日成果卡 ---------- */
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    if (ctx.roundRect) { ctx.roundRect(x, y, w, h, r); return; }
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  function drawShareCard() {
+    const cv = el.shareCanvas;
+    const ctx = cv.getContext('2d');
+    const W = cv.width, H = cv.height;
+    const css = getComputedStyle(document.documentElement);
+    const v = (name, fallback) => (css.getPropertyValue(name).trim() || fallback);
+    const font = '"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif';
+
+    const today = todayIso();
+    const doneToday = state.todos
+      .filter((t) => t.done && t.doneAt && toIso(new Date(t.doneAt)) === today)
+      .sort((a, b) => a.doneAt - b.doneAt);
+    const s = trailStats();
+
+    // 背景漸層
+    const bg = ctx.createLinearGradient(0, 0, W, H);
+    bg.addColorStop(0, v('--hero-1', '#4f9db8'));
+    bg.addColorStop(1, v('--hero-2', '#86c8d6'));
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.save();
+    ctx.globalAlpha = .12;
+    ctx.fillStyle = v('--on-hero', '#fff');
+    ctx.beginPath();
+    ctx.arc(W - 60, 120, 260, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(90, H - 90, 190, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // 卡片
+    const pad = 70;
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,.18)';
+    ctx.shadowBlur = 50;
+    ctx.shadowOffsetY = 18;
+    ctx.fillStyle = v('--surface', '#fff');
+    roundRect(ctx, pad, pad, W - pad * 2, H - pad * 2, 56);
+    ctx.fill();
+    ctx.restore();
+
+    const x0 = pad + 66;
+    const text = v('--text', '#21454e');
+    const dim = v('--dim', '#7c99a2');
+    const brand = v('--brand', '#4f9db8');
+
+    // 品牌
+    ctx.fillStyle = brand;
+    roundRect(ctx, x0, pad + 66, 62, 62, 20);
+    ctx.fill();
+    ctx.strokeStyle = v('--on-brand', '#fff');
+    ctx.lineWidth = 7;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(x0 + 17, pad + 98);
+    ctx.lineTo(x0 + 27, pad + 108);
+    ctx.lineTo(x0 + 45, pad + 86);
+    ctx.stroke();
+
+    ctx.fillStyle = text;
+    ctx.font = `800 34px ${font}`;
+    ctx.textBaseline = 'middle';
+    ctx.fillText('打勾勾', x0 + 82, pad + 98);
+
+    const now = new Date();
+    const week = ['日', '一', '二', '三', '四', '五', '六'][now.getDay()];
+    ctx.fillStyle = dim;
+    ctx.font = `600 25px ${font}`;
+    ctx.textAlign = 'right';
+    ctx.fillText(`${now.getMonth() + 1} 月 ${now.getDate()} 日 · 星期${week}`, W - pad - 66, pad + 98);
+    ctx.textAlign = 'left';
+
+    // 主數字
+    ctx.fillStyle = dim;
+    ctx.font = `600 30px ${font}`;
+    ctx.fillText('今天達成的約定', x0, pad + 210);
+
+    ctx.fillStyle = text;
+    ctx.font = `800 150px ${font}`;
+    const numText = String(doneToday.length);
+    ctx.fillText(numText, x0, pad + 320);
+    const numW = ctx.measureText(numText).width;
+    ctx.fillStyle = dim;
+    ctx.font = `700 40px ${font}`;
+    ctx.fillText('件', x0 + numW + 16, pad + 350);
+
+    // 進度環
+    const cx = W - pad - 150, cy = pad + 300, r = 82;
+    const scope = state.todos.filter((t) => (t.due && t.due <= today) || (t.done && t.doneAt && toIso(new Date(t.doneAt)) === today));
+    const ratio = scope.length ? scope.filter((t) => t.done).length / scope.length : 0;
+    ctx.lineWidth = 20;
+    ctx.strokeStyle = v('--surface-2', '#eee');
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.stroke();
+    if (ratio > 0) {
+      ctx.strokeStyle = brand;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * ratio);
+      ctx.stroke();
+    }
+    ctx.fillStyle = text;
+    ctx.font = `800 38px ${font}`;
+    ctx.textAlign = 'center';
+    ctx.fillText(`${Math.round(ratio * 100)}%`, cx, cy + 2);
+    ctx.textAlign = 'left';
+
+    // 清單
+    let y = pad + 430;
+    ctx.strokeStyle = v('--line', 'rgba(0,0,0,.08)');
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x0, y);
+    ctx.lineTo(W - pad - 66, y);
+    ctx.stroke();
+    y += 62;
+
+    const shown = doneToday.slice(0, 6);
+    if (!shown.length) {
+      ctx.fillStyle = dim;
+      ctx.font = `500 30px ${font}`;
+      ctx.fillText('今天還沒有打勾的項目，明天再約定一次。', x0, y);
+    }
+    for (const t of shown) {
+      ctx.fillStyle = v('--ok', '#4bab86');
+      ctx.beginPath();
+      ctx.arc(x0 + 17, y - 9, 17, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = v('--surface', '#fff');
+      ctx.lineWidth = 4.5;
+      ctx.beginPath();
+      ctx.moveTo(x0 + 9, y - 9);
+      ctx.lineTo(x0 + 15, y - 3);
+      ctx.lineTo(x0 + 26, y - 16);
+      ctx.stroke();
+
+      ctx.fillStyle = text;
+      ctx.font = `600 31px ${font}`;
+      let label = t.title;
+      const maxW = W - pad * 2 - 200;
+      while (ctx.measureText(label).width > maxW && label.length > 2) label = label.slice(0, -1);
+      if (label !== t.title) label += '…';
+      ctx.fillText(label, x0 + 52, y);
+      y += 62;
+    }
+    if (doneToday.length > shown.length) {
+      ctx.fillStyle = dim;
+      ctx.font = `500 28px ${font}`;
+      ctx.fillText(`還有 ${doneToday.length - shown.length} 件…`, x0 + 52, y);
+    }
+
+    // 底部數據
+    const by = H - pad - 150;
+    ctx.fillStyle = v('--surface-2', '#f5f5f5');
+    roundRect(ctx, x0, by - 52, W - pad * 2 - 132, 108, 34);
+    ctx.fill();
+
+    const cellW = (W - pad * 2 - 132) / 3;
+    const stats = [
+      [String(s.streak), '連續達成（天）'],
+      [s.rate === null ? '—' : s.rate + '%', '守約率'],
+      [String(s.total), '累計完成']
+    ];
+    ctx.textAlign = 'center';
+    stats.forEach((pair, i) => {
+      const px = x0 + cellW * i + cellW / 2;
+      ctx.fillStyle = text;
+      ctx.font = `800 40px ${font}`;
+      ctx.fillText(pair[0], px, by - 6);
+      ctx.fillStyle = dim;
+      ctx.font = `500 22px ${font}`;
+      ctx.fillText(pair[1], px, by + 32);
+    });
+
+    ctx.fillStyle = dim;
+    ctx.font = `600 25px ${font}`;
+    ctx.fillText('跟自己打勾勾，說到做到', W / 2, H - pad - 40);
+    ctx.textAlign = 'left';
+  }
+
+  function openShare() {
+    drawShareCard();
+    el.shareDialog.showModal();
+  }
+
+  function saveShare() {
+    el.shareCanvas.toBlob((blob) => {
+      if (!blob) { toast('產生圖片失敗。'); return; }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `打勾勾-${todayIso()}.png`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }, 'image/png');
+  }
+
+  async function copyShare() {
+    if (!(navigator.clipboard && window.ClipboardItem)) {
+      toast('這個瀏覽器不支援複製圖片，請改用下載。');
+      return;
+    }
+    try {
+      const blob = await new Promise((res) => el.shareCanvas.toBlob(res, 'image/png'));
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+      toast('已複製圖片到剪貼簿。');
+    } catch (err) {
+      toast('複製失敗，請改用下載。');
+    }
+  }
+
+  /* ---------- 對話框 ---------- */
 
   function openDialog(id) {
     editingId = id || null;
     const t = id ? state.todos.find((x) => x.id === id) : null;
-    el.dialogTitle.textContent = t ? '編輯待辦事項' : '新增待辦事項';
+    el.dialogTitle.textContent = t ? '編輯約定' : '新的約定';
     el.fTitle.value = t ? t.title : el.quickInput.value.trim();
     el.fNote.value = t ? t.note : '';
     el.fDue.value = t ? t.due : '';
-    el.fPriority.value = t ? t.priority : 'normal';
     el.fCategory.value = t ? t.category : (prefs.category || '');
-    el.dialog.showModal();
+    const p = t ? t.priority : 'normal';
+    el.editForm.querySelectorAll('input[name="priority"]').forEach((r) => { r.checked = r.value === p; });
+    el.editDialog.showModal();
     el.fTitle.focus();
     el.fTitle.select();
   }
 
   function submitDialog(event) {
     const title = el.fTitle.value.trim();
-    if (!title) {
-      event.preventDefault();
-      el.fTitle.focus();
-      return;
-    }
+    if (!title) { event.preventDefault(); el.fTitle.focus(); return; }
     const fields = {
       title,
       note: el.fNote.value.trim(),
       due: isIsoDate(el.fDue.value) ? el.fDue.value : '',
-      priority: el.fPriority.value,
+      priority: el.editForm.elements.priority.value,
       category: el.fCategory.value.trim()
     };
     if (editingId) {
@@ -475,7 +959,7 @@
     } else {
       addTodo(Object.assign({ done: false }, fields));
       el.quickInput.value = '';
-      toast('已新增。');
+      toast('約定成立。');
     }
     editingId = null;
   }
@@ -483,12 +967,15 @@
   /* ---------- 匯出／匯入 ---------- */
 
   function exportJson() {
-    const payload = JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), todos: state.todos }, null, 2);
+    const payload = JSON.stringify(
+      { version: 2, app: 'pinky', exportedAt: new Date().toISOString(), todos: state.todos, history: state.history },
+      null, 2
+    );
     const blob = new Blob([payload], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `todo-backup-${todayIso()}.json`;
+    a.download = `打勾勾備份-${todayIso()}.json`;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -502,7 +989,7 @@
         const data = JSON.parse(String(reader.result));
         const incoming = (Array.isArray(data) ? data : data.todos || []).map(normalize).filter(Boolean);
         if (!incoming.length) { toast('檔案裡沒有可匯入的項目。'); return; }
-        undoSnapshot = state.todos.slice();
+        undoSnapshot = { todos: state.todos.slice(), history: JSON.parse(JSON.stringify(state.history)) };
         const existing = new Set(state.todos.map((t) => t.id));
         let added = 0;
         for (const t of incoming) {
@@ -511,10 +998,22 @@
           existing.add(t.id);
           added++;
         }
+        if (data.history && typeof data.history === 'object') {
+          for (const [day, h] of Object.entries(data.history)) {
+            if (!isIsoDate(day) || !h) continue;
+            const cur = state.history[day] || { done: 0, withDue: 0, onTime: 0 };
+            state.history[day] = {
+              done: Math.max(cur.done, Number(h.done) || 0),
+              withDue: Math.max(cur.withDue, Number(h.withDue) || 0),
+              onTime: Math.max(cur.onTime, Number(h.onTime) || 0)
+            };
+          }
+        }
         save();
         render();
         toast(`已匯入 ${added} 個項目（略過 ${incoming.length - added} 個重複）。`, '復原', () => {
-          state.todos = undoSnapshot;
+          state.todos = undoSnapshot.todos;
+          state.history = undoSnapshot.history;
           undoSnapshot = null;
           save();
           render();
@@ -528,7 +1027,7 @@
     reader.readAsText(file);
   }
 
-  /* ---------- 提示訊息 ---------- */
+  /* ---------- 提示 ---------- */
 
   function toast(text, actionLabel, onAction) {
     clearTimeout(toastTimer);
@@ -537,10 +1036,7 @@
     if (actionLabel && onAction) {
       el.toastAction.hidden = false;
       el.toastAction.textContent = actionLabel;
-      el.toastAction.onclick = () => {
-        el.toast.hidden = true;
-        onAction();
-      };
+      el.toastAction.onclick = () => { el.toast.hidden = true; onAction(); };
     } else {
       el.toastAction.hidden = true;
       el.toastAction.onclick = null;
@@ -548,14 +1044,23 @@
     toastTimer = setTimeout(() => { el.toast.hidden = true; }, 6000);
   }
 
-  /* ---------- 主題 ---------- */
+  /* ---------- 外觀 ---------- */
 
-  function applyTheme() {
+  function applyAppearance() {
+    const root = document.documentElement;
+    root.dataset.palette = prefs.palette;
     const dark = prefs.theme
       ? prefs.theme === 'dark'
       : window.matchMedia('(prefers-color-scheme: dark)').matches;
-    document.documentElement.dataset.theme = dark ? 'dark' : 'light';
-    el.themeIcon.textContent = dark ? '☀️' : '🌙';
+    root.dataset.theme = dark ? 'dark' : 'light';
+
+    el.themeBtn.querySelector('use').setAttribute('href', dark ? '#i-sun' : '#i-moon');
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', getComputedStyle(root).getPropertyValue('--bg').trim());
+
+    el.palettePanel.querySelectorAll('[data-palette]').forEach((b) => {
+      b.setAttribute('aria-checked', String(b.dataset.palette === prefs.palette));
+    });
   }
 
   /* ---------- 拖曳排序 ---------- */
@@ -563,8 +1068,8 @@
   function setupDragAndDrop() {
     let draggingId = null;
 
-    el.list.addEventListener('dragstart', (e) => {
-      const li = e.target.closest('.item');
+    el.groups.addEventListener('dragstart', (e) => {
+      const li = e.target.closest('.task');
       if (!li || prefs.sort !== 'manual') return;
       draggingId = li.dataset.id;
       li.classList.add('is-dragging');
@@ -572,23 +1077,23 @@
       e.dataTransfer.setData('text/plain', draggingId);
     });
 
-    el.list.addEventListener('dragend', () => {
+    el.groups.addEventListener('dragend', () => {
       draggingId = null;
-      el.list.querySelectorAll('.item').forEach((n) => n.classList.remove('is-dragging', 'is-dragover'));
+      el.groups.querySelectorAll('.task').forEach((n) => n.classList.remove('is-dragging', 'is-over'));
     });
 
-    el.list.addEventListener('dragover', (e) => {
+    el.groups.addEventListener('dragover', (e) => {
       if (!draggingId) return;
-      const li = e.target.closest('.item');
+      const li = e.target.closest('.task');
       if (!li || li.dataset.id === draggingId) return;
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
-      el.list.querySelectorAll('.is-dragover').forEach((n) => n.classList.remove('is-dragover'));
-      li.classList.add('is-dragover');
+      el.groups.querySelectorAll('.is-over').forEach((n) => n.classList.remove('is-over'));
+      li.classList.add('is-over');
     });
 
-    el.list.addEventListener('drop', (e) => {
-      const li = e.target.closest('.item');
+    el.groups.addEventListener('drop', (e) => {
+      const li = e.target.closest('.task');
       if (!draggingId || !li) return;
       e.preventDefault();
       const targetId = li.dataset.id;
@@ -604,7 +1109,20 @@
     });
   }
 
-  /* ---------- 事件綁定 ---------- */
+  /* ---------- 事件 ---------- */
+
+  function closePops() {
+    [el.morePanel, el.palettePanel].forEach((p) => { p.hidden = true; });
+    el.moreBtn.setAttribute('aria-expanded', 'false');
+    el.paletteBtn.setAttribute('aria-expanded', 'false');
+  }
+
+  function togglePop(btn, panel) {
+    const open = panel.hidden;
+    closePops();
+    panel.hidden = !open;
+    btn.setAttribute('aria-expanded', String(open));
+  }
 
   function setupEvents() {
     el.quickForm.addEventListener('submit', (e) => {
@@ -612,62 +1130,60 @@
       const raw = el.quickInput.value.trim();
       if (!raw) return;
       const parsed = parseQuick(raw);
-      if (!parsed.title) { toast('請輸入待辦事項的內容。'); return; }
+      if (!parsed.title) { toast('請輸入約定的內容。'); return; }
       addTodo(Object.assign({ done: false }, parsed));
       el.quickInput.value = '';
       el.quickInput.focus();
     });
 
     el.detailBtn.addEventListener('click', () => openDialog(null));
+    el.fabBtn.addEventListener('click', () => openDialog(null));
 
-    el.filters.addEventListener('click', (e) => {
-      const btn = e.target.closest('.chip[data-filter]');
-      if (!btn) return;
-      prefs.filter = btn.dataset.filter;
-      savePrefs();
-      render();
+    document.querySelectorAll('.tile').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        prefs.filter = prefs.filter === btn.dataset.filter && btn.dataset.filter !== 'all' ? 'all' : btn.dataset.filter;
+        savePrefs();
+        render();
+      });
     });
 
-    el.searchInput.addEventListener('input', () => {
-      query = el.searchInput.value;
-      renderList();
-    });
+    el.searchInput.addEventListener('input', () => { query = el.searchInput.value; renderList(); });
+    el.sortSelect.addEventListener('change', () => { prefs.sort = el.sortSelect.value; savePrefs(); render(); });
 
-    el.categorySelect.addEventListener('change', () => {
-      prefs.category = el.categorySelect.value;
-      savePrefs();
-      render();
-    });
+    el.editForm.addEventListener('submit', submitDialog);
+    [el.cancelBtn, el.cancelBtn2].forEach((b) => b.addEventListener('click', () => {
+      editingId = null;
+      el.editDialog.close();
+    }));
+    el.editDialog.addEventListener('close', () => { editingId = null; });
 
-    el.sortSelect.addEventListener('change', () => {
-      prefs.sort = el.sortSelect.value;
-      savePrefs();
-      render();
+    el.editForm.querySelectorAll('.quickdates button').forEach((b) => {
+      b.addEventListener('click', () => {
+        el.fDue.value = b.dataset.shift === 'clear' ? '' : shiftIso(todayIso(), Number(b.dataset.shift));
+      });
     });
-
-    el.form.addEventListener('submit', submitDialog);
-    el.cancelBtn.addEventListener('click', () => { editingId = null; el.dialog.close(); });
-    el.dialog.addEventListener('close', () => { editingId = null; });
 
     el.themeBtn.addEventListener('click', () => {
-      const dark = document.documentElement.dataset.theme === 'dark';
-      prefs.theme = dark ? 'light' : 'dark';
+      prefs.theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
       savePrefs();
-      applyTheme();
+      applyAppearance();
     });
 
-    el.moreBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const open = el.morePanel.hidden;
-      el.morePanel.hidden = !open;
-      el.moreBtn.setAttribute('aria-expanded', String(open));
+    el.paletteBtn.addEventListener('click', (e) => { e.stopPropagation(); togglePop(el.paletteBtn, el.palettePanel); });
+    el.moreBtn.addEventListener('click', (e) => { e.stopPropagation(); togglePop(el.moreBtn, el.morePanel); });
+    el.palettePanel.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-palette]');
+      if (!b) return;
+      prefs.palette = b.dataset.palette;
+      savePrefs();
+      applyAppearance();
     });
-    document.addEventListener('click', () => {
-      if (!el.morePanel.hidden) {
-        el.morePanel.hidden = true;
-        el.moreBtn.setAttribute('aria-expanded', 'false');
-      }
-    });
+    document.addEventListener('click', closePops);
+
+    [el.shareBtn, el.shareBtn2].forEach((b) => b.addEventListener('click', openShare));
+    el.shareClose.addEventListener('click', () => el.shareDialog.close());
+    el.shareSave.addEventListener('click', saveShare);
+    el.shareCopy.addEventListener('click', copyShare);
 
     el.exportBtn.addEventListener('click', exportJson);
     el.importBtn.addEventListener('click', () => el.importFile.click());
@@ -685,30 +1201,29 @@
 
     el.clearAllBtn.addEventListener('click', () => {
       if (!state.todos.length) { toast('目前沒有資料。'); return; }
-      if (!confirm('確定要刪除全部待辦事項嗎？建議先匯出備份。')) return;
+      if (!confirm('確定要刪除全部待辦事項嗎？（足跡紀錄會保留，建議先匯出備份）')) return;
       removeTodos(state.todos.map((t) => t.id), '已刪除全部項目。');
     });
 
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && !el.morePanel.hidden) {
-        el.morePanel.hidden = true;
-        el.moreBtn.setAttribute('aria-expanded', 'false');
-      }
-      const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName) || el.dialog.open;
+      if (e.key === 'Escape') closePops();
+      const tag = document.activeElement ? document.activeElement.tagName : '';
+      const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(tag) || el.editDialog.open || el.shareDialog.open;
       if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
-      if (e.key === 'n' || e.key === 'N') { e.preventDefault(); el.quickInput.focus(); }
+      const k = e.key.toLowerCase();
+      if (k === 'n') { e.preventDefault(); el.quickInput.focus(); }
       else if (e.key === '/') { e.preventDefault(); el.searchInput.focus(); }
-      else if (e.key === 't' || e.key === 'T') { el.themeBtn.click(); }
+      else if (k === 't') { el.themeBtn.click(); }
+      else if (k === 'p') { prefs.palette = PALETTES[(PALETTES.indexOf(prefs.palette) + 1) % PALETTES.length]; savePrefs(); applyAppearance(); }
+      else if (k === 's') { openShare(); }
     });
 
-    // 換日時更新「今天／逾期」的顯示
     let lastDay = todayIso();
     setInterval(() => {
       const now = todayIso();
       if (now !== lastDay) { lastDay = now; render(); }
     }, 60000);
 
-    // 多分頁同步
     window.addEventListener('storage', (e) => {
       if (e.key !== STORE_KEY) return;
       load();
@@ -719,8 +1234,7 @@
   /* ---------- 啟動 ---------- */
 
   load();
-  applyTheme();
-  el.searchInput.value = '';
+  applyAppearance();
   setupEvents();
   setupDragAndDrop();
   render();

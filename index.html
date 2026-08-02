@@ -1,108 +1,244 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-Hant" data-palette="cream" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="description" content="專屬個人的待辦清單網頁應用，資料儲存在自己的瀏覽器。">
-  <meta name="theme-color" content="#111827">
-  <title>我的待辦清單</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✅</text></svg>">
+  <meta name="description" content="打勾勾 — 跟自己打勾勾，說到做到。個人待辦清單，資料存在自己的瀏覽器。">
+  <meta name="theme-color" content="#f7e9cf">
+  <title>打勾勾 · 跟自己的約定</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='28' fill='%234f9db8'/><path d='M28 52l14 14 30-32' fill='none' stroke='white' stroke-width='10' stroke-linecap='round' stroke-linejoin='round'/></svg>">
   <link rel="stylesheet" href="assets/styles.css">
 </head>
 <body>
-  <a class="skip-link" href="#list">跳到清單</a>
+  <a class="skip-link" href="#groups">跳到清單</a>
 
-  <header class="topbar">
-    <div class="topbar__inner">
-      <h1 class="brand"><span aria-hidden="true">✅</span> 我的待辦清單</h1>
-      <div class="topbar__actions">
-        <button type="button" id="themeBtn" class="icon-btn" title="切換淺色／深色（T）" aria-label="切換淺色或深色主題">
-          <span id="themeIcon" aria-hidden="true">🌙</span>
-        </button>
-        <div class="menu">
-          <button type="button" id="moreBtn" class="icon-btn" aria-haspopup="true" aria-expanded="false" aria-label="更多功能">⋯</button>
-          <div class="menu__panel" id="morePanel" role="menu" hidden>
-            <button type="button" role="menuitem" id="exportBtn">匯出備份 (JSON)</button>
-            <button type="button" role="menuitem" id="importBtn">匯入備份</button>
-            <button type="button" role="menuitem" id="clearDoneBtn">清除已完成項目</button>
-            <button type="button" role="menuitem" id="clearAllBtn" class="danger">刪除全部資料</button>
+  <!-- 圖示：Lucide (https://lucide.dev) — ISC License，路徑內嵌，不依賴外部資源 -->
+  <svg class="sprite" aria-hidden="true" focusable="false">
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></symbol>
+    <symbol id="i-alarm" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3 2 6"/><path d="m22 6-3-3"/><path d="M6.38 18.7 4 21"/><path d="M17.64 18.67 20 21"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+    <symbol id="i-done" viewBox="0 0 24 24"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol>
+    <symbol id="i-palette" viewBox="0 0 24 24"><path d="M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z"/><circle cx="13.5" cy="6.5" r=".5" class="dot"/><circle cx="17.5" cy="10.5" r=".5" class="dot"/><circle cx="6.5" cy="12.5" r=".5" class="dot"/><circle cx="8.5" cy="7.5" r=".5" class="dot"/></symbol>
+    <symbol id="i-more" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><path d="M10 11v6"/><path d="M14 11v6"/></symbol>
+    <symbol id="i-grip" viewBox="0 0 24 24"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22v-7"/></symbol>
+    <symbol id="i-tag" viewBox="0 0 24 24"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" class="dot"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><path d="M12 15V3"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><path d="M12 3v12"/></symbol>
+    <symbol id="i-eraser" viewBox="0 0 24 24"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></symbol>
+    <symbol id="i-inbox" viewBox="0 0 24 24"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></symbol>
+    <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/></symbol>
+    <symbol id="i-flame" viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 2v13"/><path d="m16 6-4-4-4 4"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
+  </svg>
+
+  <div class="app">
+    <header class="hero">
+      <div class="hero__bar">
+        <div class="brand">
+          <span class="brand__mark"><svg class="ico"><use href="#i-check"/></svg></span>
+          <span class="brand__name">打勾勾</span>
+        </div>
+        <div class="hero__tools">
+          <div class="pop">
+            <button type="button" class="ghost-btn" id="paletteBtn" aria-haspopup="true" aria-expanded="false" aria-label="更換配色">
+              <svg class="ico"><use href="#i-palette"/></svg>
+            </button>
+            <div class="pop__panel pop__panel--swatches" id="palettePanel" role="menu" hidden>
+              <button type="button" role="menuitemradio" data-palette="cream"><i class="sw sw--cream"></i>奶油拿鐵</button>
+              <button type="button" role="menuitemradio" data-palette="pastel"><i class="sw sw--pastel"></i>粉彩糖霜</button>
+              <button type="button" role="menuitemradio" data-palette="lime"><i class="sw sw--lime"></i>螢光萊姆</button>
+            </div>
+          </div>
+          <button type="button" class="ghost-btn" id="themeBtn" aria-label="切換淺色或深色主題">
+            <svg class="ico"><use href="#i-moon"/></svg>
+          </button>
+          <div class="pop">
+            <button type="button" class="ghost-btn" id="moreBtn" aria-haspopup="true" aria-expanded="false" aria-label="更多功能">
+              <svg class="ico"><use href="#i-more"/></svg>
+            </button>
+            <div class="pop__panel" id="morePanel" role="menu" hidden>
+              <button type="button" role="menuitem" id="shareBtn"><svg class="ico"><use href="#i-share"/></svg>產生今日成果卡</button>
+              <button type="button" role="menuitem" id="exportBtn"><svg class="ico"><use href="#i-download"/></svg>匯出備份</button>
+              <button type="button" role="menuitem" id="importBtn"><svg class="ico"><use href="#i-upload"/></svg>匯入備份</button>
+              <button type="button" role="menuitem" id="clearDoneBtn"><svg class="ico"><use href="#i-eraser"/></svg>清除已完成</button>
+              <button type="button" role="menuitem" id="clearAllBtn" class="danger"><svg class="ico"><use href="#i-trash"/></svg>刪除全部資料</button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </header>
+      <p class="eyebrow" id="dateLine"></p>
+      <h1 class="hero__title" id="greeting">你好</h1>
+      <p class="hero__sub" id="heroSub"></p>
+    </header>
 
-  <main class="wrap">
-    <section class="stats" aria-label="統計">
-      <div class="stat"><span class="stat__num" id="statActive">0</span><span class="stat__label">待完成</span></div>
-      <div class="stat"><span class="stat__num" id="statToday">0</span><span class="stat__label">今天到期</span></div>
-      <div class="stat stat--warn"><span class="stat__num" id="statOverdue">0</span><span class="stat__label">已逾期</span></div>
-      <div class="stat"><span class="stat__num" id="statDone">0</span><span class="stat__label">已完成</span></div>
-    </section>
-
-    <section class="quickadd">
-      <form id="quickForm" autocomplete="off">
-        <input type="text" id="quickInput" placeholder="要做什麼？按 Enter 新增（按 N 快速聚焦）" aria-label="新增待辦事項">
-        <button type="submit" class="btn btn--primary">新增</button>
-        <button type="button" class="btn" id="detailBtn" title="填寫完整欄位">詳細…</button>
-      </form>
-      <p class="hint">小技巧：輸入 <code>!高</code>／<code>!中</code>／<code>!低</code> 設定優先度、<code>#分類</code> 設定分類、<code>@今天</code>／<code>@明天</code>／<code>@2026-08-15</code> 設定到期日。</p>
-    </section>
-
-    <section class="toolbar" aria-label="篩選與排序">
-      <div class="filters" role="tablist" aria-label="狀態篩選">
-        <button type="button" role="tab" class="chip is-active" data-filter="all">全部</button>
-        <button type="button" role="tab" class="chip" data-filter="active">未完成</button>
-        <button type="button" role="tab" class="chip" data-filter="today">今天</button>
-        <button type="button" role="tab" class="chip" data-filter="overdue">逾期</button>
-        <button type="button" role="tab" class="chip" data-filter="done">已完成</button>
+    <section class="progress" aria-label="今日進度">
+      <div class="progress__text">
+        <p class="progress__label">今日約定</p>
+        <p class="progress__value"><span id="progPct">0</span><small>%</small></p>
+        <p class="progress__hint" id="progHint">今天還沒有排定的約定</p>
       </div>
-      <div class="toolbar__right">
-        <input type="search" id="searchInput" placeholder="搜尋…（/）" aria-label="搜尋待辦事項">
-        <select id="categorySelect" aria-label="依分類篩選">
-          <option value="">所有分類</option>
-        </select>
+      <div class="ring">
+        <svg viewBox="0 0 120 120" aria-hidden="true">
+          <circle class="ring__track" cx="60" cy="60" r="50"></circle>
+          <circle class="ring__bar" id="ringBar" cx="60" cy="60" r="50"></circle>
+        </svg>
+        <span class="ring__label" id="ringLabel">0/0</span>
+      </div>
+    </section>
+
+    <section class="tiles" aria-label="狀態篩選">
+      <button type="button" class="tile" data-filter="all" data-tone="brand">
+        <span class="tile__ico"><svg class="ico"><use href="#i-list"/></svg></span>
+        <span class="tile__num" id="tAll">0</span>
+        <span class="tile__label">全部</span>
+      </button>
+      <button type="button" class="tile" data-filter="today" data-tone="accent">
+        <span class="tile__ico"><svg class="ico"><use href="#i-calendar"/></svg></span>
+        <span class="tile__num" id="tToday">0</span>
+        <span class="tile__label">今天</span>
+      </button>
+      <button type="button" class="tile" data-filter="overdue" data-tone="danger">
+        <span class="tile__ico"><svg class="ico"><use href="#i-alarm"/></svg></span>
+        <span class="tile__num" id="tOver">0</span>
+        <span class="tile__label">逾期</span>
+      </button>
+      <button type="button" class="tile" data-filter="done" data-tone="ok">
+        <span class="tile__ico"><svg class="ico"><use href="#i-done"/></svg></span>
+        <span class="tile__num" id="tDone">0</span>
+        <span class="tile__label">已完成</span>
+      </button>
+    </section>
+
+    <section class="compose">
+      <form id="quickForm" autocomplete="off">
+        <input type="text" id="quickInput" placeholder="今天想跟自己約定什麼？" aria-label="新增待辦事項">
+        <button type="button" class="compose__more" id="detailBtn" title="填寫完整欄位">詳細</button>
+        <button type="submit" class="compose__go" aria-label="新增">
+          <svg class="ico"><use href="#i-plus"/></svg>
+        </button>
+      </form>
+      <details class="syntax">
+        <summary>快速語法</summary>
+        <p>
+          <code>!高</code> <code>!中</code> <code>!低</code> 設定優先度 ·
+          <code>#分類</code> 設定分類 ·
+          <code>@今天</code> <code>@明天</code> <code>@下週</code> <code>@8/15</code> 設定到期日。
+          例如：<em>寫月報 !高 #工作 @明天</em>
+        </p>
+      </details>
+    </section>
+
+    <section class="controls">
+      <div class="search">
+        <svg class="ico"><use href="#i-search"/></svg>
+        <input type="search" id="searchInput" placeholder="搜尋待辦事項…" aria-label="搜尋待辦事項">
+      </div>
+      <label class="select">
         <select id="sortSelect" aria-label="排序方式">
           <option value="manual">自訂順序</option>
           <option value="due">依到期日</option>
           <option value="priority">依優先度</option>
           <option value="created">依建立時間</option>
         </select>
-      </div>
+        <svg class="ico"><use href="#i-chevron"/></svg>
+      </label>
     </section>
 
-    <ul class="list" id="list"></ul>
+    <div class="cats" id="cats" role="group" aria-label="分類篩選"></div>
 
-    <p class="empty" id="empty" hidden></p>
-  </main>
+    <main id="groups" class="groups"></main>
+    <div class="empty" id="empty" hidden></div>
 
-  <dialog id="editDialog" class="dialog">
+    <section class="trail" aria-label="約定足跡">
+      <div class="trail__head">
+        <h2>約定足跡</h2>
+        <button type="button" class="mini-btn" id="shareBtn2">
+          <svg class="ico"><use href="#i-sparkles"/></svg>成果卡
+        </button>
+      </div>
+      <div class="trail__stats">
+        <div class="trail__stat">
+          <span class="trail__ico" data-tone="accent"><svg class="ico"><use href="#i-flame"/></svg></span>
+          <b id="streakNum">0</b>
+          <small>連續達成</small>
+        </div>
+        <div class="trail__stat">
+          <span class="trail__ico" data-tone="ok"><svg class="ico"><use href="#i-shield"/></svg></span>
+          <b id="keepRate">—</b>
+          <small>守約率</small>
+        </div>
+        <div class="trail__stat">
+          <span class="trail__ico" data-tone="brand"><svg class="ico"><use href="#i-check"/></svg></span>
+          <b id="totalDone">0</b>
+          <small>累計完成</small>
+        </div>
+      </div>
+      <div class="heatmap" id="heatmap"></div>
+      <div class="trail__legend">
+        <span>少</span>
+        <i data-lv="0"></i><i data-lv="1"></i><i data-lv="2"></i><i data-lv="3"></i><i data-lv="4"></i>
+        <span>多</span>
+        <em id="trailRange"></em>
+      </div>
+    </section>
+  </div>
+
+  <button type="button" class="fab" id="fabBtn" aria-label="新增待辦事項（詳細）">
+    <svg class="ico"><use href="#i-plus"/></svg>
+  </button>
+
+  <canvas id="confetti" class="confetti" aria-hidden="true"></canvas>
+
+  <dialog id="editDialog" class="sheet">
     <form method="dialog" id="editForm">
-      <h2 id="dialogTitle">新增待辦事項</h2>
+      <div class="sheet__head">
+        <h2 id="dialogTitle">新的約定</h2>
+        <button type="button" class="ghost-btn" id="cancelBtn" aria-label="關閉">
+          <svg class="ico"><use href="#i-close"/></svg>
+        </button>
+      </div>
 
       <label class="field">
-        <span>標題 <em>必填</em></span>
-        <input type="text" name="title" id="fTitle" required maxlength="200">
+        <span>標題</span>
+        <input type="text" name="title" id="fTitle" required maxlength="200" placeholder="例如：寫月報">
       </label>
 
       <label class="field">
         <span>備註</span>
-        <textarea name="note" id="fNote" rows="3" maxlength="2000"></textarea>
+        <textarea name="note" id="fNote" rows="3" maxlength="2000" placeholder="補充說明（選填）"></textarea>
       </label>
 
-      <div class="field-row">
-        <label class="field">
-          <span>到期日</span>
-          <input type="date" name="due" id="fDue">
-        </label>
-        <label class="field">
-          <span>優先度</span>
-          <select name="priority" id="fPriority">
-            <option value="high">高</option>
-            <option value="normal" selected>中</option>
-            <option value="low">低</option>
-          </select>
-        </label>
+      <div class="field">
+        <span>優先度</span>
+        <div class="segmented">
+          <label><input type="radio" name="priority" value="high"><span>高</span></label>
+          <label><input type="radio" name="priority" value="normal" checked><span>中</span></label>
+          <label><input type="radio" name="priority" value="low"><span>低</span></label>
+        </div>
+      </div>
+
+      <div class="field">
+        <span>到期日</span>
+        <input type="date" name="due" id="fDue">
+        <div class="quickdates">
+          <button type="button" data-shift="0">今天</button>
+          <button type="button" data-shift="1">明天</button>
+          <button type="button" data-shift="7">下週</button>
+          <button type="button" data-shift="clear">清除</button>
+        </div>
       </div>
 
       <label class="field">
@@ -111,11 +247,25 @@
         <datalist id="categoryList"></datalist>
       </label>
 
-      <div class="dialog__actions">
-        <button type="button" class="btn" id="cancelBtn">取消</button>
+      <div class="sheet__actions">
+        <button type="button" class="btn" id="cancelBtn2">取消</button>
         <button type="submit" class="btn btn--primary" id="saveBtn">儲存</button>
       </div>
     </form>
+  </dialog>
+
+  <dialog id="shareDialog" class="sheet sheet--share">
+    <div class="sheet__head">
+      <h2>今日成果卡</h2>
+      <button type="button" class="ghost-btn" id="shareClose" aria-label="關閉">
+        <svg class="ico"><use href="#i-close"/></svg>
+      </button>
+    </div>
+    <div class="shareview"><canvas id="shareCanvas" width="1080" height="1350"></canvas></div>
+    <div class="sheet__actions">
+      <button type="button" class="btn" id="shareCopy"><svg class="ico"><use href="#i-link"/></svg>複製圖片</button>
+      <button type="button" class="btn btn--primary" id="shareSave"><svg class="ico"><use href="#i-download"/></svg>下載 PNG</button>
+    </div>
   </dialog>
 
   <input type="file" id="importFile" accept="application/json,.json" hidden>
