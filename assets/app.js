@@ -29,7 +29,7 @@
   const PAGE_SIZE = 20;
 
   let state = { todos: [], history: {} };
-  let prefs = { view: 'today', page: 'all', category: '', sort: 'manual', theme: null, palette: 'cream', collapsed: ['done'], tone: 'savage' };
+  let prefs = { view: 'today', page: 'all', category: '', sort: 'manual', theme: null, palette: 'cream', collapsed: ['done'], tone: 'savage', notify: { on: false, morning: '09:00', evening: '21:00' } };
   let pageIndex = 0;
   let query = '';
   let editingId = null;
@@ -50,7 +50,7 @@
     'shareBtn', 'shareBtn2', 'exportBtn', 'importBtn', 'importFile', 'clearDoneBtn', 'clearAllBtn',
     'fabBtn', 'confetti', 'toast', 'toastText', 'toastAction', 'installBtn',
     'mascot', 'mascotSay', 'creditScore', 'limitFill', 'limitText', 'backfillBtn',
-    'toneBtn', 'toneLabel', 'nagDialog', 'nagText', 'nagMain', 'nagAlt',
+    'toneBtn', 'toneLabel', 'nagDialog', 'nagText', 'nagMain', 'nagAlt', 'notifyBtn', 'notifyLabel',
     'editDialog', 'editForm', 'dialogTitle', 'fTitle', 'fNote', 'fDue', 'fCategory', 'categoryList',
     'cancelBtn', 'cancelBtn2', 'saveBtn',
     'shareDialog', 'shareCanvas', 'shareClose', 'shareCopy', 'shareSave'
@@ -80,6 +80,7 @@
     if (!PAGES.includes(prefs.page)) prefs.page = 'all';
     if (!Array.isArray(prefs.collapsed)) prefs.collapsed = ['done'];
     if (!TONES.includes(prefs.tone)) prefs.tone = 'savage';
+    if (!prefs.notify || typeof prefs.notify !== 'object') prefs.notify = { on: false, morning: '09:00', evening: '21:00' };
     if (!state.credit || typeof state.credit.score !== 'number') {
       state.credit = { score: 70, settledUntil: todayIso(), bankruptAsked: '' };
     }
@@ -92,6 +93,25 @@
       toast('儲存失敗，瀏覽器儲存空間可能已滿。');
       console.error(err);
     }
+    writeNagState();
+  }
+
+  /* Service Worker 讀不到 localStorage，把罵人所需的狀態放進 Cache Storage */
+  function writeNagState() {
+    if (!('caches' in window)) return;
+    const today = todayIso();
+    const overdue = state.todos.filter((t) => !t.done && t.due && t.due < today).length;
+    const todayDue = state.todos.filter((t) => !t.done && t.due === today).length;
+    const n = overdue + todayDue;
+    const pool = (LINES[prefs.tone] || LINES.savage);
+    const lines = [];
+    for (const ctx of ['notif_morning', 'notif_evening']) {
+      for (const raw of (pool[ctx] || [])) lines.push(raw.split('{n}').join(String(n)));
+    }
+    const payload = { enabled: !!prefs.notify.on, overdue, todayDue, lines };
+    caches.open('pinky-state')
+      .then((c) => c.put('./nag-state.json', new Response(JSON.stringify(payload), { headers: { 'Content-Type': 'application/json' } })))
+      .catch(() => {});
   }
 
   function savePrefs() {
@@ -244,43 +264,119 @@
 
   const LINES = {
     savage: {
-      greet_clean: ['喲，帳面乾淨。難得。', '今天還沒欠債。保持，別讓我開口。'],
-      greet_over: ['{n} 筆呆帳掛著。裝死不會讓它消失。', '逾期 {n} 件。你的小指記得，你倒是忘了。', '帳單在這，{n} 筆逾期。先還債再許願。'],
-      greet_todaydue: ['今天 {n} 件到期。話是你自己說的。', '{n} 個約定今天到期。我看著。'],
-      add_over: ['超貸了。你的信用只撐 {limit} 件，這是第 {count} 件。先扣 3 分。', '又借？額度 {limit} 件早就滿了。−3 分，記帳。'],
-      add_debt: ['又許願。你上一筆呆帳「{title}」躺 {days} 天了。', '先還舊債再開新票，這道理要我教？'],
-      resched: ['「{title}」改期第 {n} 次。我都幫你數著。', '延到 {due}。這句話你上次也說過。'],
-      done_ontime: ['說到做到，+{pts}。算你行。', '準時。這才叫約定。+{pts}。'],
-      done_late: ['遲到總比賴帳好。+1，下次準時。'],
-      backfill: ['有做就記，這才像帳。+1。', '沒列在單上也做了？行，記上。+1。'],
-      abandon: ['承認不會做，扣得少。這叫誠實。', '放掉了。比拖著爛掉體面。'],
-      allclear: ['今天的帳清了。你今天配得上這個名字。', '全勾完。少見，多來幾次。']
+      greet_clean: [
+        '喲，帳面乾淨。難得。',
+        '今天還沒欠債。保持，別讓我開口。',
+        '零逾期。今天的你我還算看得順眼。',
+        '帳上沒事。別高興太早，晚點我再來看。',
+        '乾淨的清單。希望不是因為你什麼都沒排。'
+      ],
+      greet_over: [
+        '{n} 筆呆帳掛著。裝死不會讓它消失。',
+        '逾期 {n} 件。你的小指記得，你倒是忘了。',
+        '帳單在這，{n} 筆逾期。先還債再許願。',
+        '那 {n} 件事不會自己完成。我等著，它們也等著。',
+        '{n} 筆逾期。要我唸出來給你聽嗎？',
+        '你知道嗎，利息每天都在扣。{n} 件，現在去處理。'
+      ],
+      greet_todaydue: [
+        '今天 {n} 件到期。話是你自己說的。',
+        '{n} 個約定今天到期。我看著。',
+        '今天的份：{n} 件。太陽下山前搞定。',
+        '{n} 件今天到期。別讓它們變成明天的呆帳。'
+      ],
+      add_over: [
+        '超貸了。你的信用只撐 {limit} 件，這是第 {count} 件。先扣 3 分。',
+        '又借？額度 {limit} 件早就滿了。−3 分，記帳。',
+        '第 {count} 件。你的額度是 {limit}。你在寫許願池嗎？−3。',
+        '收下了，但這是超貸。做不完的清單叫負債，不叫計畫。−3。'
+      ],
+      add_debt: [
+        '又許願。你上一筆呆帳「{title}」躺 {days} 天了。',
+        '先還舊債再開新票，這道理要我教？「{title}」等你 {days} 天了。',
+        '新的來了，舊的呢？「{title}」，{days} 天，你自己看。',
+        '可以。但「{title}」已經臭了 {days} 天，先聞一下。'
+      ],
+      resched: [
+        '「{title}」改期第 {n} 次。我都幫你數著。',
+        '延到 {due}。這句話你上次也說過。',
+        '第 {n} 次了。日曆不是許願池。',
+        '好，{due}。我把你上次說的日期劃掉了，這是第 {n} 條劃痕。'
+      ],
+      done_ontime: [
+        '說到做到，+{pts}。算你行。',
+        '準時。這才叫約定。+{pts}。',
+        '勾下去的聲音真好聽。+{pts}。',
+        '有欠有還，+{pts}。繼續。',
+        '這勾打得漂亮。+{pts}。',
+        '看吧，做得到嘛。+{pts}。'
+      ],
+      done_late: [
+        '遲到總比賴帳好。+1，下次準時。',
+        '晚了，但清了。+1。別讓我習慣等你。',
+        '補交作業。+1。準時的話是 2 分，自己算。'
+      ],
+      backfill: [
+        '有做就記，這才像帳。+1。',
+        '沒列在單上也做了？行，記上。+1。',
+        '偷偷做事不留紀錄，虧的是你自己的守約率。+1。',
+        '這筆入帳。做了就該算數。+1。'
+      ],
+      abandon: [
+        '承認不會做，扣得少。這叫誠實。',
+        '放掉了。比拖著爛掉體面。',
+        '好，這筆銷帳。誠實面對比較不痛，對吧。'
+      ],
+      allclear: [
+        '今天的帳清了。你今天配得上這個名字。',
+        '全勾完。少見，多來幾次。',
+        '帳面歸零。今天的你，我沒話講。',
+        '清空了。好好休息，明天繼續打勾。'
+      ],
+      notif_morning: [
+        '早。今天 {n} 件等著，先別滑手機。',
+        '起床了就來對帳：{n} 件掛著。',
+        '早安。你的約定比你先醒，{n} 件。',
+        '新的一天，舊的債。{n} 件，開工。',
+        '鬧鐘響第二次了吧。{n} 件事在等，去。'
+      ],
+      notif_evening: [
+        '今天還剩 {n} 件沒勾。睡前想清楚怎麼交代。',
+        '晚上好。{n} 筆帳還開著，要帶進夢裡嗎？',
+        '一天要結束了，{n} 件沒動。明天的你會罵今天的你。',
+        '還有 {n} 件。現在做一件，都比明天做兩件划算。',
+        '睡前結帳：{n} 件未清。你知道該怎麼做。'
+      ]
     },
     coach: {
-      greet_clean: ['帳面乾淨，今天照計畫走。', '沒有逾期，狀態不錯。'],
-      greet_over: ['有 {n} 件逾期，先處理它們再開新的。', '{n} 筆逾期在累積利息，優先清掉。'],
-      greet_todaydue: ['今天 {n} 件到期，逐一擊破。'],
-      add_over: ['超過額度了（{limit} 件）。建議先完成或放棄舊項目。−3 分。'],
-      add_debt: ['提醒：「{title}」已擱置 {days} 天，先處理它更好。'],
-      resched: ['「{title}」第 {n} 次改期。想一下是不是拆小一點。'],
-      done_ontime: ['準時完成，+{pts}。'],
+      greet_clean: ['帳面乾淨，今天照計畫走。', '沒有逾期，狀態不錯。', '零負債開局，保持節奏。'],
+      greet_over: ['有 {n} 件逾期，先處理它們再開新的。', '{n} 筆逾期在累積利息，優先清掉。', '先清 {n} 件舊帳，今天會順很多。'],
+      greet_todaydue: ['今天 {n} 件到期，逐一擊破。', '{n} 件今日到期，從最難的開始。'],
+      add_over: ['超過額度了（{limit} 件）。建議先完成或放棄舊項目。−3 分。', '第 {count} 件超出負荷，清單短一點反而做得完。−3。'],
+      add_debt: ['提醒：「{title}」已擱置 {days} 天，先處理它更好。', '新任務收到。「{title}」等了 {days} 天，別忘了它。'],
+      resched: ['「{title}」第 {n} 次改期。想一下是不是拆小一點。', '延到 {due}。第 {n} 次了，考慮調整範圍。'],
+      done_ontime: ['準時完成，+{pts}。', '如期達成，+{pts}。這就是節奏。'],
       done_late: ['補上了，+1。下次抓前一點的時間。'],
-      backfill: ['已補記，+1。有做的事都該被算進來。'],
+      backfill: ['已補記，+1。有做的事都該被算進來。', '入帳，+1。紀錄完整才看得見真實產出。'],
       abandon: ['放棄也是決策。清單乾淨了。'],
-      allclear: ['今日全數達成，漂亮。']
+      allclear: ['今日全數達成，漂亮。', '今天結清，明天見。'],
+      notif_morning: ['早安，今天 {n} 件。先挑一件最重要的開始。', '開工提醒：{n} 件待處理。'],
+      notif_evening: ['今天還有 {n} 件未完成。收個尾或誠實改期。', '睡前檢查：{n} 件未勾。']
     },
     soft: {
-      greet_clean: ['今天沒有欠著的事，安心開始吧。'],
-      greet_over: ['有 {n} 件過期的小約定在等你，慢慢來。'],
+      greet_clean: ['今天沒有欠著的事，安心開始吧。', '帳面乾乾淨淨，today is a good day。'],
+      greet_over: ['有 {n} 件過期的小約定在等你，慢慢來。', '{n} 件事等久了，挑一件開始就好。'],
       greet_todaydue: ['今天有 {n} 件到期，一件一件來就好。'],
       add_over: ['手上的約定有點多了（額度 {limit} 件），要不要先收個尾？'],
       add_debt: ['「{title}」等你 {days} 天了，別忘了它。'],
       resched: ['「{title}」再延一次沒關係，記得回來。'],
-      done_ontime: ['做到了，+{pts}，給自己一點掌聲。'],
+      done_ontime: ['做到了，+{pts}，給自己一點掌聲。', '完成了呢，+{pts}。'],
       done_late: ['雖然晚了，還是做完了，+1。'],
       backfill: ['把做過的事記下來，+1。'],
       abandon: ['放下也是一種整理。'],
-      allclear: ['今天的約定都完成了，好好休息。']
+      allclear: ['今天的約定都完成了，好好休息。'],
+      notif_morning: ['早安，今天有 {n} 件小約定，加油。'],
+      notif_evening: ['還有 {n} 件沒完成，做一件也很棒。']
     }
   };
 
@@ -1254,6 +1350,95 @@
     }
   }
 
+  /* ---------- 推播罵人（無後端版）----------
+     真推播需要伺服器；這裡做三層：
+     1. 頁面開著（含背景分頁）時，早晚各追討一次
+     2. Android 裝到主畫面後，periodicSync 背景喚醒（盡力而為）
+     3. 每次打開 App 補追一次當天還沒發的  */
+
+  const NOTIFIED_KEY = 'pinky/notified';
+
+  function notifiedToday() {
+    try {
+      const d = JSON.parse(localStorage.getItem(NOTIFIED_KEY) || '{}');
+      return d.date === todayIso() ? d.keys || [] : [];
+    } catch (err) { return []; }
+  }
+
+  function markNotified(key) {
+    const keys = notifiedToday();
+    keys.push(key);
+    try { localStorage.setItem(NOTIFIED_KEY, JSON.stringify({ date: todayIso(), keys })); } catch (err) { /* 忽略 */ }
+  }
+
+  function showNag(body) {
+    const opts = { body, icon: 'icons/icon-192-any.png', badge: 'icons/icon-192.png', tag: 'pinky-nag' };
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready
+        .then((reg) => reg.showNotification('打勾勾', opts))
+        .catch(() => { try { new Notification('打勾勾', opts); } catch (err) { /* 忽略 */ } });
+    } else {
+      try { new Notification('打勾勾', opts); } catch (err) { /* 忽略 */ }
+    }
+  }
+
+  function maybeNotify() {
+    if (!prefs.notify.on) return;
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    const today = todayIso();
+    const overdue = state.todos.filter((t) => !t.done && t.due && t.due < today).length;
+    const todayDue = state.todos.filter((t) => !t.done && t.due === today).length;
+    const n = overdue + todayDue;
+    if (!n) return;
+    const now = new Date();
+    const hm = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+    const fired = notifiedToday();
+    const slots = [['morning', prefs.notify.morning, 'notif_morning'], ['evening', prefs.notify.evening, 'notif_evening']];
+    for (const [key, time, ctx] of slots) {
+      if (hm >= time && !fired.includes(key)) {
+        showNag(say(ctx, { n }));
+        markNotified(key);
+        break;
+      }
+    }
+  }
+
+  async function toggleNotify() {
+    if (!('Notification' in window)) { toast('這個瀏覽器不支援通知。'); return; }
+    if (prefs.notify.on) {
+      prefs.notify.on = false;
+      savePrefs();
+      writeNagState();
+      renderNotifyLabel();
+      toast('提醒已關閉。想被罵再回來開。');
+      return;
+    }
+    let perm = Notification.permission;
+    if (perm === 'default') perm = await Notification.requestPermission();
+    if (perm !== 'granted') {
+      toast(perm === 'denied' ? '通知被封鎖了。要開請到瀏覽器設定解除。' : '沒拿到通知權限。');
+      return;
+    }
+    prefs.notify.on = true;
+    savePrefs();
+    writeNagState();
+    renderNotifyLabel();
+    showNag(prefs.tone === 'savage' ? '勾勾上工了。早上 9 點、晚上 9 點，有帳必追。' : '提醒已開啟：早上 9 點與晚上 9 點。');
+    toast('提醒已開啟（早 9 點／晚 9 點，有未完成才會通知）。');
+
+    // Android 裝到主畫面後的背景喚醒（其他平台會靜默失敗，無妨）
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      if ('periodicSync' in reg) {
+        await reg.periodicSync.register('pinky-nag', { minInterval: 6 * 60 * 60 * 1000 });
+      }
+    } catch (err) { /* 不支援就算了 */ }
+  }
+
+  function renderNotifyLabel() {
+    el.notifyLabel.textContent = '提醒：' + (prefs.notify.on ? '開' : '關');
+  }
+
   /* ---------- 對話框 ---------- */
 
   function openDialog(id, backfill) {
@@ -1507,10 +1692,13 @@
     el.fabBtn.addEventListener('click', () => openDialog(null));
     el.backfillBtn.addEventListener('click', () => openDialog(null, true));
 
+    el.notifyBtn.addEventListener('click', toggleNotify);
+
     el.toneBtn.addEventListener('click', () => {
       prefs.tone = TONES[(TONES.indexOf(prefs.tone) + 1) % TONES.length];
       savePrefs();
       el.toneLabel.textContent = '語氣：' + TONE_LABEL[prefs.tone];
+      writeNagState();
       renderCredit();
       toast(prefs.tone === 'savage' ? '毒舌模式。自己選的。' : prefs.tone === 'coach' ? '教練模式。' : '溫柔模式。');
     });
@@ -1613,6 +1801,7 @@
     setInterval(() => {
       const now = todayIso();
       if (now !== lastDay) { lastDay = now; settleCredit(); render(); maybeBankrupt(); }
+      maybeNotify();
     }, 60000);
 
     window.addEventListener('storage', (e) => {
@@ -1681,8 +1870,10 @@
   setupDragAndDrop();
   setupPwa();
   el.toneLabel.textContent = '語氣：' + TONE_LABEL[prefs.tone];
+  renderNotifyLabel();
   render();
   maybeBankrupt();
+  setTimeout(maybeNotify, 1500);
 
   // 主畫面捷徑：?action=new / ?action=share
   const action = new URLSearchParams(location.search).get('action');
