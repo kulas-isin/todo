@@ -24,7 +24,7 @@
   const HEAT_WEEKS = 17;
 
   let state = { todos: [], history: {} };
-  let prefs = { filter: 'all', category: '', sort: 'manual', theme: null, palette: 'cream', collapsed: ['done'] };
+  let prefs = { filter: 'all', category: '', sort: 'manual', theme: null, palette: 'cream', collapsed: ['done'], density: 'cozy' };
   let query = '';
   let editingId = null;
   let undoSnapshot = null;
@@ -40,7 +40,7 @@
     'quickForm', 'quickInput', 'detailBtn', 'searchInput', 'sortSelect',
     'paletteBtn', 'palettePanel', 'themeBtn', 'moreBtn', 'morePanel',
     'shareBtn', 'shareBtn2', 'exportBtn', 'importBtn', 'importFile', 'clearDoneBtn', 'clearAllBtn',
-    'fabBtn', 'confetti', 'toast', 'toastText', 'toastAction', 'installBtn',
+    'fabBtn', 'confetti', 'toast', 'toastText', 'toastAction', 'installBtn', 'densityBtn', 'densityLabel',
     'editDialog', 'editForm', 'dialogTitle', 'fTitle', 'fNote', 'fDue', 'fCategory', 'categoryList',
     'cancelBtn', 'cancelBtn2', 'saveBtn',
     'shareDialog', 'shareCanvas', 'shareClose', 'shareCopy', 'shareSave'
@@ -67,6 +67,7 @@
     if (!PALETTES.includes(prefs.palette)) prefs.palette = 'cream';
     if (!['all', 'today', 'overdue', 'done'].includes(prefs.filter)) prefs.filter = 'all';
     if (!Array.isArray(prefs.collapsed)) prefs.collapsed = ['done'];
+    if (!['cozy', 'compact'].includes(prefs.density)) prefs.density = 'cozy';
   }
 
   function save() {
@@ -1050,6 +1051,8 @@
   function applyAppearance() {
     const root = document.documentElement;
     root.dataset.palette = prefs.palette;
+    root.dataset.density = prefs.density;
+    el.densityLabel.textContent = prefs.density === 'compact' ? '改回舒適模式' : '切換精簡模式';
     const dark = prefs.theme
       ? prefs.theme === 'dark'
       : window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -1170,6 +1173,13 @@
       applyAppearance();
     });
 
+    el.densityBtn.addEventListener('click', () => {
+      prefs.density = prefs.density === 'compact' ? 'cozy' : 'compact';
+      savePrefs();
+      applyAppearance();
+      toast(prefs.density === 'compact' ? '已切換到精簡模式，一列一件事。' : '已改回舒適模式。');
+    });
+
     el.paletteBtn.addEventListener('click', (e) => { e.stopPropagation(); togglePop(el.paletteBtn, el.palettePanel); });
     el.moreBtn.addEventListener('click', (e) => { e.stopPropagation(); togglePop(el.moreBtn, el.morePanel); });
     el.palettePanel.addEventListener('click', (e) => {
@@ -1217,6 +1227,7 @@
       else if (k === 't') { el.themeBtn.click(); }
       else if (k === 'p') { prefs.palette = PALETTES[(PALETTES.indexOf(prefs.palette) + 1) % PALETTES.length]; savePrefs(); applyAppearance(); }
       else if (k === 's') { openShare(); }
+      else if (k === 'd') { el.densityBtn.click(); }
     });
 
     let lastDay = todayIso();
