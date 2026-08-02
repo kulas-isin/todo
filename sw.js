@@ -2,12 +2,12 @@
    應用外殼採快取優先（背景更新），導覽請求採網路優先（離線時回落到快取）。
    改動任何被預先快取的檔案時，請把 VERSION 加一。 */
 
-const VERSION = 'pinky-v4';
+const VERSION = 'pinky-v5';
 const ASSETS = [
   './',
   './index.html',
-  './assets/styles.css?v=4',
-  './assets/app.js?v=4',
+  './assets/styles.css?v=5',
+  './assets/app.js?v=5',
   './manifest.webmanifest',
   './icons/icon-192-any.png',
   './icons/icon-512-any.png',

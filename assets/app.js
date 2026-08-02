@@ -22,9 +22,13 @@
   };
   const CHEERS = ['約定達成', '說到做到', '又守住一個約定', '漂亮，繼續保持', '這一勾，值得'];
   const HEAT_WEEKS = 17;
+  const VIEWS = ['today', 'list', 'trail'];
+  const PAGES = ['all'].concat(GROUP_ORDER);
+  const PAGE_SIZE = 20;
 
   let state = { todos: [], history: {} };
-  let prefs = { filter: 'all', category: '', sort: 'manual', theme: null, palette: 'cream', collapsed: ['done'], density: 'cozy' };
+  let prefs = { view: 'today', page: 'all', category: '', sort: 'manual', theme: null, palette: 'cream', collapsed: ['done'] };
+  let pageIndex = 0;
   let query = '';
   let editingId = null;
   let undoSnapshot = null;
@@ -35,12 +39,13 @@
   const el = {};
   [
     'dateLine', 'greeting', 'heroSub', 'progPct', 'progHint', 'ringBar', 'ringLabel',
-    'tAll', 'tToday', 'tOver', 'tDone', 'cats', 'groups', 'empty',
+    'tAll', 'tToday', 'tOver', 'tDone', 'cats', 'groups', 'empty', 'tabs', 'pager',
+    'nav', 'navDot', 'viewToday', 'viewList', 'viewTrail', 'todayList', 'todayEmpty',
     'streakNum', 'keepRate', 'totalDone', 'heatmap', 'trailRange',
     'quickForm', 'quickInput', 'detailBtn', 'searchInput', 'sortSelect',
     'paletteBtn', 'palettePanel', 'themeBtn', 'moreBtn', 'morePanel',
     'shareBtn', 'shareBtn2', 'exportBtn', 'importBtn', 'importFile', 'clearDoneBtn', 'clearAllBtn',
-    'fabBtn', 'confetti', 'toast', 'toastText', 'toastAction', 'installBtn', 'densityBtn', 'densityLabel',
+    'fabBtn', 'confetti', 'toast', 'toastText', 'toastAction', 'installBtn',
     'editDialog', 'editForm', 'dialogTitle', 'fTitle', 'fNote', 'fDue', 'fCategory', 'categoryList',
     'cancelBtn', 'cancelBtn2', 'saveBtn',
     'shareDialog', 'shareCanvas', 'shareClose', 'shareCopy', 'shareSave'
@@ -65,9 +70,9 @@
     } catch (err) { /* 用預設值 */ }
 
     if (!PALETTES.includes(prefs.palette)) prefs.palette = 'cream';
-    if (!['all', 'today', 'overdue', 'done'].includes(prefs.filter)) prefs.filter = 'all';
+    if (!VIEWS.includes(prefs.view)) prefs.view = 'today';
+    if (!PAGES.includes(prefs.page)) prefs.page = 'all';
     if (!Array.isArray(prefs.collapsed)) prefs.collapsed = ['done'];
-    if (!['cozy', 'compact'].includes(prefs.density)) prefs.density = 'cozy';
   }
 
   function save() {
@@ -224,7 +229,7 @@
     const todo = normalize(Object.assign({ createdAt: Date.now() }, fields));
     if (!todo || !todo.title) return null;
     state.todos.unshift(todo);
-    if (prefs.filter === 'done') { prefs.filter = 'all'; savePrefs(); }
+    if (prefs.page === 'done') { prefs.page = 'all'; savePrefs(); }
     save();
     render();
     return todo;
@@ -247,7 +252,7 @@
     save();
 
     if (t.done) {
-      const node = el.groups.querySelector(`[data-id="${CSS.escape(id)}"]`);
+      const node = document.querySelector(`.task[data-id="${CSS.escape(id)}"]`);
       if (node) {
         node.classList.add('just-done');
         const r = node.getBoundingClientRect();
@@ -290,9 +295,7 @@
     const today = todayIso();
     const q = query.trim().toLowerCase();
     let list = state.todos.filter((t) => {
-      if (prefs.filter === 'today' && (t.done || t.due !== today)) return false;
-      if (prefs.filter === 'overdue' && (t.done || !t.due || t.due >= today)) return false;
-      if (prefs.filter === 'done' && !t.done) return false;
+      if (prefs.page !== 'all' && groupOf(t) !== prefs.page) return false;
       if (prefs.category && t.category !== prefs.category) return false;
       if (q && !`${t.title} ${t.note} ${t.category}`.toLowerCase().includes(q)) return false;
       return true;
@@ -331,13 +334,136 @@
   /* ---------- 繪製 ---------- */
 
   function render() {
+    applyView();
     renderHero();
     renderProgress();
     renderTiles();
+    renderTodayList();
     renderCategories();
+    renderTabs();
     renderList();
     renderTrail();
     el.sortSelect.value = prefs.sort;
+  }
+
+  function applyView() {
+    el.viewToday.hidden = prefs.view !== 'today';
+    el.viewList.hidden = prefs.view !== 'list';
+    el.viewTrail.hidden = prefs.view !== 'trail';
+    el.nav.querySelectorAll('.nav__btn').forEach((b) => {
+      const on = b.dataset.view === prefs.view;
+      b.classList.toggle('is-on', on);
+      b.setAttribute('aria-selected', String(on));
+    });
+    const today = todayIso();
+    el.navDot.hidden = state.todos.filter((t) => !t.done && t.due && t.due <= today).length === 0;
+  }
+
+  function goto(view, page) {
+    prefs.view = view;
+    if (page) prefs.page = page;
+    pageIndex = 0;
+    savePrefs();
+    render();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* 今天頁只顯示逾期與今天 */
+  function renderTodayList() {
+    const today = todayIso();
+    const items = state.todos.filter((t) => !t.done && t.due && t.due <= today);
+    el.todayList.textContent = '';
+    if (!items.length) {
+      el.todayEmpty.hidden = false;
+      el.todayEmpty.textContent = '';
+      const mark = document.createElement('strong');
+      mark.appendChild(icon(state.todos.length ? '#i-sparkles' : '#i-inbox'));
+      el.todayEmpty.appendChild(mark);
+      el.todayEmpty.append(state.todos.length ? '今天沒有待辦的約定，輕鬆一下。' : '還沒有任何約定，從上面寫下第一個吧。');
+      return;
+    }
+    el.todayEmpty.hidden = true;
+    const buckets = new Map();
+    for (const t of items) {
+      const g = groupOf(t);
+      if (!buckets.has(g)) buckets.set(g, []);
+      buckets.get(g).push(t);
+    }
+    const frag = document.createDocumentFragment();
+    for (const key of ['overdue', 'today']) {
+      const list = buckets.get(key);
+      if (list && list.length) frag.appendChild(buildGroup(key, list));
+    }
+    el.todayList.appendChild(frag);
+  }
+
+  /* 清單頁的日期分頁列 */
+  function renderTabs() {
+    const q = query.trim().toLowerCase();
+    const scope = state.todos.filter((t) => {
+      if (prefs.category && t.category !== prefs.category) return false;
+      if (q && !`${t.title} ${t.note} ${t.category}`.toLowerCase().includes(q)) return false;
+      return true;
+    });
+    const counts = {};
+    for (const t of scope) {
+      const g = groupOf(t);
+      counts[g] = (counts[g] || 0) + 1;
+    }
+    if (prefs.page !== 'all' && !counts[prefs.page]) { prefs.page = 'all'; savePrefs(); }
+
+    el.tabs.textContent = '';
+    el.tabs.appendChild(tabBtn('all', '全部', scope.length));
+    for (const key of GROUP_ORDER) {
+      if (counts[key]) el.tabs.appendChild(tabBtn(key, GROUP_LABEL[key], counts[key]));
+    }
+  }
+
+  function tabBtn(page, label, count) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = `tab tab--${page}` + (prefs.page === page ? ' is-on' : '');
+    b.setAttribute('role', 'tab');
+    b.setAttribute('aria-selected', String(prefs.page === page));
+    b.append(label);
+    const n = document.createElement('span');
+    n.className = 'tab__n';
+    n.textContent = count;
+    b.appendChild(n);
+    b.addEventListener('click', () => {
+      prefs.page = page;
+      pageIndex = 0;
+      savePrefs();
+      render();
+    });
+    return b;
+  }
+
+  function renderPager(total) {
+    const pages = Math.ceil(total / PAGE_SIZE);
+    el.pager.textContent = '';
+    if (pages <= 1) { el.pager.hidden = true; return; }
+    el.pager.hidden = false;
+
+    const step = (delta, label, cls, disabled) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = cls;
+      b.disabled = disabled;
+      if (cls === 'prev') b.appendChild(icon('#i-chevron'));
+      b.append(label);
+      if (cls === 'next') b.appendChild(icon('#i-chevron'));
+      b.addEventListener('click', () => {
+        pageIndex = Math.min(Math.max(0, pageIndex + delta), pages - 1);
+        render();
+        el.tabs.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      return b;
+    };
+    const at = document.createElement('span');
+    at.className = 'pager__at';
+    at.textContent = `${pageIndex + 1} / ${pages}`;
+    el.pager.append(step(-1, '上一頁', 'prev', pageIndex === 0), at, step(1, '下一頁', 'next', pageIndex >= pages - 1));
   }
 
   function renderHero() {
@@ -399,9 +525,7 @@
     el.tDone.textContent = done;
 
     document.querySelectorAll('.tile').forEach((btn) => {
-      const on = btn.dataset.filter === prefs.filter;
-      btn.classList.toggle('is-on', on);
-      btn.setAttribute('aria-pressed', String(on));
+      btn.classList.toggle('is-on', prefs.view === 'list' && btn.dataset.page === prefs.page);
     });
   }
 
@@ -431,6 +555,7 @@
     b.setAttribute('aria-pressed', String(prefs.category === value));
     b.addEventListener('click', () => {
       prefs.category = prefs.category === value ? '' : value;
+      pageIndex = 0;
       savePrefs();
       render();
     });
@@ -438,7 +563,11 @@
   }
 
   function renderList() {
-    const items = visibleTodos();
+    const all = visibleTodos();
+    const pages = Math.max(1, Math.ceil(all.length / PAGE_SIZE));
+    if (pageIndex > pages - 1) pageIndex = pages - 1;
+    const items = all.slice(pageIndex * PAGE_SIZE, (pageIndex + 1) * PAGE_SIZE);
+    renderPager(all.length);
     el.groups.textContent = '';
 
     if (!items.length) {
@@ -465,10 +594,22 @@
     }
 
     const frag = document.createDocumentFragment();
-    for (const key of GROUP_ORDER) {
-      const list = buckets.get(key);
-      if (!list || !list.length) continue;
-      frag.appendChild(buildGroup(key, list));
+    if (prefs.page !== 'all') {
+      // 已由分頁列指明是哪一組，不再重複標題
+      const ul = document.createElement('ul');
+      ul.className = 'list';
+      items.forEach((t, i) => {
+        const li = buildTask(t);
+        li.style.animationDelay = `${Math.min(i, 8) * 25}ms`;
+        ul.appendChild(li);
+      });
+      frag.appendChild(ul);
+    } else {
+      for (const key of GROUP_ORDER) {
+        const list = buckets.get(key);
+        if (!list || !list.length) continue;
+        frag.appendChild(buildGroup(key, list));
+      }
     }
     el.groups.appendChild(frag);
   }
@@ -905,7 +1046,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `打勾勾-${todayIso()}.png`;
+      a.download = `pinky-${todayIso()}.png`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -977,7 +1118,7 @@
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `打勾勾備份-${todayIso()}.json`;
+    a.download = `pinky-backup-${todayIso()}.json`;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -1051,8 +1192,6 @@
   function applyAppearance() {
     const root = document.documentElement;
     root.dataset.palette = prefs.palette;
-    root.dataset.density = prefs.density;
-    el.densityLabel.textContent = prefs.density === 'compact' ? '改回舒適模式' : '切換精簡模式';
     const dark = prefs.theme
       ? prefs.theme === 'dark'
       : window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -1144,15 +1283,16 @@
     el.fabBtn.addEventListener('click', () => openDialog(null));
 
     document.querySelectorAll('.tile').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        prefs.filter = prefs.filter === btn.dataset.filter && btn.dataset.filter !== 'all' ? 'all' : btn.dataset.filter;
-        savePrefs();
-        render();
-      });
+      btn.addEventListener('click', () => goto('list', btn.dataset.page));
     });
 
-    el.searchInput.addEventListener('input', () => { query = el.searchInput.value; renderList(); });
-    el.sortSelect.addEventListener('change', () => { prefs.sort = el.sortSelect.value; savePrefs(); render(); });
+    el.nav.addEventListener('click', (e) => {
+      const b = e.target.closest('.nav__btn');
+      if (b) goto(b.dataset.view);
+    });
+
+    el.searchInput.addEventListener('input', () => { query = el.searchInput.value; pageIndex = 0; renderTabs(); renderList(); });
+    el.sortSelect.addEventListener('change', () => { prefs.sort = el.sortSelect.value; pageIndex = 0; savePrefs(); render(); });
 
     el.editForm.addEventListener('submit', submitDialog);
     [el.cancelBtn, el.cancelBtn2].forEach((b) => b.addEventListener('click', () => {
@@ -1171,13 +1311,6 @@
       prefs.theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
       savePrefs();
       applyAppearance();
-    });
-
-    el.densityBtn.addEventListener('click', () => {
-      prefs.density = prefs.density === 'compact' ? 'cozy' : 'compact';
-      savePrefs();
-      applyAppearance();
-      toast(prefs.density === 'compact' ? '已切換到精簡模式，一列一件事。' : '已改回舒適模式。');
     });
 
     el.paletteBtn.addEventListener('click', (e) => { e.stopPropagation(); togglePop(el.paletteBtn, el.palettePanel); });
@@ -1227,7 +1360,9 @@
       else if (k === 't') { el.themeBtn.click(); }
       else if (k === 'p') { prefs.palette = PALETTES[(PALETTES.indexOf(prefs.palette) + 1) % PALETTES.length]; savePrefs(); applyAppearance(); }
       else if (k === 's') { openShare(); }
-      else if (k === 'd') { el.densityBtn.click(); }
+      else if (k === '1') { goto('today'); }
+      else if (k === '2') { goto('list'); }
+      else if (k === '3') { goto('trail'); }
     });
 
     let lastDay = todayIso();
@@ -1305,6 +1440,7 @@
   // 主畫面捷徑：?action=new / ?action=share
   const action = new URLSearchParams(location.search).get('action');
   if (action === 'new') openDialog(null);
+  else if (action === 'list') goto('list');
   else if (action === 'share') openShare();
   if (action) history.replaceState(null, '', location.pathname);
 })();
