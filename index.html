@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="專屬個人的待辦清單網頁應用，資料儲存在自己的瀏覽器。">
+  <meta name="theme-color" content="#111827">
+  <title>我的待辦清單</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✅</text></svg>">
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#list">跳到清單</a>
+
+  <header class="topbar">
+    <div class="topbar__inner">
+      <h1 class="brand"><span aria-hidden="true">✅</span> 我的待辦清單</h1>
+      <div class="topbar__actions">
+        <button type="button" id="themeBtn" class="icon-btn" title="切換淺色／深色（T）" aria-label="切換淺色或深色主題">
+          <span id="themeIcon" aria-hidden="true">🌙</span>
+        </button>
+        <div class="menu">
+          <button type="button" id="moreBtn" class="icon-btn" aria-haspopup="true" aria-expanded="false" aria-label="更多功能">⋯</button>
+          <div class="menu__panel" id="morePanel" role="menu" hidden>
+            <button type="button" role="menuitem" id="exportBtn">匯出備份 (JSON)</button>
+            <button type="button" role="menuitem" id="importBtn">匯入備份</button>
+            <button type="button" role="menuitem" id="clearDoneBtn">清除已完成項目</button>
+            <button type="button" role="menuitem" id="clearAllBtn" class="danger">刪除全部資料</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="stats" aria-label="統計">
+      <div class="stat"><span class="stat__num" id="statActive">0</span><span class="stat__label">待完成</span></div>
+      <div class="stat"><span class="stat__num" id="statToday">0</span><span class="stat__label">今天到期</span></div>
+      <div class="stat stat--warn"><span class="stat__num" id="statOverdue">0</span><span class="stat__label">已逾期</span></div>
+      <div class="stat"><span class="stat__num" id="statDone">0</span><span class="stat__label">已完成</span></div>
+    </section>
+
+    <section class="quickadd">
+      <form id="quickForm" autocomplete="off">
+        <input type="text" id="quickInput" placeholder="要做什麼？按 Enter 新增（按 N 快速聚焦）" aria-label="新增待辦事項">
+        <button type="submit" class="btn btn--primary">新增</button>
+        <button type="button" class="btn" id="detailBtn" title="填寫完整欄位">詳細…</button>
+      </form>
+      <p class="hint">小技巧：輸入 <code>!高</code>／<code>!中</code>／<code>!低</code> 設定優先度、<code>#分類</code> 設定分類、<code>@今天</code>／<code>@明天</code>／<code>@2026-08-15</code> 設定到期日。</p>
+    </section>
+
+    <section class="toolbar" aria-label="篩選與排序">
+      <div class="filters" role="tablist" aria-label="狀態篩選">
+        <button type="button" role="tab" class="chip is-active" data-filter="all">全部</button>
+        <button type="button" role="tab" class="chip" data-filter="active">未完成</button>
+        <button type="button" role="tab" class="chip" data-filter="today">今天</button>
+        <button type="button" role="tab" class="chip" data-filter="overdue">逾期</button>
+        <button type="button" role="tab" class="chip" data-filter="done">已完成</button>
+      </div>
+      <div class="toolbar__right">
+        <input type="search" id="searchInput" placeholder="搜尋…（/）" aria-label="搜尋待辦事項">
+        <select id="categorySelect" aria-label="依分類篩選">
+          <option value="">所有分類</option>
+        </select>
+        <select id="sortSelect" aria-label="排序方式">
+          <option value="manual">自訂順序</option>
+          <option value="due">依到期日</option>
+          <option value="priority">依優先度</option>
+          <option value="created">依建立時間</option>
+        </select>
+      </div>
+    </section>
+
+    <ul class="list" id="list"></ul>
+
+    <p class="empty" id="empty" hidden></p>
+  </main>
+
+  <dialog id="editDialog" class="dialog">
+    <form method="dialog" id="editForm">
+      <h2 id="dialogTitle">新增待辦事項</h2>
+
+      <label class="field">
+        <span>標題 <em>必填</em></span>
+        <input type="text" name="title" id="fTitle" required maxlength="200">
+      </label>
+
+      <label class="field">
+        <span>備註</span>
+        <textarea name="note" id="fNote" rows="3" maxlength="2000"></textarea>
+      </label>
+
+      <div class="field-row">
+        <label class="field">
+          <span>到期日</span>
+          <input type="date" name="due" id="fDue">
+        </label>
+        <label class="field">
+          <span>優先度</span>
+          <select name="priority" id="fPriority">
+            <option value="high">高</option>
+            <option value="normal" selected>中</option>
+            <option value="low">低</option>
+          </select>
+        </label>
+      </div>
+
+      <label class="field">
+        <span>分類</span>
+        <input type="text" name="category" id="fCategory" list="categoryList" maxlength="30" placeholder="例如：工作、家事、學習">
+        <datalist id="categoryList"></datalist>
+      </label>
+
+      <div class="dialog__actions">
+        <button type="button" class="btn" id="cancelBtn">取消</button>
+        <button type="submit" class="btn btn--primary" id="saveBtn">儲存</button>
+      </div>
+    </form>
+  </dialog>
+
+  <input type="file" id="importFile" accept="application/json,.json" hidden>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden>
+    <span id="toastText"></span>
+    <button type="button" id="toastAction" class="toast__action" hidden>復原</button>
+  </div>
+
+  <script src="assets/app.js"></script>
+</body>
+</html>
