@@ -29,7 +29,7 @@
   const PAGE_SIZE = 20;
 
   let state = { todos: [], history: {} };
-  let prefs = { view: 'today', page: 'all', category: '', sort: 'manual', theme: null, palette: 'cream', collapsed: ['done'], tone: 'savage', notify: { on: false, morning: '09:00', evening: '21:00' }, voice: false };
+  let prefs = { view: 'today', page: 'all', category: '', sort: 'manual', theme: null, palette: 'cream', collapsed: ['done'], tone: 'savage', notify: { on: false, morning: '09:00', evening: '21:00' }, voice: false, sound: true };
   let pageIndex = 0;
   let query = '';
   let editingId = null;
@@ -51,7 +51,7 @@
     'fabBtn', 'confetti', 'toast', 'toastText', 'toastAction', 'installBtn',
     'mascot', 'mascotSay', 'creditScore', 'limitFill', 'limitText', 'backfillBtn',
     'toneBtn', 'toneLabel', 'nagDialog', 'nagText', 'nagMain', 'nagAlt', 'notifyBtn', 'notifyLabel', 'testNagBtn',
-    'voiceBtn', 'voiceLabel', 'spinBtn', 'focusBtn', 'spinDialog', 'spinClose', 'slot', 'slotText', 'spinSay', 'spinAgain', 'spinGo',
+    'voiceBtn', 'voiceLabel', 'soundBtn', 'soundLabel', 'spinBtn', 'focusBtn', 'spinDialog', 'spinClose', 'slot', 'slotText', 'spinSay', 'spinAgain', 'spinGo',
     'focusBar', 'focusTask', 'focusTime', 'focusQuit', 'shareTitle',
     'editDialog', 'editForm', 'dialogTitle', 'fTitle', 'fNote', 'fDue', 'fCategory', 'categoryList',
     'cancelBtn', 'cancelBtn2', 'saveBtn',
@@ -390,6 +390,12 @@
         '早。咖啡可以慢慢喝，{n} 件事不能慢慢拖。',
         '日出而作。{n} 件，字面意思。'
       ],
+      poke1: ['幹嘛。', '戳我也不會幫你做事。', '有事？沒事去打勾。'],
+      poke2: ['再戳啊。', '我在記帳，你在戳我。', '手很閒？你的清單不這麼認為。', '戳上癮了？'],
+      poke3: ['夠了喔。再戳我就把你的 {n} 筆呆帳一筆一筆唸出來。', '你再戳一下試試看。', '行，你贏了。我生氣了。'],
+      greet_night: ['這個時間還醒著？你的約定都睡了。', '凌晨 {h} 點。要嘛去做事，要嘛去睡，別掛在這。', '深夜食堂開張。要罵的排隊。', '夜貓子。明天的你已經在恨現在的你了。'],
+      night_welcome: ['歡迎光臨打勾勾深夜部。這個時間來的，通常心裡有鬼。', '深夜對帳時間。有事快辦，辦完去睡。'],
+      night_add: ['凌晨許的願，白天記得認帳。', '這個時間寫下的約定，八成是報復性上進。我先記著。', '深夜的雄心壯志，我見多了。寫吧。'],
       spin: [
         '就這件：「{title}」。別挑了，你挑最久的就是這種時候。',
         '命運選了「{title}」。不服可以再抽，反正我會記。',
@@ -498,6 +504,12 @@
         '開工提醒：{n} 件待處理。',
         '早。建議：{n} 件裡先做最花腦的，上午腦力最好。'
       ],
+      poke1: ['我在。需要什麼？'],
+      poke2: ['與其戳我，不如做一件事。'],
+      poke3: ['好了，回去工作。'],
+      greet_night: ['深夜了，重要的事明天精神好再做。', '夜深了，挑一件小的收尾就去睡。'],
+      night_welcome: ['夜深了，快速看一眼就去休息。'],
+      night_add: ['記下了。深夜的計畫，白天記得再檢視一次。'],
       spin: ['抽到「{title}」。專注做這一件就好。', '就從「{title}」開始，其他先放下。'],
       spin_again: ['第 {n} 次抽。其實哪件都行，開始最重要。'],
       focus_start: ['專注 25 分鐘，其他事之後再說。', '計時開始，關掉通知效果更好。'],
@@ -562,6 +574,12 @@
         '早安，今天有 {n} 件小約定，加油。',
         '新的一天，{n} 件事慢慢來。'
       ],
+      poke1: ['嘿嘿，在呢。'],
+      poke2: ['好癢啦。'],
+      poke3: ['別鬧啦，去做點事吧。'],
+      greet_night: ['這麼晚了還醒著呀，早點休息。', '夜深了，明天再努力也可以。'],
+      night_welcome: ['夜深了，看完就去睡吧。'],
+      night_add: ['記好了。晚安，早點休息。'],
       spin: ['抽到「{title}」了，慢慢開始就好。'],
       spin_again: ['想換一件也可以，第 {n} 次抽～'],
       focus_start: ['一起專注 25 分鐘吧。'],
@@ -586,6 +604,80 @@
       if (v) u.voice = v;
       speechSynthesis.speak(u);
     } catch (err) { /* 唸不出來就算了 */ }
+  }
+
+  /* ---------- 音效（WebAudio 現場合成，不用任何音檔） ---------- */
+
+  let audioCtx = null;
+  function sfx(kind) {
+    if (!prefs.sound) return;
+    try {
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const t0 = audioCtx.currentTime;
+      const tone = (freq, start, dur, type, gain) => {
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = type || 'sine';
+        o.frequency.value = freq;
+        g.gain.setValueAtTime(0.0001, t0 + start);
+        g.gain.linearRampToValueAtTime(gain || 0.1, t0 + start + 0.012);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + start + dur);
+        o.connect(g).connect(audioCtx.destination);
+        o.start(t0 + start);
+        o.stop(t0 + start + dur + 0.05);
+      };
+      switch (kind) {
+        case 'check': tone(660, 0, 0.12); tone(880, 0.09, 0.2); break;                       // 打勾
+        case 'allclear': tone(523, 0, 0.12); tone(659, 0.1, 0.12); tone(784, 0.2, 0.3); break; // 全清
+        case 'poke': tone(280 + Math.min(pokeCount, 8) * 55, 0, 0.09, 'triangle', 0.15); break; // 戳
+        case 'womp': tone(170, 0, 0.22, 'sawtooth', 0.07); tone(140, 0.12, 0.3, 'sawtooth', 0.07); break; // 挨罵
+        case 'tada': tone(587, 0, 0.1); tone(880, 0.1, 0.32); break;                          // 抽籤
+      }
+    } catch (err) { /* 沒聲音就算了 */ }
+  }
+
+  /* ---------- 戳勾勾 ---------- */
+
+  let pokeCount = 0;
+  let pokeTimer = null;
+
+  function pokeMascot() {
+    pokeCount++;
+    clearTimeout(pokeTimer);
+    pokeTimer = setTimeout(() => { pokeCount = 0; }, 60000);
+    el.mascot.classList.remove('is-poked');
+    void el.mascot.getBoundingClientRect(); // 重新觸發動畫
+    el.mascot.classList.add('is-poked');
+    sfx('poke');
+    const today = todayIso();
+    const overdue = state.todos.filter((t) => !t.done && t.due && t.due < today).length;
+    const ctx = pokeCount <= 2 ? 'poke1' : pokeCount <= 5 ? 'poke2' : 'poke3';
+    const line = say(ctx, { n: overdue || '幾' });
+    el.mascotSay.textContent = line;
+    speak(line);
+    if (pokeCount === 6) {
+      el.mascot.dataset.mood = 'angry';           // 被戳到翻臉
+      setTimeout(() => renderCredit(), 5000);     // 五秒後消氣
+    }
+  }
+
+  /* ---------- 深夜彩蛋（00:00–04:59） ---------- */
+
+  const NIGHT_KEY = 'pinky/night';
+
+  function isNight() {
+    const h = new Date().getHours();
+    return h >= 0 && h < 5;
+  }
+
+  function nightWelcomeOnce() {
+    if (!isNight()) return;
+    try {
+      if (localStorage.getItem(NIGHT_KEY) === todayIso()) return;
+      localStorage.setItem(NIGHT_KEY, todayIso());
+    } catch (err) { /* 記不住就每次講 */ }
+    nagOut(say('night_welcome'));
   }
 
   /* 顯示 + （開啟語音時）唸出來 */
@@ -617,7 +709,8 @@
     const overN = state.todos.filter((t) => !t.done && t.due && t.due < today).length;
     const todayDue = state.todos.filter((t) => !t.done && t.due === today).length;
     const doneToday = state.todos.some((t) => t.done && t.doneAt && toIso(new Date(t.doneAt)) === today);
-    if (overN) el.mascotSay.textContent = say('greet_over', { n: overN });
+    if (isNight()) el.mascotSay.textContent = say('greet_night', { n: overN + todayDue, h: new Date().getHours() });
+    else if (overN) el.mascotSay.textContent = say('greet_over', { n: overN });
     else if (todayDue) el.mascotSay.textContent = say('greet_todaydue', { n: todayDue });
     else if (doneToday) el.mascotSay.textContent = say('allclear');
     else el.mascotSay.textContent = say('greet_clean');
@@ -714,6 +807,9 @@
       if (wasActive >= limit) {
         applyCredit(-3);
         nagOut(say('add_over', { limit, count: wasActive + 1 }));
+        sfx('womp');
+      } else if (isNight()) {
+        nagOut(say('night_add'));
       } else {
         const debt = oldestDebt();
         if (debt && debt.id !== todo.id) {
@@ -754,6 +850,7 @@
         celebrate(r.left + 40, r.top + r.height / 2, allTodayCleared() ? 120 : 34);
       }
       nagOut(onTime || !t.due ? say('done_ontime', { pts }) : say('done_late'));
+      sfx(allTodayCleared() ? 'allclear' : 'check');
       setTimeout(render, 260);
     } else {
       render();
@@ -1728,6 +1825,7 @@
       const line = say('spin', { title: spinPicked.title.slice(0, 14) });
       el.spinSay.textContent = line;
       speak(line);
+      sfx('tada');
     }, delay + 220));
     return true;
   }
@@ -1789,6 +1887,7 @@
     render();
     celebrate(window.innerWidth / 2, 120, 60);
     nagOut(say('focus_done'));
+    sfx('allclear');
     const t = f.taskId ? state.todos.find((x) => x.id === f.taskId) : null;
     if (t && !t.done) {
       openNag('25 分鐘到。「' + t.title.slice(0, 20) + '」做完了嗎？', '完成，打勾', '還沒',
@@ -1920,7 +2019,7 @@
     const line = el.mascotSay.textContent.trim();
     if (!line) return;
     drawQuoteCard(line);
-    el.shareTitle.textContent = '勾勾語錄';
+    el.shareTitle.textContent = '被罵卡';
     el.shareDialog.showModal();
   }
 
@@ -2212,7 +2311,17 @@
     document.addEventListener('visibilitychange', onVisibility);
 
     el.mascotSay.addEventListener('click', openQuote);
-    el.mascotSay.title = '點一下做成語錄卡';
+    el.mascotSay.title = '點一下做成被罵卡';
+    el.mascot.addEventListener('click', pokeMascot);
+    el.mascot.style.cursor = 'pointer';
+
+    el.soundBtn.addEventListener('click', () => {
+      prefs.sound = !prefs.sound;
+      savePrefs();
+      el.soundLabel.textContent = '音效：' + (prefs.sound ? '開' : '關');
+      if (prefs.sound) sfx('check');
+      toast(prefs.sound ? '音效已開啟。' : '音效已關閉。');
+    });
 
     el.toneBtn.addEventListener('click', () => {
       prefs.tone = TONES[(TONES.indexOf(prefs.tone) + 1) % TONES.length];
@@ -2392,8 +2501,10 @@
   el.toneLabel.textContent = '語氣：' + TONE_LABEL[prefs.tone];
   renderNotifyLabel();
   el.voiceLabel.textContent = '語音：' + (prefs.voice ? '開' : '關');
+  el.soundLabel.textContent = '音效：' + (prefs.sound ? '開' : '關');
   render();
   resumeFocus();
+  setTimeout(nightWelcomeOnce, 1600); // 晚一點發，避免被 SW 更新提示蓋掉
   maybeBankrupt();
   setTimeout(maybeNotify, 1500);
 

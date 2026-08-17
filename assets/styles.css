@@ -1211,6 +1211,15 @@ button { cursor: pointer; }
 .focusbar button:hover { background: rgba(255, 255, 255, .28); }
 .focusbar.is-warn { background: var(--danger); color: #fff; }
 
+/* 戳勾勾 */
+.mascot.is-poked { animation: pokeSquash .32s var(--ease); transform-origin: 50% 90%; }
+@keyframes pokeSquash {
+  30% { transform: scale(1.14, .84); }
+  60% { transform: scale(.9, 1.1); }
+  80% { transform: scale(1.04, .97); }
+}
+#i-note circle.stroked { fill: none; stroke: currentColor; }
+
 /* 語錄卡入口：泡泡可點 */
 .bubble { cursor: pointer; transition: transform .15s var(--ease); }
 .bubble:hover { transform: scale(1.01); }
