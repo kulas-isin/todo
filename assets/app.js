@@ -29,7 +29,7 @@
   const PAGE_SIZE = 20;
 
   let state = { todos: [], history: {} };
-  let prefs = { view: 'today', page: 'all', category: '', sort: 'manual', theme: null, palette: 'cream', collapsed: ['done'], tone: 'savage', notify: { on: false, morning: '09:00', evening: '21:00' } };
+  let prefs = { view: 'today', page: 'all', category: '', sort: 'manual', theme: null, palette: 'cream', collapsed: ['done'], tone: 'savage', notify: { on: false, morning: '09:00', evening: '21:00' }, voice: false };
   let pageIndex = 0;
   let query = '';
   let editingId = null;
@@ -51,6 +51,8 @@
     'fabBtn', 'confetti', 'toast', 'toastText', 'toastAction', 'installBtn',
     'mascot', 'mascotSay', 'creditScore', 'limitFill', 'limitText', 'backfillBtn',
     'toneBtn', 'toneLabel', 'nagDialog', 'nagText', 'nagMain', 'nagAlt', 'notifyBtn', 'notifyLabel', 'testNagBtn',
+    'voiceBtn', 'voiceLabel', 'spinBtn', 'focusBtn', 'spinDialog', 'spinClose', 'slot', 'slotText', 'spinSay', 'spinAgain', 'spinGo',
+    'focusBar', 'focusTask', 'focusTime', 'focusQuit', 'shareTitle',
     'editDialog', 'editForm', 'dialogTitle', 'fTitle', 'fNote', 'fDue', 'fCategory', 'categoryList',
     'cancelBtn', 'cancelBtn2', 'saveBtn',
     'shareDialog', 'shareCanvas', 'shareClose', 'shareCopy', 'shareSave'
@@ -388,6 +390,38 @@
         '早。咖啡可以慢慢喝，{n} 件事不能慢慢拖。',
         '日出而作。{n} 件，字面意思。'
       ],
+      spin: [
+        '就這件：「{title}」。別挑了，你挑最久的就是這種時候。',
+        '命運選了「{title}」。不服可以再抽，反正我會記。',
+        '「{title}」。抽到就是緣分，做完才是本事。',
+        '轉盤都幫你決定了：「{title}」。現在你沒藉口了。'
+      ],
+      spin_again: [
+        '說好不換的。這是第 {n} 次抽。',
+        '再抽也是要做，你知道吧。第 {n} 次。',
+        '第 {n} 抽。轉盤沒有壞，是你在逃。'
+      ],
+      focus_start: [
+        '25 分鐘。我盯著，你最好動起來。',
+        '監工上班。手機收起來。',
+        '計時開始。這 25 分鐘你是我的。'
+      ],
+      focus_leave: [
+        '我看到了。你剛剛去哪？',
+        '分頁切走第 {n} 次。你當我瞎？',
+        '回來。第 {n} 次了，我都記著。',
+        '喔？出去晃了一圈。第 {n} 次，繼續。'
+      ],
+      focus_done: [
+        '25 分鐘乾淨俐落。+1，這才像話。',
+        '監工下班，成果驗收。+1。',
+        '撐完全場。+1。原來你做得到，以後別裝。'
+      ],
+      focus_quit: [
+        '放棄監工。不扣分，扣印象。',
+        '才這樣就投降？行，這筆我記在心裡。',
+        '中途離席。分數我不動，你自己知道就好。'
+      ],
       notif_evening: [
         '今天還剩 {n} 件沒勾。睡前想清楚怎麼交代。',
         '晚上好。{n} 筆帳還開著，要帶進夢裡嗎？',
@@ -464,6 +498,12 @@
         '開工提醒：{n} 件待處理。',
         '早。建議：{n} 件裡先做最花腦的，上午腦力最好。'
       ],
+      spin: ['抽到「{title}」。專注做這一件就好。', '就從「{title}」開始，其他先放下。'],
+      spin_again: ['第 {n} 次抽。其實哪件都行，開始最重要。'],
+      focus_start: ['專注 25 分鐘，其他事之後再說。', '計時開始，關掉通知效果更好。'],
+      focus_leave: ['分心第 {n} 次了，回來繼續。'],
+      focus_done: ['完成一輪專注，+1。這個節奏很好。'],
+      focus_quit: ['中斷了也沒關係，等等再來一輪。'],
       notif_evening: [
         '今天還有 {n} 件未完成。收個尾或誠實改期。',
         '睡前檢查：{n} 件未勾。',
@@ -522,12 +562,38 @@
         '早安，今天有 {n} 件小約定，加油。',
         '新的一天，{n} 件事慢慢來。'
       ],
+      spin: ['抽到「{title}」了，慢慢開始就好。'],
+      spin_again: ['想換一件也可以，第 {n} 次抽～'],
+      focus_start: ['一起專注 25 分鐘吧。'],
+      focus_leave: ['回來了嗎？繼續加油（第 {n} 次分心也沒關係）。'],
+      focus_done: ['專注完成，+1，休息一下吧。'],
+      focus_quit: ['累了就休息，等等再來。'],
       notif_evening: [
         '還有 {n} 件沒完成，做一件也很棒。',
         '晚上了，剩 {n} 件。做不完也沒關係，明天再約。'
       ]
     }
   };
+
+  function speak(text) {
+    if (!prefs.voice || !('speechSynthesis' in window)) return;
+    try {
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'zh-TW';
+      u.rate = 1.05;
+      const v = speechSynthesis.getVoices().find((x) => /^zh/.test(x.lang));
+      if (v) u.voice = v;
+      speechSynthesis.speak(u);
+    } catch (err) { /* 唸不出來就算了 */ }
+  }
+
+  /* 顯示 + （開啟語音時）唸出來 */
+  function nagOut(line) {
+    toast(line);
+    speak(line);
+    return line;
+  }
 
   let lineSeed = 0;
   function say(context, vars) {
@@ -647,11 +713,11 @@
     if (!todo.done) {
       if (wasActive >= limit) {
         applyCredit(-3);
-        toast(say('add_over', { limit, count: wasActive + 1 }));
+        nagOut(say('add_over', { limit, count: wasActive + 1 }));
       } else {
         const debt = oldestDebt();
         if (debt && debt.id !== todo.id) {
-          toast(say('add_debt', { title: debt.title.slice(0, 12), days: -daysFromToday(debt.due) }));
+          nagOut(say('add_debt', { title: debt.title.slice(0, 12), days: -daysFromToday(debt.due) }));
         }
       }
     }
@@ -687,7 +753,7 @@
         const r = node.getBoundingClientRect();
         celebrate(r.left + 40, r.top + r.height / 2, allTodayCleared() ? 120 : 34);
       }
-      toast(onTime || !t.due ? say('done_ontime', { pts }) : say('done_late'));
+      nagOut(onTime || !t.due ? say('done_ontime', { pts }) : say('done_late'));
       setTimeout(render, 260);
     } else {
       render();
@@ -1467,6 +1533,7 @@
 
   function openShare() {
     drawShareCard();
+    el.shareTitle.textContent = '今日成果卡';
     el.shareDialog.showModal();
   }
 
@@ -1608,6 +1675,255 @@
     el.notifyLabel.textContent = '提醒：' + (prefs.notify.on ? '開' : '關');
   }
 
+  /* ---------- 轉盤：別再選了 ---------- */
+
+  let spinPicked = null;
+  let spinCount = 0;
+  let spinTimers = [];
+
+  function spinWeight(t) {
+    const today = todayIso();
+    let w = 1;
+    if (t.due && t.due < today) w += 2;      // 逾期最該做
+    if (t.due === today) w += 1.5;
+    if (t.priority === 'high') w += 1.5;
+    return w;
+  }
+
+  function pickWeighted(list) {
+    const total = list.reduce((sum, t) => sum + spinWeight(t), 0);
+    let r = Math.random() * total;
+    for (const t of list) {
+      r -= spinWeight(t);
+      if (r <= 0) return t;
+    }
+    return list[list.length - 1];
+  }
+
+  function runSpin() {
+    const candidates = state.todos.filter((t) => !t.done);
+    if (!candidates.length) { toast('沒東西可抽。先寫下一個約定。'); return false; }
+    spinTimers.forEach(clearTimeout);
+    spinTimers = [];
+    spinPicked = pickWeighted(candidates);
+    el.slot.classList.remove('is-done');
+    el.slot.classList.add('is-rolling');
+    el.spinSay.textContent = '';
+    el.spinGo.disabled = true;
+    // 逐步變慢的滾動
+    let delay = 0;
+    const steps = 16;
+    for (let i = 0; i < steps; i++) {
+      delay += 45 + i * 14;
+      spinTimers.push(setTimeout(() => {
+        const t = candidates[Math.floor(Math.random() * candidates.length)];
+        el.slotText.textContent = t.title;
+      }, delay));
+    }
+    spinTimers.push(setTimeout(() => {
+      el.slotText.textContent = spinPicked.title;
+      el.slot.classList.remove('is-rolling');
+      el.slot.classList.add('is-done');
+      el.spinGo.disabled = false;
+      const line = say('spin', { title: spinPicked.title.slice(0, 14) });
+      el.spinSay.textContent = line;
+      speak(line);
+    }, delay + 220));
+    return true;
+  }
+
+  function openSpin() {
+    spinCount = 0;
+    if (!runSpin()) return;
+    el.spinDialog.showModal();
+  }
+
+  /* ---------- 監工模式 ---------- */
+
+  const FOCUS_KEY = 'pinky/focus';
+  const FOCUS_MS = 25 * 60 * 1000;
+  let focusTimer = null;
+
+  function focusState() {
+    try { return JSON.parse(localStorage.getItem(FOCUS_KEY) || 'null'); } catch (err) { return null; }
+  }
+
+  function saveFocus(f) {
+    if (f) localStorage.setItem(FOCUS_KEY, JSON.stringify(f));
+    else localStorage.removeItem(FOCUS_KEY);
+  }
+
+  function startFocus(taskId) {
+    const t = taskId ? state.todos.find((x) => x.id === taskId) : null;
+    saveFocus({ end: Date.now() + FOCUS_MS, taskId: t ? t.id : null, leaves: 0 });
+    el.focusTask.textContent = t ? t.title : '專注中';
+    el.focusBar.hidden = false;
+    el.focusBar.classList.remove('is-warn');
+    nagOut(say('focus_start'));
+    tickFocus();
+    clearInterval(focusTimer);
+    focusTimer = setInterval(tickFocus, 1000);
+  }
+
+  function stopFocus() {
+    clearInterval(focusTimer);
+    focusTimer = null;
+    saveFocus(null);
+    el.focusBar.hidden = true;
+  }
+
+  function tickFocus() {
+    const f = focusState();
+    if (!f) { stopFocus(); return; }
+    const left = f.end - Date.now();
+    if (left <= 0) { finishFocus(f); return; }
+    const m = Math.floor(left / 60000);
+    const sec = Math.floor((left % 60000) / 1000);
+    el.focusTime.textContent = String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
+  }
+
+  function finishFocus(f) {
+    stopFocus();
+    applyCredit(1);
+    save();
+    render();
+    celebrate(window.innerWidth / 2, 120, 60);
+    nagOut(say('focus_done'));
+    const t = f.taskId ? state.todos.find((x) => x.id === f.taskId) : null;
+    if (t && !t.done) {
+      openNag('25 分鐘到。「' + t.title.slice(0, 20) + '」做完了嗎？', '完成，打勾', '還沒',
+        () => toggleDone(t.id), () => {});
+    }
+  }
+
+  function resumeFocus() {
+    const f = focusState();
+    if (!f) return;
+    if (f.end <= Date.now()) { finishFocus(f); return; }
+    const t = f.taskId ? state.todos.find((x) => x.id === f.taskId) : null;
+    el.focusTask.textContent = t ? t.title : '專注中';
+    el.focusBar.hidden = false;
+    tickFocus();
+    focusTimer = setInterval(tickFocus, 1000);
+  }
+
+  function onVisibility() {
+    const f = focusState();
+    if (!f || f.end <= Date.now()) return;
+    if (document.visibilityState === 'visible') {
+      f.leaves = (f.leaves || 0) + 1;
+      saveFocus(f);
+      el.focusBar.classList.toggle('is-warn', f.leaves >= 2);
+      nagOut(say('focus_leave', { n: f.leaves }));
+    }
+  }
+
+  /* ---------- 語錄分享卡 ---------- */
+
+  function wrapChars(text, perLine) {
+    const lines = [];
+    for (let i = 0; i < text.length; i += perLine) lines.push(text.slice(i, i + perLine));
+    return lines;
+  }
+
+  function drawMascotMini(ctx, x, y, size, mood, css) {
+    const r = size * 0.28;
+    ctx.fillStyle = mood === 'angry' ? css.getPropertyValue('--danger').trim() : css.getPropertyValue('--brand').trim();
+    roundRect(ctx, x, y, size, size, r);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,.5)';
+    ctx.lineWidth = size * 0.075;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(x + size * 0.28, y + size * 0.56);
+    ctx.lineTo(x + size * 0.45, y + size * 0.72);
+    ctx.lineTo(x + size * 0.74, y + size * 0.36);
+    ctx.stroke();
+    ctx.fillStyle = '#fff';
+    if (mood === 'angry') {
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = size * 0.045;
+      ctx.beginPath();
+      ctx.moveTo(x + size * 0.30, y + size * 0.30);
+      ctx.lineTo(x + size * 0.42, y + size * 0.35);
+      ctx.moveTo(x + size * 0.70, y + size * 0.30);
+      ctx.lineTo(x + size * 0.58, y + size * 0.35);
+      ctx.stroke();
+    }
+    ctx.beginPath();
+    ctx.arc(x + size * 0.38, y + size * 0.40, size * 0.045, 0, Math.PI * 2);
+    ctx.arc(x + size * 0.62, y + size * 0.40, size * 0.045, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  function drawQuoteCard(line) {
+    const cv = el.shareCanvas;
+    const ctx = cv.getContext('2d');
+    const W = cv.width, H = cv.height;
+    const css = getComputedStyle(document.documentElement);
+    const v = (name, fb) => (css.getPropertyValue(name).trim() || fb);
+    const font = '"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif';
+
+    const bg = ctx.createLinearGradient(0, 0, W, H);
+    bg.addColorStop(0, v('--hero-1', '#4f9db8'));
+    bg.addColorStop(1, v('--hero-2', '#86c8d6'));
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    const pad = 90;
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,.2)';
+    ctx.shadowBlur = 60;
+    ctx.shadowOffsetY = 20;
+    ctx.fillStyle = v('--surface', '#fff');
+    roundRect(ctx, pad, pad, W - pad * 2, H - pad * 2, 60);
+    ctx.fill();
+    ctx.restore();
+
+    // 大引號
+    ctx.fillStyle = v('--brand', '#4f9db8');
+    ctx.font = `800 200px ${font}`;
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText('「', pad + 40, pad + 250);
+
+    // 語錄本文
+    const text = line.slice(0, 60);
+    const size = text.length <= 14 ? 92 : text.length <= 28 ? 76 : 60;
+    const perLine = Math.floor((W - pad * 2 - 160) / size);
+    const lines = wrapChars(text, perLine);
+    ctx.fillStyle = v('--text', '#21454e');
+    ctx.font = `800 ${size}px ${font}`;
+    ctx.textBaseline = 'top';
+    let y = pad + 300;
+    for (const l of lines.slice(0, 6)) {
+      ctx.fillText(l, pad + 90, y);
+      y += size * 1.5;
+    }
+
+    // 署名與吉祥物
+    const mSize = 130;
+    drawMascotMini(ctx, pad + 90, H - pad - 240, mSize, moodFor(state.credit.score), css);
+    ctx.fillStyle = v('--dim', '#7c99a2');
+    ctx.font = `700 40px ${font}`;
+    ctx.textBaseline = 'middle';
+    ctx.fillText('—— 勾勾', pad + 90 + mSize + 30, H - pad - 240 + mSize / 2);
+
+    const now = new Date();
+    ctx.font = `600 30px ${font}`;
+    ctx.textAlign = 'center';
+    ctx.fillText('打勾勾 · ' + (now.getMonth() + 1) + ' 月 ' + now.getDate() + ' 日', W / 2, H - pad - 55);
+    ctx.textAlign = 'left';
+  }
+
+  function openQuote() {
+    const line = el.mascotSay.textContent.trim();
+    if (!line) return;
+    drawQuoteCard(line);
+    el.shareTitle.textContent = '勾勾語錄';
+    el.shareDialog.showModal();
+  }
+
   /* ---------- 對話框 ---------- */
 
   function openDialog(id, backfill) {
@@ -1651,7 +1967,7 @@
             '誠實放棄（−1）', '繼續拖（−4）',
             () => {
               applyCredit(-1);
-              toast(say('abandon'));
+              nagOut(say('abandon'));
               removeTodos([id], '已放棄「' + before.title.slice(0, 12) + '」。');
             },
             () => {
@@ -1661,7 +1977,7 @@
             }
           );
         } else {
-          toast(say('resched', { title: before.title.slice(0, 12), n, due: fields.due }));
+          nagOut(say('resched', { title: before.title.slice(0, 12), n, due: fields.due }));
         }
       } else {
         updateTodo(editingId, fields);
@@ -1674,7 +1990,7 @@
         applyCredit(1);
         save();
         render();
-        toast(say('backfill'));
+        nagOut(say('backfill'));
       }
       el.quickInput.value = '';
     } else {
@@ -1864,6 +2180,40 @@
     el.notifyBtn.addEventListener('click', toggleNotify);
     el.testNagBtn.addEventListener('click', testNag);
 
+    el.voiceBtn.addEventListener('click', () => {
+      prefs.voice = !prefs.voice;
+      savePrefs();
+      el.voiceLabel.textContent = '語音：' + (prefs.voice ? '開' : '關');
+      if (prefs.voice) speak(prefs.tone === 'savage' ? '語音開了。準備好被唸了嗎？' : '語音提醒已開啟。');
+      else if ('speechSynthesis' in window) speechSynthesis.cancel();
+      toast(prefs.voice ? '語音已開啟，勾勾會唸出來。' : '語音已關閉。');
+    });
+
+    el.spinBtn.addEventListener('click', openSpin);
+    el.spinClose.addEventListener('click', () => el.spinDialog.close());
+    el.spinAgain.addEventListener('click', () => {
+      spinCount++;
+      nagOut(say('spin_again', { n: spinCount + 1 }));
+      runSpin();
+    });
+    el.spinGo.addEventListener('click', () => {
+      el.spinDialog.close();
+      if (spinPicked) startFocus(spinPicked.id);
+    });
+
+    el.focusBtn.addEventListener('click', () => {
+      if (focusState() && focusState().end > Date.now()) { toast('已經在監工了。專心。'); return; }
+      startFocus(null);
+    });
+    el.focusQuit.addEventListener('click', () => {
+      nagOut(say('focus_quit'));
+      stopFocus();
+    });
+    document.addEventListener('visibilitychange', onVisibility);
+
+    el.mascotSay.addEventListener('click', openQuote);
+    el.mascotSay.title = '點一下做成語錄卡';
+
     el.toneBtn.addEventListener('click', () => {
       prefs.tone = TONES[(TONES.indexOf(prefs.tone) + 1) % TONES.length];
       savePrefs();
@@ -2041,7 +2391,9 @@
   setupPwa();
   el.toneLabel.textContent = '語氣：' + TONE_LABEL[prefs.tone];
   renderNotifyLabel();
+  el.voiceLabel.textContent = '語音：' + (prefs.voice ? '開' : '關');
   render();
+  resumeFocus();
   maybeBankrupt();
   setTimeout(maybeNotify, 1500);
 
