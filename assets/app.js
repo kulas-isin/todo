@@ -22,7 +22,7 @@
   };
   const CHEERS = ['約定達成', '說到做到', '又守住一個約定', '漂亮，繼續保持', '這一勾，值得'];
   const HEAT_WEEKS = 17;
-  const VIEWS = ['today', 'list', 'trail'];
+  const VIEWS = ['today', 'week', 'list', 'trail'];
   const TONES = ['savage', 'coach', 'soft'];
   const TONE_LABEL = { savage: '毒舌', coach: '教練', soft: '溫柔' };
   const PAGES = ['all'].concat(GROUP_ORDER);
@@ -44,6 +44,7 @@
     'dateLine', 'greeting', 'heroSub', 'progPct', 'progHint', 'ringBar', 'ringLabel',
     'tAll', 'tToday', 'tOver', 'tDone', 'cats', 'groups', 'empty', 'tabs', 'pager',
     'nav', 'navDot', 'viewToday', 'viewList', 'viewTrail', 'todayList', 'todayEmpty',
+    'viewWeek', 'weekBoard', 'weekLabel', 'weekPrev', 'weekNext', 'weekSomeday',
     'streakNum', 'keepRate', 'totalDone', 'heatmap', 'trailRange',
     'quickForm', 'quickInput', 'detailBtn', 'searchInput', 'sortSelect',
     'paletteBtn', 'palettePanel', 'themeBtn', 'moreBtn', 'morePanel',
@@ -932,6 +933,7 @@
     renderProgress();
     renderTiles();
     renderTodayList();
+    renderWeek();
     renderCategories();
     renderTabs();
     renderList();
@@ -940,6 +942,7 @@
   }
 
   function applyView() {
+    el.viewWeek.hidden = prefs.view !== 'week';
     el.viewToday.hidden = prefs.view !== 'today';
     el.viewList.hidden = prefs.view !== 'list';
     el.viewTrail.hidden = prefs.view !== 'trail';
@@ -959,6 +962,212 @@
     savePrefs();
     render();
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ---------- 本週：每天的分配一眼看完 ---------- */
+
+  let weekOffset = 0;
+  const WEEKDAY = ['一', '二', '三', '四', '五', '六', '日'];
+
+  function mondayOf(iso) {
+    const d = fromIso(iso);
+    const dow = (d.getDay() + 6) % 7; // 週一為 0
+    return shiftIso(iso, -dow);
+  }
+
+  function parseHours(note) {
+    const m = /預估\s*([\d.]+)\s*[Hh]/.exec(note || '');
+    return m ? parseFloat(m[1]) : 0;
+  }
+
+  /* 搬移到別天。未來的任務是規劃（免費）；今天／逾期往後搬算改期，照罰。 */
+  function shiftDue(id, delta) {
+    const t = state.todos.find((x) => x.id === id);
+    if (!t || t.done || !t.due) return;
+    const from = t.due;
+    const to = shiftIso(from, delta);
+    const today = todayIso();
+    const punish = from <= today && to > from;
+    t.due = to;
+    if (punish) {
+      t.reschedules = (t.reschedules || 0) + 1;
+      const n = t.reschedules;
+      applyCredit(n >= 2 ? -2 : -1);
+      sfx('womp');
+      if (n >= 3) {
+        openNag(
+          '「' + t.title.slice(0, 20) + '」第 ' + n + ' 次改期了。要不要承認你根本不會做？誠實放棄扣 1 分，繼續拖扣 4 分。',
+          '誠實放棄（−1）', '繼續拖（−4）',
+          () => {
+            applyCredit(-1);
+            nagOut(say('abandon'));
+            removeTodos([t.id], '已放棄「' + t.title.slice(0, 12) + '」。');
+          },
+          () => { applyCredit(-4); save(); render(); }
+        );
+      } else {
+        nagOut(say('resched', { title: t.title.slice(0, 12), n, due: to }));
+      }
+    }
+    save();
+    render();
+  }
+
+  let weekSel = null; // 'd0'~'d4' 平日，'we' 週末
+
+  function renderWeek() {
+    const start = shiftIso(mondayOf(todayIso()), weekOffset * 7);
+    const end = shiftIso(start, 6);
+    const today = todayIso();
+    el.weekLabel.textContent = weekOffset === 0
+      ? '本週（' + start.slice(5).replace('-', '/') + ' – ' + end.slice(5).replace('-', '/') + '）'
+      : (weekOffset > 0 ? '+' + weekOffset : String(weekOffset)) + ' 週（' + start.slice(5).replace('-', '/') + ' – ' + end.slice(5).replace('-', '/') + '）';
+
+    const days = [];
+    for (let i = 0; i < 7; i++) {
+      const iso = shiftIso(start, i);
+      const items = state.todos
+        .filter((t) => t.due === iso)
+        .sort((a, b) => (a.done !== b.done ? (a.done ? 1 : -1) : PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority]));
+      days.push({ iso, items, hours: items.reduce((sum, t) => sum + parseHours(t.note), 0) });
+    }
+    const weItems = days[5].items.concat(days[6].items);
+    const weHours = days[5].hours + days[6].hours;
+    const useHours = days.some((d) => d.hours > 0);
+    const loadOf = (items, hours) => (useHours ? hours : items.length);
+    const maxLoad = Math.max(1, ...days.slice(0, 5).map((d) => loadOf(d.items, d.hours)), loadOf(weItems, weHours));
+
+    if (!weekSel) {
+      const dow = (fromIso(today).getDay() + 6) % 7;
+      weekSel = dow <= 4 ? 'd' + dow : 'we';
+    }
+
+    el.weekBoard.textContent = '';
+
+    // ---- 週一～週五 tab ＋ 週末 ----
+    const tabs = document.createElement('div');
+    tabs.className = 'wtabs';
+    const mkTab = (key, name, dateStr, items, hours, isToday) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'wtab' + (weekSel === key ? ' is-on' : '') + (isToday ? ' is-today' : '') + (key === 'we' ? ' wtab--we' : '');
+      const done = items.filter((t) => t.done).length;
+
+      const nm = document.createElement('span');
+      nm.className = 'wtab__name';
+      nm.textContent = name;
+      const dt = document.createElement('span');
+      dt.className = 'wtab__date';
+      dt.textContent = dateStr;
+      const ct = document.createElement('span');
+      ct.className = 'wtab__count';
+      ct.textContent = items.length ? done + '/' + items.length : '·';
+
+      const bar = document.createElement('i');
+      bar.className = 'wtab__bar';
+      const load = loadOf(items, hours);
+      const fill = document.createElement('b');
+      fill.style.width = Math.round((load / maxLoad) * 100) + '%';
+      const doneFill = document.createElement('u');
+      doneFill.style.width = items.length ? Math.round((load / maxLoad) * (done / items.length) * 100) + '%' : '0%';
+      bar.append(fill, doneFill);
+
+      btn.append(nm, dt, ct, bar);
+      btn.addEventListener('click', () => { weekSel = key; renderWeek(); });
+      return btn;
+    };
+    for (let i = 0; i < 5; i++) {
+      tabs.appendChild(mkTab('d' + i, '週' + WEEKDAY[i], days[i].iso.slice(8), days[i].items, days[i].hours, days[i].iso === today));
+    }
+    tabs.appendChild(mkTab('we', '六日', '', weItems, weHours, days[5].iso === today || days[6].iso === today));
+    el.weekBoard.appendChild(tabs);
+
+    // ---- 選中那天的清單 ----
+    let items, hours, title;
+    if (weekSel === 'we') {
+      items = weItems; hours = weHours;
+      title = '週六・週日 ' + days[5].iso.slice(5).replace('-', '/') + ' – ' + days[6].iso.slice(5).replace('-', '/');
+    } else {
+      const i = Number(weekSel[1]);
+      items = days[i].items; hours = days[i].hours;
+      title = '週' + WEEKDAY[i] + ' ' + days[i].iso.slice(5).replace('-', '/') + (days[i].iso === today ? '（今天）' : '');
+    }
+
+    const panel = document.createElement('section');
+    panel.className = 'wday wpanel';
+    const head = document.createElement('div');
+    head.className = 'wday__head';
+    const done = items.filter((t) => t.done).length;
+    const label = document.createElement('span');
+    label.className = 'wday__name';
+    label.textContent = title;
+    const meta = document.createElement('span');
+    meta.className = 'wday__meta';
+    meta.textContent = items.length
+      ? done + '/' + items.length + ' 件' + (hours ? ' · ' + (Math.round(hours * 10) / 10) + 'H' : '')
+      : '沒排事';
+    head.append(label, meta);
+    panel.appendChild(head);
+
+    if (items.length) {
+      const ul = document.createElement('ul');
+      ul.className = 'wlist';
+      for (const t of items) {
+        const li = document.createElement('li');
+        li.className = 'wrow' + (t.done ? ' is-done' : '');
+
+        const check = document.createElement('button');
+        check.type = 'button';
+        check.className = 'wrow__check';
+        check.setAttribute('aria-label', (t.done ? '取消完成' : '完成') + '「' + t.title + '」');
+        check.appendChild(icon('#i-check'));
+        check.addEventListener('click', () => toggleDone(t.id));
+
+        const body = document.createElement('span');
+        body.className = 'wrow__title';
+        body.textContent = t.title;
+        body.title = '點一下編輯';
+        body.addEventListener('click', () => openDialog(t.id));
+
+        const tags = document.createElement('span');
+        tags.className = 'wrow__tags';
+        if (weekSel === 'we') tags.appendChild(pill(t.due === days[5].iso ? '六' : '日'));
+        const h = parseHours(t.note);
+        if (h) tags.appendChild(pill(h + 'H'));
+        if (t.priority === 'high') tags.appendChild(pill('高', 'pill--high'));
+        if (t.category) tags.appendChild(pill(t.category));
+
+        const mv = document.createElement('span');
+        mv.className = 'wrow__move';
+        if (!t.done) {
+          const back = document.createElement('button');
+          back.type = 'button';
+          back.textContent = '‹';
+          back.title = '移到前一天';
+          back.addEventListener('click', () => shiftDue(t.id, -1));
+          const fwd = document.createElement('button');
+          fwd.type = 'button';
+          fwd.textContent = '›';
+          fwd.title = '移到後一天';
+          fwd.addEventListener('click', () => shiftDue(t.id, 1));
+          mv.append(back, fwd);
+        }
+
+        li.append(check, body, tags, mv);
+        ul.appendChild(li);
+      }
+      panel.appendChild(ul);
+    } else {
+      const empty = document.createElement('p');
+      empty.className = 'wpanel__empty';
+      empty.textContent = '這天沒排事。留白也是一種安排。';
+      panel.appendChild(empty);
+    }
+    el.weekBoard.appendChild(panel);
+
+    const someday = state.todos.filter((t) => !t.done && !t.due).length;
+    el.weekSomeday.hidden = !someday;
+    if (someday) el.weekSomeday.textContent = '未排定 ' + someday + ' 件 — 點我去排進某一天';
   }
 
   /* 今天頁只顯示逾期與今天 */
@@ -2288,6 +2497,10 @@
       toast(prefs.voice ? '語音已開啟，勾勾會唸出來。' : '語音已關閉。');
     });
 
+    el.weekPrev.addEventListener('click', () => { weekOffset--; renderWeek(); });
+    el.weekNext.addEventListener('click', () => { weekOffset++; renderWeek(); });
+    el.weekSomeday.addEventListener('click', () => goto('list', 'someday'));
+
     el.spinBtn.addEventListener('click', openSpin);
     el.spinClose.addEventListener('click', () => el.spinDialog.close());
     el.spinAgain.addEventListener('click', () => {
@@ -2422,8 +2635,9 @@
       else if (k === 'p') { prefs.palette = PALETTES[(PALETTES.indexOf(prefs.palette) + 1) % PALETTES.length]; savePrefs(); applyAppearance(); }
       else if (k === 's') { openShare(); }
       else if (k === '1') { goto('today'); }
-      else if (k === '2') { goto('list'); }
-      else if (k === '3') { goto('trail'); }
+      else if (k === '2') { goto('week'); }
+      else if (k === '3') { goto('list'); }
+      else if (k === '4') { goto('trail'); }
     });
 
     let lastDay = todayIso();

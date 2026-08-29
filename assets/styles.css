@@ -1126,6 +1126,176 @@ button { cursor: pointer; }
   font-weight: 700;
 }
 
+/* ---------- 本週視圖 ---------- */
+.week__nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.week__label { margin: 0; font-size: 16px; font-weight: 800; letter-spacing: .01em; }
+.week__hint { margin: 0 4px 16px; font-size: 12.5px; color: var(--dim); }
+.week__hint b { color: var(--danger); font-weight: 600; }
+
+.week { display: grid; gap: 12px; }
+
+/* 週一～週五 tab */
+.wtabs {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr) auto;
+  gap: 6px;
+}
+.wtab {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 9px 4px 7px;
+  background: var(--surface);
+  border: 1.5px solid transparent;
+  border-radius: var(--r-sm);
+  box-shadow: var(--shadow-sm);
+  transition: all .18s var(--ease);
+}
+.wtab:hover { transform: translateY(-2px); }
+.wtab.is-on { background: var(--brand); border-color: var(--brand); }
+.wtab.is-on .wtab__name, .wtab.is-on .wtab__date, .wtab.is-on .wtab__count { color: var(--on-brand); }
+.wtab.is-today:not(.is-on) { border-color: var(--brand); }
+.wtab--we { padding-left: 10px; padding-right: 10px; opacity: .85; }
+.wtab__name { font-size: 12.5px; font-weight: 800; }
+.wtab__date { font-size: 10.5px; color: var(--dim); font-variant-numeric: tabular-nums; min-height: 1em; }
+.wtab__count { font-size: 11px; font-weight: 700; color: var(--dim); font-variant-numeric: tabular-nums; }
+.wtab__bar {
+  position: relative;
+  width: 82%;
+  height: 4px;
+  margin-top: 3px;
+  background: var(--surface-2);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.wtab.is-on .wtab__bar { background: rgba(255, 255, 255, .3); }
+.wtab__bar b, .wtab__bar u {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  border-radius: 999px;
+  transition: width .4s var(--ease);
+}
+.wtab__bar b { background: var(--brand-wash); }
+.wtab__bar u { background: var(--brand); text-decoration: none; }
+.wtab.is-on .wtab__bar b { background: rgba(255, 255, 255, .35); }
+.wtab.is-on .wtab__bar u { background: var(--on-brand); }
+
+.wpanel__empty { margin: 12px 2px 4px; font-size: 13.5px; color: var(--dim); }
+
+.wday {
+  background: var(--surface);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-sm);
+  padding: 12px 14px;
+}
+.wday--today { border: 1.5px solid var(--brand); }
+.wday--weekend { opacity: .82; }
+.wday--empty { padding: 9px 14px; opacity: .6; box-shadow: none; background: color-mix(in srgb, var(--surface) 55%, transparent); }
+
+.wday__head {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  gap: 12px;
+}
+.wday__name { font-size: 13px; font-weight: 800; }
+.wday--today .wday__name { color: var(--brand); }
+.wday__meta { font-size: 12px; color: var(--dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.wday__bar {
+  position: relative;
+  height: 8px;
+  background: var(--surface-2);
+  border-radius: 999px;
+  overflow: hidden;
+  min-width: 60px;
+}
+.wday__bar b, .wday__bar u {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  border-radius: 999px;
+  transition: width .4s var(--ease);
+}
+.wday__bar b { background: var(--brand-wash); border: 0; }
+.wday__bar u { background: var(--brand); text-decoration: none; }
+
+.wlist { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 4px; }
+.wrow {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 8px;
+  border-radius: 10px;
+}
+.wrow:hover { background: var(--surface-2); }
+
+.wrow__check {
+  width: 21px; height: 21px;
+  display: grid; place-items: center;
+  flex: none;
+  padding: 0;
+  background: var(--surface);
+  border: 0;
+  border-radius: 50%;
+  color: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--line);
+  transition: all .18s var(--ease);
+}
+.wrow__check .ico { width: 12px; height: 12px; stroke-width: 3; }
+.wrow__check:hover { color: var(--dim); transform: scale(1.1); }
+.wrow.is-done .wrow__check { background: var(--ok); color: #fff; box-shadow: none; }
+
+.wrow__title {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.wrow.is-done .wrow__title { text-decoration: line-through; color: var(--dim); font-weight: 500; }
+
+.wrow__tags { display: flex; gap: 4px; flex: none; }
+.wrow__tags .pill { font-size: 10.5px; padding: 1px 7px; }
+
+.wrow__move { display: flex; gap: 2px; flex: none; }
+.wrow__move button {
+  width: 26px; height: 26px;
+  display: grid; place-items: center;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--dim);
+  background: none;
+  border: 0;
+  border-radius: 8px;
+}
+.wrow__move button:hover { background: var(--brand-wash); color: var(--brand); }
+
+.week__someday {
+  width: 100%;
+  margin-top: 12px;
+  padding: 12px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--dim);
+  background: var(--surface);
+  border: 1.5px dashed var(--line);
+  border-radius: var(--r-md);
+  transition: all .2s var(--ease);
+}
+.week__someday:hover { color: var(--brand); border-color: var(--brand); }
+
+@media (hover: hover) {
+  .wrow__move button { opacity: 0; transition: opacity .15s var(--ease); }
+  .wrow:hover .wrow__move button { opacity: 1; }
+}
+
 /* ---------- 好玩的：轉盤與監工 ---------- */
 .funrow { display: flex; gap: 10px; margin-bottom: 18px; }
 .fun-btn {

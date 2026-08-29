@@ -23,7 +23,7 @@
     body { margin: 0; font-family: system-ui, sans-serif; }
     canvas.confetti { position: fixed; inset: 0; pointer-events: none; opacity: 0; }
   </style>
-  <link rel="stylesheet" href="assets/styles.css?v=11">
+  <link rel="stylesheet" href="assets/styles.css?v=12">
 </head>
 <body>
   <a class="skip-link" href="#groups">跳到清單</a>
@@ -59,6 +59,7 @@
     <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 2v13"/><path d="m16 6-4-4-4 4"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></symbol>
     <symbol id="i-bell" viewBox="0 0 24 24"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></symbol>
     <symbol id="i-tone" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M12 7v3"/><path d="M12 13.5h.01"/></symbol>
+    <symbol id="i-week" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/><path d="M8 14h8"/><path d="M8 18h5"/></symbol>
     <symbol id="i-dice" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="4"/><circle cx="8.5" cy="8.5" r=".8" class="dot"/><circle cx="15.5" cy="8.5" r=".8" class="dot"/><circle cx="12" cy="12" r=".8" class="dot"/><circle cx="8.5" cy="15.5" r=".8" class="dot"/><circle cx="15.5" cy="15.5" r=".8" class="dot"/></symbol>
     <symbol id="i-note" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3" class="stroked"/><circle cx="18" cy="16" r="3" class="stroked"/></symbol>
     <symbol id="i-voice" viewBox="0 0 24 24"><path d="M11 4.7 6.6 8H3.5a.5.5 0 0 0-.5.5v7a.5.5 0 0 0 .5.5h3.1L11 19.3a.5.5 0 0 0 .8-.4V5.1a.5.5 0 0 0-.8-.4z"/><path d="M16 9a5 5 0 0 1 0 6"/><path d="M19.4 5.6a9 9 0 0 1 0 12.8"/></symbol>
@@ -114,6 +115,9 @@
       <button type="button" class="nav__btn" data-view="today" role="tab">
         <svg class="ico"><use href="#i-calendar"/></svg><span>今天</span>
         <i class="nav__dot" id="navDot" hidden></i>
+      </button>
+      <button type="button" class="nav__btn" data-view="week" role="tab">
+        <svg class="ico"><use href="#i-week"/></svg><span>本週</span>
       </button>
       <button type="button" class="nav__btn" data-view="list" role="tab">
         <svg class="ico"><use href="#i-list"/></svg><span>清單</span>
@@ -226,6 +230,18 @@
 
       <main class="groups" id="todayList"></main>
       <div class="empty" id="todayEmpty" hidden></div>
+    </section>
+
+    <!-- ========== 本週 ========== -->
+    <section class="view" id="viewWeek" role="tabpanel" aria-label="本週" hidden>
+      <div class="week__nav">
+        <button type="button" class="ghost-btn" id="weekPrev" aria-label="上一週"><svg class="ico" style="transform:rotate(180deg)"><use href="#i-chevron"/></svg></button>
+        <h2 class="week__label" id="weekLabel"></h2>
+        <button type="button" class="ghost-btn" id="weekNext" aria-label="下一週"><svg class="ico"><use href="#i-chevron"/></svg></button>
+      </div>
+      <p class="week__hint">點日期看那天要做什麼；tab 下的小條是各天的負載。用 ‹ › 把事情搬到別天——未來的隨便搬，<b>今天和逾期的往後搬算改期，照罰</b>。</p>
+      <div id="weekBoard" class="week"></div>
+      <button type="button" class="week__someday" id="weekSomeday" hidden></button>
     </section>
 
     <!-- ========== 清單 ========== -->
@@ -413,6 +429,6 @@
     <button type="button" id="toastAction" class="toast__action" hidden>復原</button>
   </div>
 
-  <script src="assets/app.js?v=11"></script>
+  <script src="assets/app.js?v=12"></script>
 </body>
 </html>
