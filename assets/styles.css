@@ -985,6 +985,7 @@ button { cursor: pointer; }
 /* ---------- 浮動按鈕 ---------- */
 .fab {
   position: fixed;
+  z-index: 41;
   right: max(20px, calc(50vw - 410px));
   bottom: 26px;
   width: 60px; height: 60px;
@@ -1564,8 +1565,7 @@ button { cursor: pointer; }
   .select select { width: 100%; }
   .compose__more { display: none; }
   .task { grid-template-columns: 52px 1fr auto; }
-  .toast { bottom: 100px; }
-  .fab { right: 18px; bottom: 20px; }
+  .fab { right: 18px; }
 
   .sheet {
     width: 100%;
