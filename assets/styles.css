@@ -366,65 +366,24 @@ button { cursor: pointer; }
 .sw--pastel { background: linear-gradient(135deg, #eeedf8 45%, #8a83ea 45%); }
 .sw--lime { background: linear-gradient(135deg, #22231a 45%, #cfee4d 45%); }
 
-/* ---------- 進度卡 ---------- */
-.progress {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 16px 20px;
-  margin-bottom: 12px;
-  border-radius: var(--r-xl);
-  background: linear-gradient(125deg, var(--hero-1), var(--hero-2));
-  color: var(--on-hero);
-  box-shadow: var(--shadow-md);
-  overflow: hidden;
-  position: relative;
-}
-.progress::after {
-  content: "";
-  position: absolute;
-  right: -60px; top: -70px;
-  width: 190px; height: 190px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, .1);
-}
-.progress__text { position: relative; z-index: 1; }
-.progress__label {
-  margin: 0;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: .14em;
-  opacity: .85;
-}
-.progress__value {
-  margin: 2px 0 0;
-  font-size: 32px;
-  font-weight: 800;
-  letter-spacing: -.03em;
-  line-height: 1.1;
-  font-variant-numeric: tabular-nums;
-}
-.progress__value small { font-size: 17px; font-weight: 700; opacity: .8; }
-.progress__hint { margin: 4px 0 0; font-size: 13.5px; opacity: .88; }
-
-.ring { position: relative; width: 68px; height: 68px; flex: none; z-index: 1; }
-.ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
-.ring circle { fill: none; stroke-width: 11; stroke-linecap: round; }
-.ring__track { stroke: rgba(255, 255, 255, .28); }
-.ring__bar {
-  stroke: var(--on-hero);
+/* ---------- 今日進度環（迷你，嵌在信用卡片） ---------- */
+.ring--mini { position: relative; width: 40px; height: 40px; flex: none; }
+.ring--mini svg { width: 100%; height: 100%; transform: rotate(-90deg); display: block; }
+.ring--mini circle { fill: none; stroke-width: 14; stroke-linecap: round; }
+.ring--mini .ring__track { stroke: var(--surface-2); }
+.ring--mini .ring__bar {
+  stroke: var(--ok);
   stroke-dasharray: 314.16;
   stroke-dashoffset: 314.16;
   transition: stroke-dashoffset .6s var(--ease);
 }
-.ring__label {
+.ring--mini .ring__label {
   position: absolute;
   inset: 0;
   display: grid;
   place-items: center;
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 9.5px;
+  font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
 
@@ -432,9 +391,9 @@ button { cursor: pointer; }
 .credit {
   display: flex;
   align-items: flex-start;
-  gap: 14px;
-  padding: 16px 18px;
-  margin-bottom: 14px;
+  gap: 12px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
   background: var(--surface);
   border-radius: var(--r-lg);
   box-shadow: var(--shadow-sm);
@@ -535,32 +494,41 @@ button { cursor: pointer; }
   margin-bottom: 14px;
 }
 .tile {
-  position: relative;
   display: grid;
-  gap: 2px;
-  padding: 11px 11px 10px;
-  text-align: left;
+  grid-template-columns: auto 1fr;
+  column-gap: 8px;
+  align-items: center;
+  padding: 8px 10px;
   background: var(--surface);
   border: 1.5px solid transparent;
-  border-radius: var(--r-lg);
+  border-radius: var(--r-md);
   box-shadow: var(--shadow-sm);
   color: var(--text);
+  min-width: 0;
   transition: transform .2s var(--ease), border-color .2s var(--ease), background-color .2s var(--ease);
 }
 .tile:hover { transform: translateY(-2px); }
 .tile__ico {
-  width: 28px; height: 28px;
+  width: 26px; height: 26px;
   display: grid; place-items: center;
+  grid-row: 1 / span 2;
   border-radius: 50%;
-  margin-bottom: 6px;
 }
+.tile__ico .ico { width: 14px; height: 14px; }
 .tile__num {
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 800;
   letter-spacing: -.02em;
+  line-height: 1.1;
   font-variant-numeric: tabular-nums;
 }
-.tile__label { font-size: 12.5px; color: var(--dim); }
+.tile__label {
+  font-size: 11px;
+  color: var(--dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 .tile[data-tone="brand"] .tile__ico { background: var(--brand-wash); color: var(--brand); }
 .tile[data-tone="accent"] .tile__ico { background: var(--accent-wash); color: var(--accent); }
@@ -1559,11 +1527,11 @@ button { cursor: pointer; }
   .fab { bottom: calc(96px + env(safe-area-inset-bottom)); }
   .toast { bottom: calc(96px + env(safe-area-inset-bottom)); }
 
-  .tiles { grid-template-columns: repeat(2, 1fr); }
   .controls { flex-wrap: wrap; }
   .search { flex-basis: 100%; }
   .select select { width: 100%; }
-  .compose__more { display: none; }
+  #detailBtn { display: none; }
+  .compose__more { padding: 9px 10px; font-size: 12.5px; }
   .task { grid-template-columns: 52px 1fr auto; }
   .fab { right: 18px; }
 

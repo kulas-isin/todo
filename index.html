@@ -23,7 +23,7 @@
     body { margin: 0; font-family: system-ui, sans-serif; }
     canvas.confetti { position: fixed; inset: 0; pointer-events: none; opacity: 0; }
   </style>
-  <link rel="stylesheet" href="assets/styles.css?v=13">
+  <link rel="stylesheet" href="assets/styles.css?v=14">
 </head>
 <body>
   <a class="skip-link" href="#groups">跳到清單</a>
@@ -133,22 +133,7 @@
       <h1 class="hero__title" id="greeting">你好</h1>
       <p class="hero__sub" id="heroSub"></p>
 
-      <section class="progress" aria-label="今日進度">
-        <div class="progress__text">
-          <p class="progress__label">今日約定</p>
-          <p class="progress__value"><span id="progPct">0</span><small>%</small></p>
-          <p class="progress__hint" id="progHint">今天還沒有排定的約定</p>
-        </div>
-        <div class="ring">
-          <svg viewBox="0 0 120 120" aria-hidden="true">
-            <circle class="ring__track" cx="60" cy="60" r="50"></circle>
-            <circle class="ring__bar" id="ringBar" cx="60" cy="60" r="50"></circle>
-          </svg>
-          <span class="ring__label" id="ringLabel">0/0</span>
-        </div>
-      </section>
-
-      <section class="credit" aria-label="信用">
+      <section class="credit" aria-label="信用與今日進度">
         <svg class="mascot" id="mascot" data-mood="normal" viewBox="0 0 120 120" aria-hidden="true">
           <rect x="14" y="18" width="92" height="88" rx="30" class="mascot__body"/>
           <path d="M44 66l12 12 22-24" class="mascot__check"/>
@@ -173,6 +158,13 @@
         <div class="credit__body">
           <p class="bubble" id="mascotSay">…</p>
           <div class="credit__meta">
+            <span class="ring ring--mini" title="今日進度">
+              <svg viewBox="0 0 120 120" aria-hidden="true">
+                <circle class="ring__track" cx="60" cy="60" r="50"></circle>
+                <circle class="ring__bar" id="ringBar" cx="60" cy="60" r="50"></circle>
+              </svg>
+              <b class="ring__label" id="ringLabel">0/0</b>
+            </span>
             <span class="credit__score">信用 <b id="creditScore">70</b></span>
             <div class="limitbar" title="進行中／額度"><i id="limitFill"></i></div>
             <span class="credit__limit" id="limitText"></span>
@@ -199,7 +191,7 @@
         <button type="button" class="tile" data-page="done" data-tone="ok">
           <span class="tile__ico"><svg class="ico"><use href="#i-done"/></svg></span>
           <span class="tile__num" id="tDone">0</span>
-          <span class="tile__label">已完成</span>
+          <span class="tile__label">完成</span>
         </button>
       </section>
 
@@ -429,6 +421,6 @@
     <button type="button" id="toastAction" class="toast__action" hidden>復原</button>
   </div>
 
-  <script src="assets/app.js?v=12"></script>
+  <script src="assets/app.js?v=14"></script>
 </body>
 </html>

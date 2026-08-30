@@ -41,7 +41,7 @@
   const $ = (s) => document.querySelector(s);
   const el = {};
   [
-    'dateLine', 'greeting', 'heroSub', 'progPct', 'progHint', 'ringBar', 'ringLabel',
+    'dateLine', 'greeting', 'heroSub', 'ringBar', 'ringLabel',
     'tAll', 'tToday', 'tOver', 'tDone', 'cats', 'groups', 'empty', 'tabs', 'pager',
     'nav', 'navDot', 'viewToday', 'viewList', 'viewTrail', 'todayList', 'todayEmpty',
     'viewWeek', 'weekBoard', 'weekLabel', 'weekPrev', 'weekNext', 'weekSomeday',
@@ -1304,12 +1304,11 @@
     const total = scope.length;
     const pct = total ? Math.round((done / total) * 100) : 0;
 
-    el.progPct.textContent = pct;
     el.ringLabel.textContent = `${done}/${total}`;
     el.ringBar.style.strokeDashoffset = String(314.16 * (1 - (total ? done / total : 0)));
-    el.progHint.textContent = !total
-      ? '今天還沒有排定的約定'
-      : done === total ? '今天的約定全部達成！' : `還差 ${total - done} 個就完成今天`;
+    el.ringLabel.parentElement.title = !total
+      ? '今日進度：今天還沒有排定的約定'
+      : `今日進度 ${pct}%${done === total ? '，全部達成！' : `，還差 ${total - done} 件`}`;
   }
 
   function renderTiles() {
@@ -2482,8 +2481,26 @@
     });
 
     el.detailBtn.addEventListener('click', () => openDialog(null));
-    el.fabBtn.addEventListener('click', () => openDialog(null));
     el.backfillBtn.addEventListener('click', () => openDialog(null, true));
+
+    // FAB：短按新增；長按（550ms）補記
+    let fabTimer = null;
+    let fabLong = false;
+    el.fabBtn.title = '新增（長按＝補記）';
+    el.fabBtn.addEventListener('pointerdown', () => {
+      fabLong = false;
+      fabTimer = setTimeout(() => {
+        fabLong = true;
+        if (navigator.vibrate) navigator.vibrate(12);
+        openDialog(null, true);
+      }, 550);
+    });
+    const fabCancel = () => clearTimeout(fabTimer);
+    el.fabBtn.addEventListener('pointerup', fabCancel);
+    el.fabBtn.addEventListener('pointerleave', fabCancel);
+    el.fabBtn.addEventListener('pointercancel', fabCancel);
+    el.fabBtn.addEventListener('click', () => { if (!fabLong) openDialog(null); });
+    el.fabBtn.addEventListener('contextmenu', (e) => e.preventDefault());
 
     el.notifyBtn.addEventListener('click', toggleNotify);
     el.testNagBtn.addEventListener('click', testNag);
