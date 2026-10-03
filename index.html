@@ -23,7 +23,7 @@
     body { margin: 0; font-family: system-ui, sans-serif; }
     canvas.confetti { position: fixed; inset: 0; pointer-events: none; opacity: 0; }
   </style>
-  <link rel="stylesheet" href="assets/styles.css?v=14">
+  <link rel="stylesheet" href="assets/styles.css?v=15">
 </head>
 <body>
   <a class="skip-link" href="#groups">跳到清單</a>
@@ -129,9 +129,10 @@
 
     <!-- ========== 今天 ========== -->
     <section class="view" id="viewToday" role="tabpanel" aria-label="今天">
-      <p class="eyebrow" id="dateLine"></p>
-      <h1 class="hero__title" id="greeting">你好</h1>
-      <p class="hero__sub" id="heroSub"></p>
+      <div class="todayhead">
+        <h1 class="hero__title" id="greeting">你好</h1>
+        <p class="eyebrow" id="dateLine"></p>
+      </div>
 
       <section class="credit" aria-label="信用與今日進度">
         <svg class="mascot" id="mascot" data-mood="normal" viewBox="0 0 120 120" aria-hidden="true">
@@ -174,24 +175,20 @@
 
       <section class="tiles" aria-label="狀態總覽">
         <button type="button" class="tile" data-page="all" data-tone="brand">
-          <span class="tile__ico"><svg class="ico"><use href="#i-list"/></svg></span>
-          <span class="tile__num" id="tAll">0</span>
           <span class="tile__label">全部</span>
+          <span class="tile__num" id="tAll">0</span>
         </button>
         <button type="button" class="tile" data-page="today" data-tone="accent">
-          <span class="tile__ico"><svg class="ico"><use href="#i-calendar"/></svg></span>
-          <span class="tile__num" id="tToday">0</span>
           <span class="tile__label">今天</span>
+          <span class="tile__num" id="tToday">0</span>
         </button>
         <button type="button" class="tile" data-page="overdue" data-tone="danger">
-          <span class="tile__ico"><svg class="ico"><use href="#i-alarm"/></svg></span>
-          <span class="tile__num" id="tOver">0</span>
           <span class="tile__label">逾期</span>
+          <span class="tile__num" id="tOver">0</span>
         </button>
         <button type="button" class="tile" data-page="done" data-tone="ok">
-          <span class="tile__ico"><svg class="ico"><use href="#i-done"/></svg></span>
-          <span class="tile__num" id="tDone">0</span>
           <span class="tile__label">完成</span>
+          <span class="tile__num" id="tDone">0</span>
         </button>
       </section>
 
@@ -204,21 +201,18 @@
             <svg class="ico"><use href="#i-plus"/></svg>
           </button>
         </form>
-        <details class="syntax">
-          <summary>快速語法</summary>
-          <p>
+        <div class="toolrow">
+          <button type="button" class="toolrow__link" id="syntaxBtn" aria-expanded="false" aria-controls="syntaxHelp">快速語法</button>
+          <button type="button" class="fun-btn" id="spinBtn"><svg class="ico"><use href="#i-dice"/></svg>別再選了</button>
+          <button type="button" class="fun-btn" id="focusBtn"><svg class="ico"><use href="#i-eye"/></svg>監工</button>
+        </div>
+        <p class="syntax" id="syntaxHelp" hidden>
             <code>!高</code> <code>!中</code> <code>!低</code> 設定優先度 ·
             <code>#分類</code> 設定分類 ·
             <code>@今天</code> <code>@明天</code> <code>@下週</code> <code>@8/15</code> 設定到期日。
             例如：<em>寫月報 !高 #工作 @明天</em>
-          </p>
-        </details>
+        </p>
       </section>
-
-      <div class="funrow">
-        <button type="button" class="fun-btn" id="spinBtn"><svg class="ico"><use href="#i-dice"/></svg>別再選了</button>
-        <button type="button" class="fun-btn" id="focusBtn"><svg class="ico"><use href="#i-eye"/></svg>監工模式</button>
-      </div>
 
       <main class="groups" id="todayList"></main>
       <div class="empty" id="todayEmpty" hidden></div>
@@ -421,6 +415,6 @@
     <button type="button" id="toastAction" class="toast__action" hidden>復原</button>
   </div>
 
-  <script src="assets/app.js?v=14"></script>
+  <script src="assets/app.js?v=15"></script>
 </body>
 </html>

@@ -41,7 +41,7 @@
   const $ = (s) => document.querySelector(s);
   const el = {};
   [
-    'dateLine', 'greeting', 'heroSub', 'ringBar', 'ringLabel',
+    'dateLine', 'greeting', 'ringBar', 'ringLabel',
     'tAll', 'tToday', 'tOver', 'tDone', 'cats', 'groups', 'empty', 'tabs', 'pager',
     'nav', 'navDot', 'viewToday', 'viewList', 'viewTrail', 'todayList', 'todayEmpty',
     'viewWeek', 'weekBoard', 'weekLabel', 'weekPrev', 'weekNext', 'weekSomeday',
@@ -50,7 +50,7 @@
     'paletteBtn', 'palettePanel', 'themeBtn', 'moreBtn', 'morePanel',
     'shareBtn', 'shareBtn2', 'exportBtn', 'importBtn', 'importFile', 'clearDoneBtn', 'clearAllBtn',
     'fabBtn', 'confetti', 'toast', 'toastText', 'toastAction', 'installBtn',
-    'mascot', 'mascotSay', 'creditScore', 'limitFill', 'limitText', 'backfillBtn',
+    'syntaxBtn', 'syntaxHelp', 'mascot', 'mascotSay', 'creditScore', 'limitFill', 'limitText', 'backfillBtn',
     'toneBtn', 'toneLabel', 'nagDialog', 'nagText', 'nagMain', 'nagAlt', 'notifyBtn', 'notifyLabel', 'testNagBtn',
     'voiceBtn', 'voiceLabel', 'soundBtn', 'soundLabel', 'spinBtn', 'focusBtn', 'spinDialog', 'spinClose', 'slot', 'slotText', 'spinSay', 'spinAgain', 'spinGo',
     'focusBar', 'focusTask', 'focusTime', 'focusQuit', 'shareTitle',
@@ -702,7 +702,8 @@
     const active = activeCount();
     el.creditScore.textContent = score;
     el.mascot.dataset.mood = moodFor(score);
-    el.limitText.textContent = '進行中 ' + active + '／額度 ' + limit;
+    el.limitText.textContent = active + '/' + limit;
+    el.limitText.title = '進行中 ' + active + '／額度 ' + limit;
     el.limitFill.style.width = Math.min(100, Math.round((active / limit) * 100)) + '%';
     el.limitFill.classList.toggle('is-over', active > limit);
 
@@ -1271,30 +1272,10 @@
   function renderHero() {
     const now = new Date();
     const week = ['日', '一', '二', '三', '四', '五', '六'][now.getDay()];
-    el.dateLine.textContent = `${now.getFullYear()} 年 ${now.getMonth() + 1} 月 ${now.getDate()} 日 · 星期${week}`;
+    el.dateLine.textContent = `${now.getMonth() + 1}/${now.getDate()} 星期${week}`;
 
     const h = now.getHours();
     el.greeting.textContent = h < 5 ? '夜深了' : h < 11 ? '早安' : h < 14 ? '午安' : h < 18 ? '午後好' : '晚安';
-
-    const today = todayIso();
-    const left = state.todos.filter((t) => !t.done && t.due && t.due <= today).length;
-    const active = state.todos.filter((t) => !t.done).length;
-    el.heroSub.textContent = '';
-    if (!state.todos.length) {
-      el.heroSub.textContent = '寫下第一個跟自己的約定吧。';
-    } else if (left > 0) {
-      el.heroSub.append('今天還有 ', bold(left), ' 個約定等你打勾。');
-    } else if (active > 0) {
-      el.heroSub.append('今天的約定都完成了，還有 ', bold(active), ' 個排在後面。');
-    } else {
-      el.heroSub.textContent = '清單全空，難得的輕鬆一天。';
-    }
-  }
-
-  function bold(text) {
-    const b = document.createElement('b');
-    b.textContent = String(text);
-    return b;
   }
 
   function renderProgress() {
@@ -2482,6 +2463,11 @@
 
     el.detailBtn.addEventListener('click', () => openDialog(null));
     el.backfillBtn.addEventListener('click', () => openDialog(null, true));
+    el.syntaxBtn.addEventListener('click', () => {
+      const open = el.syntaxHelp.hidden;
+      el.syntaxHelp.hidden = !open;
+      el.syntaxBtn.setAttribute('aria-expanded', String(open));
+    });
 
     // FAB：短按新增；長按（550ms）補記
     let fabTimer = null;
