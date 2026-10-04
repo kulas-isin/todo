@@ -1159,6 +1159,7 @@ button { cursor: pointer; }
 .wpanel__empty { margin: 12px 2px 4px; font-size: 13.5px; color: var(--dim); }
 
 .wday {
+  min-width: 0; /* 在 .week 格線裡不被長標題撐寬 */
   background: var(--surface);
   border-radius: var(--r-md);
   box-shadow: var(--shadow-sm);
@@ -1524,6 +1525,26 @@ button { cursor: pointer; }
   .app { padding-bottom: calc(104px + env(safe-area-inset-bottom)); }
   .fab { bottom: calc(96px + env(safe-area-inset-bottom)); }
   .toast { bottom: calc(96px + env(safe-area-inset-bottom)); }
+
+  /* 本週列：標籤移到標題下方，標題可換兩行 */
+  .wrow {
+    display: grid;
+    grid-template-columns: 21px minmax(0, 1fr) auto;
+    column-gap: 9px;
+    row-gap: 3px;
+  }
+  .wrow__check { grid-row: 1 / span 2; }
+  .wrow__title {
+    grid-column: 2;
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-height: 1.4;
+  }
+  .wrow__tags { grid-column: 2; grid-row: 2; flex-wrap: wrap; }
+  .wrow__tags:empty { display: none; }
+  .wrow__move { grid-column: 3; grid-row: 1 / span 2; }
 
   .controls { flex-wrap: wrap; }
   .search { flex-basis: 100%; }
