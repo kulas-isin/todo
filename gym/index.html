@@ -1,0 +1,1825 @@
+<title>練勾勾</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="重訓紀錄：動作、組數、次數、重量，逐組打勾。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&display=swap">
+<style>
+/* =========================================================
+   練勾勾 Lift — 樣式
+   沿用打勾勾的「螢光萊姆」色盤，預設跟隨系統明暗，可手動切換。
+   ========================================================= */
+
+:root, :root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #eef3d8;
+  --bg-2: #f7faea;
+  --surface: #ffffff;
+  --surface-2: #f4f7e4;
+  --line: rgba(32, 38, 20, .1);
+  --text: #232a16;
+  --dim: #7c8468;
+  --brand: #7f9c16;
+  --brand-wash: #eaf3c8;
+  --on-brand: #ffffff;
+  --accent: #d0a520;
+  --accent-wash: #f8eec7;
+  --danger: #d9604f;
+  --danger-wash: #fae4df;
+  --ok: #3fa478;
+  --ok-wash: #ddf0e6;
+  --hero-1: #b6d92f;
+  --hero-2: #8fc63f;
+  --on-hero: #1c220f;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #14150e;
+    --bg-2: #1b1c13;
+    --surface: #222318;
+    --surface-2: #2b2d1f;
+    --line: rgba(255, 255, 255, .1);
+    --text: #f1f3e2;
+    --dim: #9ea48b;
+    --brand: #cfee4d;
+    --brand-wash: #33381c;
+    --on-brand: #1a1d0d;
+    --accent: #e8c85a;
+    --accent-wash: #3d3620;
+    --danger: #f08a76;
+    --danger-wash: #43281f;
+    --ok: #6ed3a1;
+    --ok-wash: #1f402f;
+    --hero-1: #c7e94a;
+    --hero-2: #98cc45;
+    --on-hero: #1a1e0c;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #14150e;
+  --bg-2: #1b1c13;
+  --surface: #222318;
+  --surface-2: #2b2d1f;
+  --line: rgba(255, 255, 255, .1);
+  --text: #f1f3e2;
+  --dim: #9ea48b;
+  --brand: #cfee4d;
+  --brand-wash: #33381c;
+  --on-brand: #1a1d0d;
+  --accent: #e8c85a;
+  --accent-wash: #3d3620;
+  --danger: #f08a76;
+  --danger-wash: #43281f;
+  --ok: #6ed3a1;
+  --ok-wash: #1f402f;
+  --hero-1: #c7e94a;
+  --hero-2: #98cc45;
+  --on-hero: #1a1e0c;
+}
+
+:root {
+  /* 字體：數字用窄體（像槓片和計分板），其餘用系統中文字 */
+  --font-num: "Barlow Condensed", "Arial Narrow", ui-sans-serif, system-ui, sans-serif;
+  --r-sm: 12px;
+  --r-md: 18px;
+  --r-lg: 26px;
+  --shadow-sm: 0 2px 6px rgba(20, 30, 40, .05), 0 8px 20px rgba(20, 30, 40, .05);
+  --shadow-md: 0 6px 14px rgba(20, 30, 40, .07), 0 18px 40px rgba(20, 30, 40, .08);
+  --shadow-lg: 0 20px 50px rgba(20, 30, 40, .18);
+  --ease: cubic-bezier(.22, .68, .36, 1);
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { min-height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  background-image: radial-gradient(120% 900px at 50% -160px, var(--bg-2) 0%, transparent 100%);
+  background-repeat: no-repeat;
+  color: var(--text);
+  font: 400 16px/1.55 "Noto Sans TC", "PingFang TC", "Hiragino Sans", "Microsoft JhengHei", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+}
+
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
+
+.sprite { display: none; }
+.ico {
+  width: 20px; height: 20px; flex: none;
+  fill: none; stroke: currentColor; stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.ico .dot { fill: currentColor; stroke: none; }
+
+.app {
+  max-width: 720px;
+  margin: 0 auto;
+  padding-block: clamp(18px, 3.5vw, 30px) 120px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px);
+  z-index: 25; background: var(--bg);
+}
+.num, .stat b, .live__time, .rest__time, .summary__big, .lift__pr b, .set input, .set__no {
+  font-family: var(--font-num);
+}
+
+/* ---------- 標頭 ---------- */
+.bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand__mark {
+  width: 34px; height: 34px; display: grid; place-items: center;
+  color: var(--on-brand); background: var(--brand);
+  border-radius: 11px; box-shadow: var(--shadow-sm);
+}
+.brand__mark .ico { width: 19px; height: 19px; stroke-width: 2.6; }
+.brand__name { font-size: 17px; font-weight: 800; letter-spacing: .04em; }
+.tools { display: flex; gap: 4px; }
+
+.ghost-btn {
+  width: 40px; height: 40px; display: grid; place-items: center;
+  color: var(--text); background: transparent; border: 0; border-radius: 50%;
+  transition: background-color .2s var(--ease), transform .2s var(--ease);
+}
+.ghost-btn:hover { background: var(--surface); }
+.ghost-btn:active { transform: scale(.94); }
+.ghost-btn--sm { width: 32px; height: 32px; }
+.ghost-btn--sm .ico { width: 17px; height: 17px; }
+
+.pop { position: relative; }
+.pop__panel {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 50;
+  min-width: 210px; padding: 6px;
+  background: var(--surface); border-radius: var(--r-md); box-shadow: var(--shadow-lg);
+  display: flex; flex-direction: column;
+}
+.pop__panel button, .pop__panel a {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border: 0; border-radius: var(--r-sm);
+  background: transparent; text-align: left; font-size: 14.5px;
+  color: var(--text); text-decoration: none;
+}
+.pop__panel button:hover, .pop__panel a:hover { background: var(--surface-2); }
+.pop__panel .danger { color: var(--danger); }
+
+/* ---------- 分頁列 ---------- */
+.nav {
+  display: flex; gap: 6px; padding: 6px; margin-bottom: 20px;
+  background: var(--surface); border-radius: 999px; box-shadow: var(--shadow-sm);
+}
+.nav__btn {
+  position: relative; flex: 1;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 10px 8px; font-size: 14.5px; font-weight: 600;
+  color: var(--dim); background: transparent; border: 0; border-radius: 999px;
+  transition: all .2s var(--ease);
+}
+.nav__btn:hover { color: var(--text); }
+.nav__btn.is-on { background: var(--brand); color: var(--on-brand); }
+.nav__btn .ico { width: 18px; height: 18px; }
+.nav__dot {
+  position: absolute; top: 7px; right: 16px; width: 7px; height: 7px;
+  border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--surface);
+}
+
+.view { animation: viewIn .22s var(--ease); }
+@keyframes viewIn { from { opacity: 0; transform: translateY(6px); } }
+
+h1.title { margin: 0 2px 4px; font-size: 26px; font-weight: 800; letter-spacing: -.02em; line-height: 1.2; }
+.sub { margin: 0 2px 16px; color: var(--dim); font-size: 14px; }
+.section-title {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  margin: 22px 2px 10px; font-size: 13px; font-weight: 700; letter-spacing: .1em; color: var(--dim);
+}
+
+/* ---------- 卡片 ---------- */
+.card {
+  background: var(--surface); border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm); padding: 16px 18px;
+}
+.card + .card { margin-top: 12px; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 44px; padding: 10px 18px;
+  font-weight: 700; font-size: 15px;
+  background: var(--surface-2); color: var(--text);
+  border: 0; border-radius: 999px;
+  transition: transform .15s var(--ease), filter .2s;
+}
+.btn:active { transform: scale(.97); }
+.btn--primary { background: var(--brand); color: var(--on-brand); }
+.btn--danger { background: var(--danger-wash); color: var(--danger); }
+.btn--block { width: 100%; }
+.btn--sm { min-height: 36px; padding: 6px 14px; font-size: 14px; }
+.btn .ico { width: 18px; height: 18px; }
+.btn:disabled { opacity: .5; cursor: default; }
+
+/* ---------- 週列 ---------- */
+.weekdots { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.weekdot { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; color: var(--dim); }
+.weekdot i {
+  width: 30px; height: 30px; border-radius: 50%;
+  display: grid; place-items: center; font-style: normal; font-weight: 700; font-size: 13px;
+  background: var(--surface-2); color: var(--dim);
+}
+.weekdot.is-done i { background: var(--brand); color: var(--on-brand); }
+.weekdot.is-today i { box-shadow: 0 0 0 2px var(--brand); }
+.weekdot.is-today { color: var(--text); font-weight: 700; }
+
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
+.stat { background: var(--surface-2); border-radius: var(--r-md); padding: 10px 12px; }
+.stat b { display: block; font-size: 20px; font-weight: 800; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.stat small { color: var(--dim); font-size: 12px; }
+
+/* ---------- 課表卡 ---------- */
+.routine { display: flex; align-items: center; gap: 12px; }
+.routine__body { flex: 1; min-width: 0; }
+.routine__name { margin: 0; font-size: 16.5px; font-weight: 800; }
+.routine__meta { margin: 2px 0 0; color: var(--dim); font-size: 13px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.routine__actions { display: flex; align-items: center; gap: 4px; flex: none; }
+
+.empty {
+  text-align: center; color: var(--dim); padding: 28px 16px; font-size: 14.5px;
+  background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--shadow-sm);
+}
+.empty b { display: block; color: var(--text); font-size: 16px; margin-bottom: 4px; }
+
+/* ---------- 進行中的訓練 ---------- */
+.live {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+  display: flex; align-items: center; gap: 12px;
+  margin: 0 -4px 14px; padding: 12px 16px;
+  background: linear-gradient(135deg, var(--hero-1), var(--hero-2));
+  color: var(--on-hero); border-radius: var(--r-lg); box-shadow: var(--shadow-md);
+}
+.live__body { flex: 1; min-width: 0; }
+.live__name {
+  width: 100%; margin: 0; padding: 0; border: 0; background: transparent;
+  font-size: 18px; font-weight: 800; color: inherit; outline: none;
+}
+.live__meta { font-size: 13px; opacity: .85; font-variant-numeric: tabular-nums; }
+.live__time { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.ex { padding: 14px 14px 12px; }
+.ex__head { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
+.ex__title { flex: 1; min-width: 0; }
+.ex__name { margin: 0; font-size: 16.5px; font-weight: 800; }
+.ex__last { margin: 1px 0 0; font-size: 12.5px; color: var(--dim); }
+.ex__hint {
+  display: inline-block; margin-top: 4px; padding: 2px 9px;
+  font-size: 12px; font-weight: 700; border-radius: 999px;
+  background: var(--accent-wash); color: var(--accent);
+}
+.ex__tools { display: flex; gap: 0; flex: none; margin: -4px -4px 0 0; }
+
+.sets { display: flex; flex-direction: column; gap: 6px; }
+.set {
+  display: grid; grid-template-columns: 28px minmax(0, 1fr) 18px minmax(0, 1fr) 44px;
+  align-items: center; gap: 6px;
+  padding: 4px 4px 4px 6px; border-radius: var(--r-sm);
+  transition: background-color .2s;
+}
+.set__hd { font-size: 11.5px; color: var(--dim); font-weight: 700; letter-spacing: .06em; }
+.set__hd span { text-align: center; }
+.set__no { font-weight: 800; color: var(--dim); text-align: center; font-variant-numeric: tabular-nums; }
+.set__x { text-align: center; color: var(--dim); font-size: 14px; }
+.set input {
+  width: 100%; min-width: 0; height: 40px; padding: 0 8px;
+  text-align: center; font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums;
+  background: var(--surface-2); border: 1.5px solid transparent; border-radius: 10px;
+  -moz-appearance: textfield;
+}
+.set input::-webkit-outer-spin-button, .set input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.set input:focus { outline: none; border-color: var(--brand); background: var(--surface); }
+.set__check {
+  width: 44px; height: 40px; display: grid; place-items: center;
+  border: 0; border-radius: 10px;
+  background: var(--surface-2); color: var(--dim);
+  transition: all .15s var(--ease);
+}
+.set__check .ico { width: 20px; height: 20px; stroke-width: 3; }
+.set__check:active { transform: scale(.92); }
+.set.is-done { background: var(--ok-wash); }
+.set.is-done input { background: transparent; }
+.set.is-done .set__check { background: var(--ok); color: #fff; }
+.set.is-pr .set__no { color: var(--accent); }
+
+.ex__foot { display: flex; gap: 8px; margin-top: 10px; }
+.ex__foot .btn { flex: 1; }
+
+.live-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
+.live-actions .btn--primary { grid-column: 1 / -1; }
+
+/* ---------- 休息計時 ---------- */
+.rest {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  bottom: calc(20px + env(safe-area-inset-bottom)); z-index: 45;
+  width: min(560px, calc(100% - 24px));
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 10px 10px 16px;
+  background: var(--text); color: var(--bg);
+  border-radius: 999px; box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+.rest__fill { position: absolute; inset: 0; right: auto; background: var(--brand); opacity: .28; transition: width .25s linear; pointer-events: none; }
+.rest__body { position: relative; flex: 1; display: flex; align-items: baseline; gap: 10px; }
+.rest__time { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.rest__label { font-size: 13px; opacity: .8; }
+.rest button {
+  position: relative; min-width: 44px; height: 38px; padding: 0 12px;
+  border: 0; border-radius: 999px; font-weight: 700; font-size: 14px;
+  background: rgba(127, 127, 127, .25); color: inherit;
+}
+.rest.is-over { background: var(--brand); color: var(--on-brand); }
+
+/* ---------- 紀錄 ---------- */
+.month { margin: 22px 2px 10px; font-size: 13px; font-weight: 700; letter-spacing: .1em; color: var(--dim); }
+.month:first-child { margin-top: 0; }
+.log { display: block; width: 100%; text-align: left; border: 0; cursor: pointer; }
+.log__top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.log__name { margin: 0; font-size: 16px; font-weight: 800; }
+.log__date { color: var(--dim); font-size: 13px; flex: none; }
+.log__meta { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 6px 0 4px; font-size: 13px; color: var(--dim); }
+.log__meta b { color: var(--text); font-variant-numeric: tabular-nums; }
+.log__ex { margin: 0; font-size: 13.5px; color: var(--dim); }
+.pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 9px; font-size: 12px; font-weight: 700; border-radius: 999px;
+  background: var(--accent-wash); color: var(--accent);
+}
+.pill .ico { width: 13px; height: 13px; }
+
+/* ---------- 進步 ---------- */
+.lift { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; border: 0; }
+.lift__body { flex: 1; min-width: 0; }
+.lift__name { margin: 0; font-size: 15.5px; font-weight: 800; }
+.lift__meta { margin: 1px 0 0; color: var(--dim); font-size: 12.5px; }
+.lift__pr { text-align: right; flex: none; }
+.lift__pr b { display: block; font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.lift__pr small { color: var(--dim); font-size: 11.5px; }
+.lift svg.spark { width: 72px; height: 28px; flex: none; }
+.spark path { fill: none; stroke: var(--brand); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.chip {
+  padding: 6px 13px; font-size: 13.5px; font-weight: 600;
+  background: var(--surface); color: var(--dim);
+  border: 0; border-radius: 999px; box-shadow: var(--shadow-sm);
+}
+.chip.is-on { background: var(--brand); color: var(--on-brand); }
+
+.chart { width: 100%; height: auto; display: block; margin: 6px 0 4px; }
+.chart .grid { stroke: var(--line); stroke-width: 1; }
+.chart .axis { fill: var(--dim); font-size: 11px; font-family: inherit; }
+.chart .line { fill: none; stroke: var(--brand); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.chart .area { fill: var(--brand); opacity: .12; }
+.chart .pt { fill: var(--surface); stroke: var(--brand); stroke-width: 2; }
+.chart .pt.is-pr { fill: var(--accent); stroke: var(--accent); }
+
+.kv { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 10px 0 14px; }
+
+/* ---------- 對話框 ---------- */
+dialog.sheet {
+  width: min(560px, calc(100% - 24px));
+  max-height: calc(100dvh - 40px);
+  padding: 0; border: 0; border-radius: var(--r-lg);
+  background: var(--surface); color: var(--text);
+  box-shadow: var(--shadow-lg);
+}
+.sync { margin: 2px 12px 6px; font-size: 12px; font-weight: 700; color: var(--dim); }
+.sheet--ask { max-width: 420px; }
+.ask__text { margin: 18px 0 4px; font-size: 16px; line-height: 1.6; }
+dialog.sheet::backdrop { background: rgba(10, 14, 6, .45); backdrop-filter: blur(2px); }
+dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-direction: column; }
+@keyframes sheetIn { from { opacity: 0; transform: translateY(14px); } }
+.sheet__head {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 16px 14px 8px 20px;
+}
+.sheet__head h2 { margin: 0; font-size: 18px; font-weight: 800; }
+.sheet__body { padding: 4px 20px 12px; overflow-y: auto; flex: 1; }
+.sheet__actions {
+  display: flex; gap: 10px; padding: 12px 20px calc(16px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line);
+}
+.sheet__actions .btn { flex: 1; }
+
+.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.field > span { font-size: 13px; font-weight: 700; color: var(--dim); }
+.input {
+  width: 100%; height: 44px; padding: 0 14px;
+  background: var(--surface-2); border: 1.5px solid transparent; border-radius: var(--r-sm);
+  font-size: 16px;
+}
+.input:focus { outline: none; border-color: var(--brand); background: var(--surface); }
+
+.pick { display: flex; flex-direction: column; gap: 4px; }
+.pick__item {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 11px 12px; border: 0; border-radius: var(--r-sm);
+  background: transparent; text-align: left; font-size: 15.5px;
+}
+.pick__item:hover { background: var(--surface-2); }
+.pick__item small { color: var(--dim); font-size: 12.5px; }
+.pick__new { color: var(--brand); font-weight: 700; }
+.pick__new select { margin-left: auto; }
+
+.ritem {
+  display: grid; grid-template-columns: minmax(0, 1fr) 54px 54px 64px 32px;
+  align-items: center; gap: 6px;
+  padding: 6px 0; border-bottom: 1px solid var(--line);
+}
+.ritem__name { font-weight: 700; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ritem input {
+  width: 100%; height: 38px; padding: 0 4px; text-align: center;
+  background: var(--surface-2); border: 1.5px solid transparent; border-radius: 10px;
+  font-weight: 700; font-variant-numeric: tabular-nums;
+}
+.ritem input:focus { outline: none; border-color: var(--brand); }
+.ritem--hd { font-size: 11.5px; color: var(--dim); font-weight: 700; padding-bottom: 2px; }
+.ritem--hd span { text-align: center; }
+.ritem--hd span:first-child { text-align: left; }
+
+.detail-ex { margin: 0 0 14px; }
+.detail-ex h3 { margin: 0 0 4px; font-size: 15px; font-weight: 800; }
+.detail-ex ol { margin: 0; padding-left: 22px; color: var(--dim); font-size: 14px; font-variant-numeric: tabular-nums; }
+.detail-ex li b { color: var(--text); }
+
+.summary { text-align: center; padding-top: 4px; }
+.summary__big { font-size: 52px; font-weight: 700; letter-spacing: -.02em; margin: 0; }
+.summary__say { margin: 4px 0 16px; color: var(--dim); }
+.prs { list-style: none; padding: 0; margin: 14px 0 0; display: flex; flex-direction: column; gap: 6px; text-align: left; }
+.prs li { display: flex; align-items: center; gap: 8px; padding: 9px 12px; background: var(--accent-wash); border-radius: var(--r-sm); font-size: 14.5px; }
+.prs li b { margin-left: auto; font-variant-numeric: tabular-nums; }
+
+.toast {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  bottom: calc(24px + env(safe-area-inset-bottom)); z-index: 60;
+  max-width: calc(100% - 32px);
+  padding: 11px 18px; border-radius: 999px;
+  background: var(--text); color: var(--bg);
+  font-size: 14.5px; font-weight: 600; box-shadow: var(--shadow-lg);
+}
+.rest:not([hidden]) ~ .toast { bottom: calc(86px + env(safe-area-inset-bottom)); }
+
+/* ---------- 手機 ---------- */
+@media (max-width: 640px) {
+  .nav {
+    position: fixed;
+    left: calc(12px + env(safe-area-inset-left, 0px)); right: calc(12px + env(safe-area-inset-right, 0px));
+    bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 40;
+    margin: 0; box-shadow: var(--shadow-md);
+  }
+  .nav__btn { flex-direction: column; gap: 3px; font-size: 11.5px; padding: 8px 4px; }
+  .nav__btn .ico { width: 21px; height: 21px; }
+  .nav__dot { top: 5px; right: calc(50% - 18px); }
+  .app { padding-bottom: calc(160px + env(safe-area-inset-bottom)); }
+  .rest { bottom: calc(88px + env(safe-area-inset-bottom)); }
+  .toast { bottom: calc(92px + env(safe-area-inset-bottom)); }
+  .rest:not([hidden]) ~ .toast { bottom: calc(152px + env(safe-area-inset-bottom)); }
+  dialog.sheet {
+    width: 100%; max-width: 100%; margin: auto 0 0;
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+    max-height: calc(100dvh - 24px);
+  }
+  .ritem { grid-template-columns: minmax(0, 1fr) 46px 46px 58px 30px; gap: 4px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+<!-- 圖示：Lucide (https://lucide.dev) — ISC License，路徑內嵌，不依賴外部資源 -->
+  <svg class="sprite" aria-hidden="true" focusable="false">
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-dumbbell" viewBox="0 0 24 24"><path d="M17.596 12.768a2 2 0 1 0 2.829-2.829l-1.768-1.767a2 2 0 0 0 2.828-2.829l-2.828-2.828a2 2 0 0 0-2.829 2.828l-1.767-1.768a2 2 0 1 0-2.829 2.829z"/><path d="m2.5 21.5 1.4-1.4"/><path d="m20.1 3.9 1.4-1.4"/><path d="M5.343 21.485a2 2 0 1 0 2.829-2.828l1.767 1.768a2 2 0 1 0 2.829-2.829l-6.364-6.364a2 2 0 1 0-2.829 2.829l1.768 1.767a2 2 0 0 0-2.828 2.829z"/><path d="m9.6 14.4 4.8-4.8"/></symbol>
+    <symbol id="i-clipboard" viewBox="0 0 24 24"><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></symbol>
+    <symbol id="i-history" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></symbol>
+    <symbol id="i-trend" viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+    <symbol id="i-more" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1" class="dot"/><circle cx="19" cy="12" r="1" class="dot"/><circle cx="5" cy="12" r="1" class="dot"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+    <symbol id="i-up" viewBox="0 0 24 24"><path d="m18 15-6-6-6 6"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></symbol>
+    <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><path d="M12 15V3"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><path d="M12 3v12"/></symbol>
+    <symbol id="i-timer" viewBox="0 0 24 24"><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+  </svg>
+
+  <div class="app">
+    <header class="bar">
+      <div class="brand">
+        <span class="brand__mark"><svg class="ico"><use href="#i-dumbbell"/></svg></span>
+        <span class="brand__name">練勾勾</span>
+      </div>
+      <div class="tools">
+        <button type="button" class="ghost-btn" id="themeBtn" aria-label="切換淺色或深色">
+          <svg class="ico"><use href="#i-moon"/></svg>
+        </button>
+        <div class="pop">
+          <button type="button" class="ghost-btn" id="moreBtn" aria-haspopup="true" aria-expanded="false" aria-label="更多功能">
+            <svg class="ico"><use href="#i-more"/></svg>
+          </button>
+          <div class="pop__panel" id="morePanel" role="menu" hidden>
+            <p class="sync" id="syncLabel">連線中…</p>
+            <button type="button" role="menuitem" id="restBtn"><svg class="ico"><use href="#i-timer"/></svg><span id="restLabel">休息：90 秒</span></button>
+            <button type="button" role="menuitem" id="stepBtn"><svg class="ico"><use href="#i-trend"/></svg><span id="stepLabel">加重：2.5 kg</span></button>
+            <button type="button" role="menuitem" id="exportBtn" hidden><svg class="ico"><use href="#i-download"/></svg>匯出備份</button>
+            <button type="button" role="menuitem" id="importBtn"><svg class="ico"><use href="#i-upload"/></svg>匯入備份</button>
+            <button type="button" role="menuitem" id="clearAllBtn" class="danger"><svg class="ico"><use href="#i-trash"/></svg>刪除全部資料</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <nav class="nav" id="nav" role="tablist" aria-label="主要分頁">
+      <button type="button" class="nav__btn" data-view="train" role="tab">
+        <svg class="ico"><use href="#i-dumbbell"/></svg><span>訓練</span>
+        <i class="nav__dot" id="navDot" hidden></i>
+      </button>
+      <button type="button" class="nav__btn" data-view="routines" role="tab">
+        <svg class="ico"><use href="#i-clipboard"/></svg><span>課表</span>
+      </button>
+      <button type="button" class="nav__btn" data-view="log" role="tab">
+        <svg class="ico"><use href="#i-history"/></svg><span>紀錄</span>
+      </button>
+      <button type="button" class="nav__btn" data-view="progress" role="tab">
+        <svg class="ico"><use href="#i-trend"/></svg><span>進步</span>
+      </button>
+    </nav>
+
+    <section class="view" id="viewTrain" role="tabpanel" aria-label="訓練"></section>
+    <section class="view" id="viewRoutines" role="tabpanel" aria-label="課表" hidden></section>
+    <section class="view" id="viewLog" role="tabpanel" aria-label="紀錄" hidden></section>
+    <section class="view" id="viewProgress" role="tabpanel" aria-label="進步" hidden></section>
+  </div>
+
+  <div class="rest" id="rest" hidden>
+    <i class="rest__fill" id="restFill"></i>
+    <div class="rest__body">
+      <span class="rest__time" id="restTime">1:30</span>
+      <span class="rest__label" id="restText">休息中</span>
+    </div>
+    <button type="button" id="restMinus" aria-label="少 15 秒">−15</button>
+    <button type="button" id="restPlus" aria-label="多 15 秒">+15</button>
+    <button type="button" id="restSkip">跳過</button>
+  </div>
+
+  <!-- 選動作 -->
+  <dialog id="pickDialog" class="sheet">
+    <div class="sheet__head">
+      <h2>選動作</h2>
+      <button type="button" class="ghost-btn" data-close aria-label="關閉"><svg class="ico"><use href="#i-close"/></svg></button>
+    </div>
+    <div class="sheet__body">
+      <input type="search" class="input" id="pickSearch" placeholder="搜尋或輸入新動作…" aria-label="搜尋動作" autocomplete="off">
+      <div class="chips" id="pickParts" style="margin-top:10px"></div>
+      <div class="pick" id="pickList"></div>
+    </div>
+  </dialog>
+
+  <!-- 編輯課表 -->
+  <dialog id="routineDialog" class="sheet">
+    <form method="dialog" id="routineForm" style="display:contents">
+      <div class="sheet__head">
+        <h2 id="routineTitle">新課表</h2>
+        <button type="button" class="ghost-btn" data-close aria-label="關閉"><svg class="ico"><use href="#i-close"/></svg></button>
+      </div>
+      <div class="sheet__body">
+        <label class="field">
+          <span>課表名稱</span>
+          <input type="text" class="input" id="rName" required maxlength="40" placeholder="例如：推日、腿日、全身 A">
+        </label>
+        <div class="field">
+          <span>動作（組數 × 次數 × 起始重量，重量可留空：會自動帶上次的）</span>
+          <div id="rItems"></div>
+          <button type="button" class="btn btn--sm" id="rAdd" style="margin-top:8px"><svg class="ico"><use href="#i-plus"/></svg>加動作</button>
+        </div>
+      </div>
+      <div class="sheet__actions">
+        <button type="button" class="btn btn--danger" id="rDelete" hidden>刪除</button>
+        <button type="submit" class="btn btn--primary">儲存</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- 訓練完成 / 紀錄明細 / 動作進步 共用 -->
+  <dialog id="infoDialog" class="sheet">
+    <div class="sheet__head">
+      <h2 id="infoTitle"></h2>
+      <button type="button" class="ghost-btn" data-close aria-label="關閉"><svg class="ico"><use href="#i-close"/></svg></button>
+    </div>
+    <div class="sheet__body" id="infoBody"></div>
+    <div class="sheet__actions" id="infoActions"></div>
+  </dialog>
+
+  <dialog id="askDialog" class="sheet sheet--ask">
+    <div class="sheet__body"><p class="ask__text" id="askText"></p></div>
+    <div class="sheet__actions">
+      <button type="button" class="btn" id="askCancel">取消</button>
+      <button type="button" class="btn btn--primary" id="askOk">確定</button>
+    </div>
+  </dialog>
+
+  <input type="file" id="importFile" accept="application/json,.json" hidden>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+/* =========================================================
+   練勾勾 Lift — 重訓紀錄
+   純前端，資料存在 localStorage。每一組都是一個小約定：做完就打勾。
+   ========================================================= */
+(() => {
+  'use strict';
+
+  const STORE_KEY = 'pinky-lift/v1';
+  const PREF_KEY = 'pinky-lift/prefs';
+  const REST_KEY = 'pinky-lift/rest';
+  const VIEWS = ['train', 'routines', 'log', 'progress'];
+  const PARTS = ['胸', '背', '腿', '肩', '手臂', '臀', '核心', '其他'];
+  const WEEKDAY = ['一', '二', '三', '四', '五', '六', '日'];
+  const REST_OPTIONS = [60, 90, 120, 180, 0];
+  const STEP_OPTIONS = [2.5, 5, 1, 1.25];
+
+  const DEFAULT_EXERCISES = [
+    ['深蹲', '腿'], ['硬舉', '背'], ['臥推', '胸'], ['肩推', '肩'],
+    ['槓鈴划船', '背'], ['引體向上', '背'], ['滑輪下拉', '背'], ['坐姿划船', '背'],
+    ['上斜啞鈴臥推', '胸'], ['啞鈴飛鳥', '胸'], ['雙槓撐體', '胸'],
+    ['腿推', '腿'], ['羅馬尼亞硬舉', '腿'], ['弓箭步', '腿'], ['腿屈伸', '腿'], ['腿彎舉', '腿'],
+    ['臀推', '臀'], ['側平舉', '肩'], ['臉拉', '肩'],
+    ['二頭彎舉', '手臂'], ['錘式彎舉', '手臂'], ['三頭下壓', '手臂'], ['過頭三頭伸展', '手臂'],
+    ['棒式', '核心'], ['懸垂舉腿', '核心']
+  ];
+  const DEFAULT_ROUTINES = [
+    ['推日（胸・肩・三頭）', [['臥推', 4, 8], ['肩推', 3, 8], ['上斜啞鈴臥推', 3, 10], ['側平舉', 3, 15], ['三頭下壓', 3, 12]]],
+    ['拉日（背・二頭）', [['硬舉', 3, 5], ['引體向上', 3, 8], ['槓鈴划船', 3, 10], ['臉拉', 3, 15], ['二頭彎舉', 3, 12]]],
+    ['腿日', [['深蹲', 4, 6], ['羅馬尼亞硬舉', 3, 10], ['腿推', 3, 12], ['腿彎舉', 3, 12], ['臀推', 3, 10]]]
+  ];
+
+  let state = { exercises: [], routines: [], workouts: [], active: null };
+  let prefs = { view: 'train', theme: null, rest: 90, step: 2.5, part: '' };
+  let toastTimer = null;
+  let tickTimer = null;
+  let audioCtx = null;
+
+  const $ = (sel) => document.querySelector(sel);
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const pad = (n) => String(n).padStart(2, '0');
+  const num = (v) => { const n = parseFloat(v); return Number.isFinite(n) && n >= 0 ? n : 0; };
+  const fmt = (n) => (Math.round(n * 100) / 100).toString();
+  const fmtBig = (n) => Math.round(n).toLocaleString('zh-TW');
+
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+  function isoOf(d) { return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; }
+  function todayIso() { return isoOf(new Date()); }
+  function mondayOf(d) {
+    const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    x.setDate(x.getDate() - ((x.getDay() + 6) % 7));
+    return x;
+  }
+  function clock(ms) {
+    const s = Math.max(0, Math.round(ms / 1000));
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    return h ? `${h}:${pad(m)}:${pad(s % 60)}` : `${m}:${pad(s % 60)}`;
+  }
+  function mins(ms) { return Math.max(1, Math.round(ms / 60000)); }
+  function dateLabel(ts) {
+    const d = new Date(ts);
+    return `${d.getMonth() + 1}/${d.getDate()}（${WEEKDAY[(d.getDay() + 6) % 7]}）`;
+  }
+
+  /* ---------- 計算 ---------- */
+  // Epley 公式估算單次最大重量；只做 1 下就是本身
+  function e1rm(w, r) { return r <= 1 ? w : w * (1 + r / 30); }
+  function setVolume(s) { return s.w * s.r; }
+  function workoutVolume(wk) {
+    return wk.items.reduce((sum, it) => sum + it.sets.filter((s) => s.done).reduce((a, s) => a + setVolume(s), 0), 0);
+  }
+  function workoutSets(wk) { return wk.items.reduce((n, it) => n + it.sets.filter((s) => s.done).length, 0); }
+  function bestOf(sets) {
+    let best = null;
+    for (const s of sets) {
+      if (!s.done || !(s.r > 0)) continue;
+      const v = e1rm(s.w, s.r);
+      if (!best || v > best.e) best = { e: v, w: s.w, r: s.r };
+    }
+    return best;
+  }
+  function sortedWorkouts() { return state.workouts.slice().sort((a, b) => b.start - a.start); }
+
+  function exById(id) { return state.exercises.find((e) => e.id === id); }
+  function exName(id) { const e = exById(id); return e ? e.name : '（已刪除的動作）'; }
+
+  // 某動作最近一次有做完的紀錄
+  function lastFor(exId) {
+    for (const wk of sortedWorkouts()) {
+      const it = wk.items.find((i) => i.exId === exId && i.sets.some((s) => s.done));
+      if (it) return { workout: wk, item: it, sets: it.sets.filter((s) => s.done) };
+    }
+    return null;
+  }
+
+  // 某動作在所有紀錄裡的最佳成績（可排除某次訓練，用來判斷是否破紀錄）
+  function recordFor(exId, excludeId) {
+    let bestE = null;
+    let maxW = 0;
+    for (const wk of state.workouts) {
+      if (wk.id === excludeId) continue;
+      for (const it of wk.items) {
+        if (it.exId !== exId) continue;
+        const b = bestOf(it.sets);
+        if (b && (!bestE || b.e > bestE.e)) bestE = b;
+        for (const s of it.sets) if (s.done && s.w > maxW) maxW = s.w;
+      }
+    }
+    return { best: bestE, maxW };
+  }
+
+  function lastSummary(last) {
+    if (!last) return '第一次做這個動作';
+    const sets = last.sets;
+    const sameW = sets.every((s) => s.w === sets[0].w);
+    const body = sameW
+      ? `${fmt(sets[0].w)}kg × ${sets.map((s) => s.r).join('、')}`
+      : sets.map((s) => `${fmt(s.w)}×${s.r}`).join('、');
+    return `上次 ${dateLabel(last.workout.start)}：${body}`;
+  }
+
+  // 漸進超負荷：上次每組都達標，今天建議加重
+  function suggestion(exId, target) {
+    const last = lastFor(exId);
+    if (!last) return { last, weight: target.weight || 0, bump: false };
+    const top = Math.max(...last.sets.map((s) => s.w));
+    const goal = target.reps || last.item.target || 0;
+    const hit = goal > 0 && last.sets.length >= (target.sets || 1) && last.sets.every((s) => s.r >= goal);
+    return { last, weight: hit && top > 0 ? top + prefs.step : top, bump: hit && top > 0 };
+  }
+
+  /* ---------- 儲存 ----------
+     主資料存在帳號底下的私人資料庫（data/users/<id>/）：
+       meta        動作庫、課表、進行中的訓練
+       m-YYYY-MM   當月的訓練紀錄（一個月一份，避免文件數暴增）
+     瀏覽器 localStorage 只當快取：先畫出畫面、雲端不可用時也能用。 */
+  const LS = {
+    get(k) { try { return localStorage.getItem(k); } catch (err) { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch (err) { /* 私密視窗等情況 */ } },
+    del(k) { try { localStorage.removeItem(k); } catch (err) { /* 略過 */ } }
+  };
+  let cloud = null;          // { coll }：雲端可用時才有
+  let pulled = false;        // 第一次從雲端讀完了沒
+  let dirtyBeforePull = false;
+  let metaTimer = null;
+  const chains = {};
+
+  function cleanState(raw) {
+    return {
+      exercises: Array.isArray(raw.exercises) ? raw.exercises : [],
+      routines: Array.isArray(raw.routines) ? raw.routines : [],
+      workouts: Array.isArray(raw.workouts) ? raw.workouts : [],
+      active: raw.active || null
+    };
+  }
+  function load() {
+    let raw = null;
+    try { raw = JSON.parse(LS.get(STORE_KEY) || 'null'); } catch (err) { raw = null; }
+    if (raw && Array.isArray(raw.exercises) && raw.exercises.length) state = cleanState(raw);
+    else seed();
+    try { Object.assign(prefs, JSON.parse(LS.get(PREF_KEY) || '{}')); } catch (err) { /* 用預設 */ }
+    if (!VIEWS.includes(prefs.view)) prefs.view = 'train';
+  }
+  function seed() {
+    state = { exercises: [], routines: [], workouts: [], active: null };
+    for (const [name, part] of DEFAULT_EXERCISES) state.exercises.push({ id: uid(), name, part });
+    for (const [name, list] of DEFAULT_ROUTINES) {
+      state.routines.push({
+        id: uid(), name,
+        items: list.map(([n, sets, reps]) => ({ exId: findOrCreateEx(n).id, sets, reps, weight: 0 }))
+      });
+    }
+    LS.set(STORE_KEY, JSON.stringify(state));
+  }
+
+  function monthKey(ts) { const d = new Date(ts); return `m-${d.getFullYear()}-${pad(d.getMonth() + 1)}`; }
+
+  // save()：動作庫／課表／進行中訓練變了；save([時間戳…])：那幾個月的紀錄也變了
+  function save(touchedTimes) {
+    LS.set(STORE_KEY, JSON.stringify(state));
+    if (!pulled) dirtyBeforePull = true;
+    if (!cloud) return;
+    clearTimeout(metaTimer);
+    metaTimer = setTimeout(flushMeta, 700);
+    for (const key of new Set((touchedTimes || []).map(monthKey))) writeMonth(key);
+  }
+  function chain(docId, fn) {
+    chains[docId] = (chains[docId] || Promise.resolve())
+      .then(fn)
+      .catch((err) => new Promise((r) => setTimeout(r, 600 + Math.random() * 600)).then(() => {
+        if (err && err.code === 'unavailable') return fn(); // 暫時性錯誤：重試一次
+        throw err;
+      }))
+      .catch(cloudError);
+    return chains[docId];
+  }
+  function flushMeta() {
+    if (!cloud || !metaTimer) return;
+    clearTimeout(metaTimer);
+    metaTimer = null;
+    chain('meta', () => cloud.coll.doc('meta').set({
+      v: 1, exercises: state.exercises, routines: state.routines, active: state.active, updatedAt: Date.now()
+    }));
+  }
+  function writeMonth(key) {
+    chain(key, () => {
+      const list = state.workouts.filter((w) => monthKey(w.start) === key);
+      const ref = cloud.coll.doc(key);
+      return list.length ? ref.set({ workouts: list }) : ref.delete();
+    });
+  }
+  function writeAll() {
+    metaTimer = metaTimer || 1;
+    flushMeta();
+    for (const key of new Set(state.workouts.map((w) => monthKey(w.start)))) writeMonth(key);
+  }
+  function cloudError(err) {
+    const code = err && err.code;
+    if (code === 'quota_exceeded') toast('雲端空間滿了：先匯出備份，再刪掉舊紀錄');
+    else if (code === 'revoked' || code === 'invalid_argument' || code === 'not_granted') { cloud = null; setSync('local'); toast('無法同步到帳號，先存在這個瀏覽器'); }
+    else toast('同步暫時失敗，稍後會再試');
+  }
+
+  function setSync(mode) {
+    const el = $('#syncLabel');
+    if (el) el.textContent = mode === 'cloud' ? '已同步到你的帳號' : mode === 'wait' ? '連線中…' : '只存在這個瀏覽器';
+  }
+
+  async function connectCloud() {
+    setSync('wait');
+    try {
+      if (!window.claude || typeof window.claude.use !== 'function') throw new Error('no-runtime');
+      const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+      const id = user ? await user.id() : null;
+      if (!db || !id) throw new Error('no-db');
+      cloud = { coll: db.collection('data/users/' + id) };
+      await pull(true);
+    } catch (err) {
+      cloud = null;
+      pulled = true;
+      setSync('local');
+    }
+  }
+
+  async function pull(first) {
+    if (!cloud) return;
+    const snap = await cloud.coll.get();
+    let meta = null;
+    const workouts = [];
+    for (const d of snap.docs) {
+      const body = JSON.parse(JSON.stringify(d.data() || {}));
+      if (d.id === 'meta') meta = body;
+      else if (d.id.startsWith('m-') && Array.isArray(body.workouts)) workouts.push(...body.workouts);
+    }
+    const cloudEmpty = !meta && !workouts.length;
+    if (first && (cloudEmpty || dirtyBeforePull)) {
+      // 雲端還沒資料（或剛剛已經在本機動過）：以本機為主，合併後整份寫上去
+      for (const w of workouts) if (!state.workouts.some((x) => x.id === w.id)) state.workouts.push(w);
+      pulled = true;
+      LS.set(STORE_KEY, JSON.stringify(state));
+      writeAll();
+    } else if (!cloudEmpty) {
+      state = cleanState({ ...(meta || {}), workouts });
+      if (!state.exercises.length) seed();
+      pulled = true;
+      LS.set(STORE_KEY, JSON.stringify(state));
+    }
+    pulled = true;
+    setSync('cloud');
+    render();
+  }
+
+  function savePrefs() { LS.set(PREF_KEY, JSON.stringify(prefs)); }
+
+  /* ---------- 頁內確認框（檢視器不支援 confirm／prompt） ---------- */
+  function ask(text, okLabel, danger) {
+    return new Promise((resolve) => {
+      const dlg = $('#askDialog');
+      $('#askText').textContent = text;
+      const ok = $('#askOk');
+      ok.textContent = okLabel || '確定';
+      ok.className = `btn ${danger ? 'btn--danger' : 'btn--primary'}`;
+      const done = (v) => { dlg.onclose = null; if (dlg.open) dlg.close(); resolve(v); };
+      ok.onclick = () => done(true);
+      $('#askCancel').onclick = () => done(false);
+      dlg.onclose = () => resolve(false);
+      dlg.showModal();
+    });
+  }
+
+  function findOrCreateEx(name, part) {
+    const clean = name.trim();
+    let ex = state.exercises.find((e) => e.name === clean);
+    if (!ex) { ex = { id: uid(), name: clean, part: part || '其他' }; state.exercises.push(ex); }
+    return ex;
+  }
+
+  /* ---------- 訓練流程 ---------- */
+  function makeItem(exId, target) {
+    const t = target || {};
+    const sug = suggestion(exId, t);
+    const lastSets = sug.last ? sug.last.sets : [];
+    const count = t.sets || lastSets.length || 3;
+    const sets = [];
+    for (let i = 0; i < count; i++) {
+      const ref = lastSets[i] || lastSets[lastSets.length - 1];
+      sets.push({
+        w: t.sets ? (sug.weight || t.weight || 0) : (ref ? ref.w : 0),
+        r: t.reps || (ref ? ref.r : 8),
+        done: false
+      });
+    }
+    return { exId, target: t.reps || 0, bump: !!(t.sets && sug.bump), sets };
+  }
+
+  function startWorkout(routine, copyFrom) {
+    if (state.active) { toast('已經有一場訓練在進行'); goto('train'); return; }
+    let items = [];
+    let name = '自由訓練';
+    if (routine) {
+      name = routine.name;
+      items = routine.items.filter((it) => exById(it.exId)).map((it) => makeItem(it.exId, it));
+    } else if (copyFrom) {
+      name = copyFrom.name;
+      items = copyFrom.items.map((it) => makeItem(it.exId, { sets: it.sets.length, reps: it.target || 0 }));
+    }
+    state.active = { id: uid(), name, routineId: routine ? routine.id : null, start: Date.now(), items };
+    save();
+    goto('train');
+    toast('開始訓練，加油');
+  }
+
+  async function finishWorkout() {
+    const wk = state.active;
+    if (!wk) return;
+    const items = wk.items
+      .map((it) => ({ ...it, sets: it.sets.filter((s) => s.done) }))
+      .filter((it) => it.sets.length);
+    if (!items.length) {
+      if (await ask('一組都還沒打勾。要放棄這場訓練嗎？', '放棄訓練', true)) discardWorkout(true);
+      return;
+    }
+    const undone = workoutSetsAll(wk) - items.reduce((n, it) => n + it.sets.length, 0);
+    if (undone > 0 && !(await ask(`還有 ${undone} 組沒打勾，沒勾的不會記錄。確定完成？`, '完成訓練'))) return;
+    if (state.active !== wk) return;
+
+    const done = { id: wk.id, name: wk.name, routineId: wk.routineId, start: wk.start, end: Date.now(), items };
+    const prs = [];
+    for (const it of items) {
+      const before = recordFor(it.exId, done.id);
+      const now = bestOf(it.sets);
+      if (now && before.best && now.e > before.best.e + 0.01) prs.push({ exId: it.exId, now, before: before.best });
+    }
+    done.prs = prs.map((p) => p.exId);
+    state.workouts.push(done);
+    state.active = null;
+    save([done.start]);
+    stopRest();
+    render();
+    showSummary(done, prs);
+  }
+  function workoutSetsAll(wk) { return wk.items.reduce((n, it) => n + it.sets.length, 0); }
+
+  async function discardWorkout(skipConfirm) {
+    if (!state.active) return;
+    if (!skipConfirm && !(await ask('放棄這場訓練？這場的紀錄不會保存。', '放棄訓練', true))) return;
+    state.active = null;
+    save();
+    stopRest();
+    render();
+    toast('已放棄');
+  }
+
+  function toggleSet(ii, si) {
+    const it = state.active.items[ii];
+    const s = it.sets[si];
+    s.done = !s.done;
+    if (s.done) {
+      if (!(s.r > 0)) s.r = it.target || 1;
+      buzz(25);
+      sfx('tick');
+      const isLast = state.active.items.every((x) => x.sets.every((y) => y.done));
+      if (isLast) { stopRest(); toast('全部完成！按「完成訓練」存檔'); }
+      else if (prefs.rest > 0) startRest(prefs.rest);
+    }
+    save();
+    renderTrain();
+  }
+
+  /* ---------- 休息計時 ---------- */
+  let restMem = null; // localStorage 不能用時的備援
+  function restState() { try { return JSON.parse(LS.get(REST_KEY) || 'null') || restMem; } catch (err) { return restMem; } }
+  function putRest(r) { restMem = r; LS.set(REST_KEY, JSON.stringify(r)); }
+  function startRest(sec) {
+    putRest({ end: Date.now() + sec * 1000, total: sec * 1000, rang: false });
+    tick();
+  }
+  function stopRest() { restMem = null; LS.del(REST_KEY); $('#rest').hidden = true; }
+  function adjustRest(deltaSec) {
+    const r = restState();
+    if (!r) return;
+    r.end = Math.max(Date.now(), r.end + deltaSec * 1000);
+    r.total = Math.max(r.total + deltaSec * 1000, 1000);
+    r.rang = false;
+    putRest(r);
+    tick();
+  }
+
+  function tick() {
+    // 進行中訓練的經過時間
+    if (state.active) {
+      const t = document.getElementById('liveTime');
+      if (t) t.textContent = clock(Date.now() - state.active.start);
+    }
+    const r = restState();
+    const bar = $('#rest');
+    if (!r || !state.active) { bar.hidden = true; return; }
+    const left = r.end - Date.now();
+    bar.hidden = false;
+    if (left <= 0) {
+      bar.classList.add('is-over');
+      $('#restTime').textContent = '0:00';
+      $('#restText').textContent = '休息結束，下一組！';
+      $('#restFill').style.width = '100%';
+      if (!r.rang) {
+        r.rang = true;
+        putRest(r);
+        buzz([200, 100, 200]);
+        sfx('ding');
+      }
+      if (left < -15000) stopRest(); // 響完 15 秒自動收起
+      return;
+    }
+    bar.classList.remove('is-over');
+    $('#restTime').textContent = clock(left);
+    $('#restText').textContent = '休息中';
+    $('#restFill').style.width = `${Math.min(100, (1 - left / r.total) * 100)}%`;
+  }
+
+  function buzz(pattern) { try { if (navigator.vibrate) navigator.vibrate(pattern); } catch (err) { /* 不支援 */ } }
+  function sfx(kind) {
+    try {
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      const now = audioCtx.currentTime;
+      const notes = kind === 'ding' ? [[880, 0], [1175, 0.16], [1568, 0.32]] : kind === 'pr' ? [[523, 0], [659, 0.1], [784, 0.2], [1047, 0.3]] : [[660, 0]];
+      for (const [f, at] of notes) {
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = 'sine';
+        o.frequency.value = f;
+        g.gain.setValueAtTime(0.0001, now + at);
+        g.gain.exponentialRampToValueAtTime(kind === 'tick' ? 0.08 : 0.18, now + at + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + at + (kind === 'tick' ? 0.12 : 0.35));
+        o.connect(g).connect(audioCtx.destination);
+        o.start(now + at);
+        o.stop(now + at + 0.4);
+      }
+    } catch (err) { /* 沒聲音也沒關係 */ }
+  }
+
+  /* ---------- 畫面：共用 ---------- */
+  function goto(view) {
+    prefs.view = view;
+    savePrefs();
+    render();
+    window.scrollTo({ top: 0 });
+  }
+
+  function render() {
+    for (const v of VIEWS) {
+      const el = document.getElementById('view' + v[0].toUpperCase() + v.slice(1));
+      el.hidden = v !== prefs.view;
+    }
+    document.querySelectorAll('.nav__btn').forEach((b) => {
+      const on = b.dataset.view === prefs.view;
+      b.classList.toggle('is-on', on);
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    $('#navDot').hidden = !state.active;
+    $('#restLabel').textContent = prefs.rest ? `休息：${prefs.rest} 秒` : '休息計時：關';
+    $('#stepLabel').textContent = `加重：${fmt(prefs.step)} kg`;
+    if (prefs.view === 'train') renderTrain();
+    if (prefs.view === 'routines') renderRoutines();
+    if (prefs.view === 'log') renderLog();
+    if (prefs.view === 'progress') renderProgress();
+    tick();
+  }
+
+  function weekInfo() {
+    const mon = mondayOf(new Date());
+    const days = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(mon); d.setDate(mon.getDate() + i);
+      days.push(isoOf(d));
+    }
+    const thisWeek = state.workouts.filter((w) => w.start >= mon.getTime());
+    const trained = new Set(thisWeek.map((w) => isoOf(new Date(w.start))));
+    // 連續幾週都有練（本週還沒練不算斷）
+    let streak = 0;
+    const cursor = new Date(mon);
+    if (!thisWeek.length) cursor.setDate(cursor.getDate() - 7);
+    for (;;) {
+      const from = cursor.getTime();
+      const to = from + 7 * 86400000;
+      if (!state.workouts.some((w) => w.start >= from && w.start < to)) break;
+      streak++;
+      cursor.setDate(cursor.getDate() - 7);
+    }
+    return { days, trained, thisWeek, streak };
+  }
+
+  /* ---------- 畫面：訓練 ---------- */
+  function renderTrain() {
+    const el = $('#viewTrain');
+    if (state.active) { el.innerHTML = activeHtml(); bindActive(el); return; }
+
+    const wi = weekInfo();
+    const today = todayIso();
+    const vol = wi.thisWeek.reduce((s, w) => s + workoutVolume(w), 0);
+    const last = sortedWorkouts()[0];
+    const hour = new Date().getHours();
+    const hello = hour < 5 ? '這麼晚還要練？' : hour < 11 ? '早安，今天練什麼？' : hour < 18 ? '午安，今天練什麼？' : '晚安，今天練什麼？';
+    const trainedToday = wi.trained.has(today);
+
+    el.innerHTML = `
+      <h1 class="title">${trainedToday ? '今天練過了，讚' : hello}</h1>
+      <p class="sub">${last ? `上次訓練：${dateLabel(last.start)} ${esc(last.name)}` : '每一組都是一個小約定：做完就打勾。'}</p>
+      <div class="card">
+        <div class="weekdots">
+          ${wi.days.map((d, i) => `<div class="weekdot${wi.trained.has(d) ? ' is-done' : ''}${d === today ? ' is-today' : ''}"><i>${wi.trained.has(d) ? '✓' : Number(d.slice(8))}</i>${WEEKDAY[i]}</div>`).join('')}
+        </div>
+        <div class="stats">
+          <div class="stat"><b>${wi.thisWeek.length}</b><small>本週次數</small></div>
+          <div class="stat"><b>${fmtBig(vol)}</b><small>本週總量 kg</small></div>
+          <div class="stat"><b>${wi.streak}</b><small>連續週數</small></div>
+        </div>
+      </div>
+      <div class="section-title"><span>選一份課表開始</span><button type="button" class="btn btn--sm" data-act="new-routine"><svg class="ico"><use href="#i-plus"/></svg>新課表</button></div>
+      ${state.routines.length ? state.routines.map(routineCard).join('') : '<div class="empty"><b>還沒有課表</b>先建一份，或直接空白開始。</div>'}
+      <button type="button" class="btn btn--block" data-act="blank" style="margin-top:14px"><svg class="ico"><use href="#i-play"/></svg>空白開始（邊練邊加動作）</button>
+    `;
+    bindRoutineCards(el);
+    el.querySelector('[data-act="blank"]').onclick = () => startWorkout(null);
+    el.querySelector('[data-act="new-routine"]').onclick = () => openRoutine(null);
+  }
+
+  function activeHtml() {
+    const wk = state.active;
+    const total = workoutSetsAll(wk);
+    const done = workoutSets(wk);
+    return `
+      <div class="live">
+        <div class="live__body">
+          <input class="live__name" id="liveName" value="${esc(wk.name)}" maxlength="40" aria-label="訓練名稱">
+          <div class="live__meta">${done}/${total} 組 · ${fmtBig(workoutVolume(wk))} kg</div>
+        </div>
+        <span class="live__time" id="liveTime">${clock(Date.now() - wk.start)}</span>
+      </div>
+      ${wk.items.length ? wk.items.map(exCardHtml).join('') : '<div class="empty"><b>還沒有動作</b>按下面「加動作」開始。</div>'}
+      <div class="live-actions">
+        <button type="button" class="btn" data-act="add-ex"><svg class="ico"><use href="#i-plus"/></svg>加動作</button>
+        <button type="button" class="btn btn--danger" data-act="discard">放棄</button>
+        <button type="button" class="btn btn--primary" data-act="finish"><svg class="ico"><use href="#i-check"/></svg>完成訓練</button>
+      </div>
+    `;
+  }
+
+  function exCardHtml(it, ii) {
+    const last = lastFor(it.exId);
+    const rec = recordFor(it.exId, state.active.id);
+    const n = state.active.items.length;
+    return `
+      <div class="card ex" data-ii="${ii}">
+        <div class="ex__head">
+          <div class="ex__title">
+            <h3 class="ex__name">${esc(exName(it.exId))}</h3>
+            <p class="ex__last">${esc(lastSummary(last))}</p>
+            ${it.bump ? `<span class="ex__hint">上次全組達標 → 今天 +${fmt(prefs.step)} kg</span>` : ''}
+          </div>
+          <div class="ex__tools">
+            <button type="button" class="ghost-btn ghost-btn--sm" data-act="up" aria-label="上移" ${ii === 0 ? 'disabled' : ''}><svg class="ico"><use href="#i-up"/></svg></button>
+            <button type="button" class="ghost-btn ghost-btn--sm" data-act="down" aria-label="下移" ${ii === n - 1 ? 'disabled' : ''}><svg class="ico"><use href="#i-down"/></svg></button>
+            <button type="button" class="ghost-btn ghost-btn--sm" data-act="remove" aria-label="移除動作"><svg class="ico"><use href="#i-close"/></svg></button>
+          </div>
+        </div>
+        <div class="sets">
+          <div class="set set__hd"><span>組</span><span>重量 kg</span><span></span><span>次數</span><span>✓</span></div>
+          ${it.sets.map((s, si) => {
+            const pr = s.done && rec.best && s.r > 0 && e1rm(s.w, s.r) > rec.best.e + 0.01;
+            return `
+            <div class="set${s.done ? ' is-done' : ''}${pr ? ' is-pr' : ''}" data-si="${si}">
+              <span class="set__no">${pr ? '★' : si + 1}</span>
+              <input type="number" inputmode="decimal" step="0.5" min="0" value="${s.w || ''}" placeholder="0" data-f="w" aria-label="第 ${si + 1} 組重量">
+              <span class="set__x">×</span>
+              <input type="number" inputmode="numeric" step="1" min="0" value="${s.r || ''}" placeholder="0" data-f="r" aria-label="第 ${si + 1} 組次數">
+              <button type="button" class="set__check" data-act="check" aria-label="${s.done ? '取消打勾' : '完成這組'}" aria-pressed="${s.done}"><svg class="ico"><use href="#i-check"/></svg></button>
+            </div>`;
+          }).join('')}
+        </div>
+        <div class="ex__foot">
+          <button type="button" class="btn btn--sm" data-act="add-set"><svg class="ico"><use href="#i-plus"/></svg>加一組</button>
+          <button type="button" class="btn btn--sm" data-act="del-set" ${it.sets.length ? '' : 'disabled'}><svg class="ico"><use href="#i-minus"/></svg>刪最後一組</button>
+        </div>
+      </div>`;
+  }
+
+  function bindActive(el) {
+    const wk = state.active;
+    el.querySelector('#liveName').addEventListener('input', (e) => { wk.name = e.target.value || '自由訓練'; save(); });
+    el.querySelector('[data-act="add-ex"]').onclick = () => openPicker((ex) => {
+      wk.items.push(makeItem(ex.id));
+      save();
+      renderTrain();
+      const cards = el.querySelectorAll('.ex');
+      if (cards.length) cards[cards.length - 1].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+    el.querySelector('[data-act="discard"]').onclick = () => discardWorkout(false);
+    el.querySelector('[data-act="finish"]').onclick = finishWorkout;
+
+    el.querySelectorAll('.ex').forEach((card) => {
+      const ii = Number(card.dataset.ii);
+      const it = wk.items[ii];
+      card.addEventListener('click', async (e) => {
+        const btn = e.target.closest('[data-act]');
+        if (!btn) return;
+        const act = btn.dataset.act;
+        const row = btn.closest('.set');
+        if (act === 'check') return toggleSet(ii, Number(row.dataset.si));
+        if (act === 'add-set') {
+          const ref = it.sets[it.sets.length - 1];
+          it.sets.push({ w: ref ? ref.w : 0, r: ref ? ref.r : (it.target || 8), done: false });
+        }
+        if (act === 'del-set') it.sets.pop();
+        if (act === 'remove') {
+          if (it.sets.some((s) => s.done) && !(await ask(`移除「${exName(it.exId)}」？已打勾的組也會一起移除。`, '移除', true))) return;
+          const at = wk.items.indexOf(it);
+          if (at >= 0) wk.items.splice(at, 1);
+        }
+        if (act === 'up' && ii > 0) [wk.items[ii - 1], wk.items[ii]] = [wk.items[ii], wk.items[ii - 1]];
+        if (act === 'down' && ii < wk.items.length - 1) [wk.items[ii + 1], wk.items[ii]] = [wk.items[ii], wk.items[ii + 1]];
+        save();
+        renderTrain();
+      });
+      // 輸入時只存資料、不重繪，避免手機鍵盤被收起
+      card.addEventListener('input', (e) => {
+        const f = e.target.dataset.f;
+        if (!f) return;
+        const si = Number(e.target.closest('.set').dataset.si);
+        it.sets[si][f] = f === 'r' ? Math.round(num(e.target.value)) : num(e.target.value);
+        // 改了第一組的重量，後面還沒做、重量一樣的組跟著改
+        save();
+        const meta = el.querySelector('.live__meta');
+        if (meta) meta.textContent = `${workoutSets(wk)}/${workoutSetsAll(wk)} 組 · ${fmtBig(workoutVolume(wk))} kg`;
+      });
+      card.addEventListener('change', (e) => {
+        const f = e.target.dataset.f;
+        if (f !== 'w') return;
+        const si = Number(e.target.closest('.set').dataset.si);
+        const prev = it.sets[si];
+        let touched = false;
+        for (let k = si + 1; k < it.sets.length; k++) {
+          if (!it.sets[k].done && it.sets[k].w !== prev.w) { it.sets[k].w = prev.w; touched = true; }
+        }
+        if (touched) { save(); renderTrain(); }
+      });
+    });
+  }
+
+  /* ---------- 畫面：課表 ---------- */
+  function routineCard(r) {
+    const names = r.items.map((it) => `${exName(it.exId)} ${it.sets}×${it.reps}`).join('・');
+    return `
+      <div class="card routine" data-rid="${r.id}">
+        <div class="routine__body">
+          <h3 class="routine__name">${esc(r.name)}</h3>
+          <p class="routine__meta">${esc(names || '（沒有動作）')}</p>
+        </div>
+        <div class="routine__actions">
+          <button type="button" class="ghost-btn" data-act="edit" aria-label="編輯課表"><svg class="ico"><use href="#i-edit"/></svg></button>
+          <button type="button" class="btn btn--primary btn--sm" data-act="start"><svg class="ico"><use href="#i-play"/></svg>開始</button>
+        </div>
+      </div>`;
+  }
+  function bindRoutineCards(el) {
+    el.querySelectorAll('.routine').forEach((card) => {
+      const r = state.routines.find((x) => x.id === card.dataset.rid);
+      card.querySelector('[data-act="edit"]').onclick = () => openRoutine(r);
+      card.querySelector('[data-act="start"]').onclick = () => startWorkout(r);
+    });
+  }
+
+  function renderRoutines() {
+    const el = $('#viewRoutines');
+    el.innerHTML = `
+      <h1 class="title">課表</h1>
+      <p class="sub">把固定要練的動作排好，開始時會自動帶入上次的重量；上次全組達標就建議加重。</p>
+      ${state.routines.length ? state.routines.map(routineCard).join('') : '<div class="empty"><b>還沒有課表</b>建一份常練的組合吧。</div>'}
+      <button type="button" class="btn btn--primary btn--block" data-act="new" style="margin-top:14px"><svg class="ico"><use href="#i-plus"/></svg>新增課表</button>
+    `;
+    bindRoutineCards(el);
+    el.querySelector('[data-act="new"]').onclick = () => openRoutine(null);
+  }
+
+  let routineDraft = null;
+  function openRoutine(r) {
+    routineDraft = r
+      ? { id: r.id, name: r.name, items: r.items.map((it) => ({ ...it })) }
+      : { id: null, name: '', items: [] };
+    $('#routineTitle').textContent = r ? '編輯課表' : '新課表';
+    $('#rName').value = routineDraft.name;
+    $('#rDelete').hidden = !r;
+    renderRoutineItems();
+    $('#routineDialog').showModal();
+  }
+  function renderRoutineItems() {
+    const box = $('#rItems');
+    if (!routineDraft.items.length) { box.innerHTML = '<p class="sub" style="margin:4px 0">還沒有動作</p>'; return; }
+    box.innerHTML = `<div class="ritem ritem--hd"><span>動作</span><span>組</span><span>次</span><span>kg</span><span></span></div>` +
+      routineDraft.items.map((it, i) => `
+        <div class="ritem" data-i="${i}">
+          <span class="ritem__name">${esc(exName(it.exId))}</span>
+          <input type="number" inputmode="numeric" min="1" max="20" value="${it.sets}" data-f="sets" aria-label="組數">
+          <input type="number" inputmode="numeric" min="1" max="100" value="${it.reps}" data-f="reps" aria-label="次數">
+          <input type="number" inputmode="decimal" min="0" step="0.5" value="${it.weight || ''}" placeholder="自動" data-f="weight" aria-label="起始重量">
+          <button type="button" class="ghost-btn ghost-btn--sm" data-act="del" aria-label="移除"><svg class="ico"><use href="#i-close"/></svg></button>
+        </div>`).join('');
+  }
+  function saveRoutine(e) {
+    e.preventDefault();
+    const name = $('#rName').value.trim();
+    if (!name) { $('#rName').focus(); return; }
+    const items = routineDraft.items.map((it) => ({
+      exId: it.exId,
+      sets: Math.max(1, Math.round(num(it.sets)) || 3),
+      reps: Math.max(1, Math.round(num(it.reps)) || 8),
+      weight: num(it.weight)
+    }));
+    if (routineDraft.id) {
+      const r = state.routines.find((x) => x.id === routineDraft.id);
+      Object.assign(r, { name, items });
+    } else {
+      state.routines.push({ id: uid(), name, items });
+    }
+    save();
+    $('#routineDialog').close();
+    render();
+    toast('課表已儲存');
+  }
+
+  /* ---------- 選動作 ---------- */
+  let pickCallback = null;
+  let pickPart = '';
+  function openPicker(cb) {
+    pickCallback = cb;
+    pickPart = '';
+    $('#pickSearch').value = '';
+    renderPicker();
+    $('#pickDialog').showModal();
+    setTimeout(() => $('#pickSearch').focus(), 50);
+  }
+  function renderPicker() {
+    const q = $('#pickSearch').value.trim();
+    $('#pickParts').innerHTML = ['', ...PARTS].map((p) => `<button type="button" class="chip${p === pickPart ? ' is-on' : ''}" data-part="${p}">${p || '全部'}</button>`).join('');
+    const list = state.exercises
+      .filter((e) => (!pickPart || e.part === pickPart) && (!q || e.name.toLowerCase().includes(q.toLowerCase())))
+      .sort((a, b) => (lastStart(b.id) - lastStart(a.id)) || a.name.localeCompare(b.name, 'zh-Hant'));
+    const exact = state.exercises.some((e) => e.name === q);
+    $('#pickList').innerHTML =
+      (q && !exact ? `<div class="pick__item pick__new"><button type="button" class="btn btn--sm btn--primary" data-new>新增「${esc(q)}」</button><select class="input" id="pickNewPart" style="width:auto;height:36px" aria-label="部位">${PARTS.map((p) => `<option${p === (pickPart || '其他') ? ' selected' : ''}>${p}</option>`).join('')}</select></div>` : '') +
+      list.map((e) => {
+        const last = lastFor(e.id);
+        return `<button type="button" class="pick__item" data-id="${e.id}"><span>${esc(e.name)}</span><small>${esc(e.part)}${last ? ' · ' + dateLabel(last.workout.start) : ''}</small></button>`;
+      }).join('') +
+      (!list.length && !q ? '<p class="sub">這個部位還沒有動作，輸入名稱新增。</p>' : '');
+  }
+  function lastStart(exId) { const l = lastFor(exId); return l ? l.workout.start : 0; }
+
+  /* ---------- 畫面：紀錄 ---------- */
+  function renderLog() {
+    const el = $('#viewLog');
+    const list = sortedWorkouts();
+    if (!list.length) {
+      el.innerHTML = '<h1 class="title">紀錄</h1><div class="empty" style="margin-top:14px"><b>還沒有訓練紀錄</b>練完按「完成訓練」就會出現在這裡。</div>';
+      return;
+    }
+    let html = '<h1 class="title">紀錄</h1><p class="sub">共 ' + list.length + ' 次訓練</p>';
+    let month = '';
+    for (const w of list) {
+      const d = new Date(w.start);
+      const m = `${d.getFullYear()} 年 ${d.getMonth() + 1} 月`;
+      if (m !== month) { month = m; html += `<h2 class="month">${m}</h2>`; }
+      const prCount = (w.prs || []).length;
+      html += `
+        <button type="button" class="card log" data-wid="${w.id}">
+          <div class="log__top"><h3 class="log__name">${esc(w.name)}</h3><span class="log__date">${dateLabel(w.start)}</span></div>
+          <div class="log__meta">
+            <span><b>${mins(w.end - w.start)}</b> 分鐘</span>
+            <span><b>${workoutSets(w)}</b> 組</span>
+            <span><b>${fmtBig(workoutVolume(w))}</b> kg</span>
+            ${prCount ? `<span class="pill"><svg class="ico"><use href="#i-trophy"/></svg>破紀錄 ${prCount}</span>` : ''}
+          </div>
+          <p class="log__ex">${esc(w.items.map((it) => `${exName(it.exId)} ${it.sets.length}組`).join('・'))}</p>
+        </button>`;
+    }
+    el.innerHTML = html;
+    el.querySelectorAll('.log').forEach((b) => { b.onclick = () => showWorkout(state.workouts.find((w) => w.id === b.dataset.wid)); });
+  }
+
+  function workoutDetailHtml(w) {
+    return w.items.map((it) => `
+      <div class="detail-ex">
+        <h3>${esc(exName(it.exId))}${(w.prs || []).includes(it.exId) ? ' <span class="pill"><svg class="ico"><use href="#i-trophy"/></svg>PR</span>' : ''}</h3>
+        <ol>${it.sets.map((s) => `<li><b>${fmt(s.w)}</b> kg × <b>${s.r}</b></li>`).join('')}</ol>
+      </div>`).join('');
+  }
+
+  function showWorkout(w) {
+    openInfo(`${esc(w.name)}`, `
+      <p class="sub" style="margin:0 0 10px">${dateLabel(w.start)} ${pad(new Date(w.start).getHours())}:${pad(new Date(w.start).getMinutes())} · ${mins(w.end - w.start)} 分鐘 · ${workoutSets(w)} 組 · ${fmtBig(workoutVolume(w))} kg</p>
+      ${workoutDetailHtml(w)}
+    `, [
+      ['刪除', 'btn--danger', async () => {
+        if (!(await ask(`刪除 ${dateLabel(w.start)}「${w.name}」這筆紀錄？`, '刪除', true))) return;
+        state.workouts = state.workouts.filter((x) => x.id !== w.id);
+        save([w.start]); render(); toast('已刪除');
+      }],
+      ['再練一次', 'btn--primary', () => startWorkout(null, w)]
+    ]);
+  }
+
+  function showSummary(w, prs) {
+    const lines = prs.length
+      ? ['破紀錄了！今天的你比過去都強。', '新 PR 入帳，這一勾很重。']
+      : ['說到做到。下次再加一點。', '打卡完成，肌肉記得你今天來過。', '練完了，記得吃蛋白質。'];
+    const say = lines[Math.floor(Math.random() * lines.length)];
+    if (prs.length) sfx('pr'); else sfx('ding');
+    openInfo('訓練完成', `
+      <div class="summary">
+        <p class="summary__big">${fmtBig(workoutVolume(w))} kg</p>
+        <p class="summary__say">${say}</p>
+        <div class="stats">
+          <div class="stat"><b>${mins(w.end - w.start)}</b><small>分鐘</small></div>
+          <div class="stat"><b>${workoutSets(w)}</b><small>組</small></div>
+          <div class="stat"><b>${w.items.length}</b><small>動作</small></div>
+        </div>
+        ${prs.length ? `<ul class="prs">${prs.map((p) => `<li><svg class="ico"><use href="#i-trophy"/></svg>${esc(exName(p.exId))}<b>${fmt(p.now.w)}×${p.now.r}（估 1RM ${fmt(Math.round(p.now.e * 2) / 2)}）</b></li>`).join('')}</ul>` : ''}
+      </div>
+    `, [
+      ['看明細', '', () => showWorkout(w)],
+      ['好', 'btn--primary', () => {}]
+    ]);
+  }
+
+  /* ---------- 畫面：進步 ---------- */
+  function exHistory(exId) {
+    // 每次訓練的最佳估算 1RM，舊到新
+    return state.workouts
+      .slice().sort((a, b) => a.start - b.start)
+      .map((w) => {
+        const its = w.items.filter((i) => i.exId === exId);
+        if (!its.length) return null;
+        const sets = its.flatMap((i) => i.sets);
+        const best = bestOf(sets);
+        if (!best) return null;
+        return { w, best, sets, vol: sets.reduce((a, s) => a + setVolume(s), 0), maxW: Math.max(...sets.map((s) => s.w)) };
+      })
+      .filter(Boolean);
+  }
+
+  function renderProgress() {
+    const el = $('#viewProgress');
+    const rows = state.exercises
+      .map((e) => ({ e, h: exHistory(e.id) }))
+      .filter((x) => x.h.length && (!prefs.part || x.e.part === prefs.part))
+      .sort((a, b) => b.h[b.h.length - 1].w.start - a.h[a.h.length - 1].w.start);
+    const total = state.workouts.length;
+    const allVol = state.workouts.reduce((s, w) => s + workoutVolume(w), 0);
+    const prTotal = state.workouts.reduce((s, w) => s + (w.prs || []).length, 0);
+    const usedParts = PARTS.filter((p) => state.exercises.some((e) => e.part === p && exHistory(e.id).length));
+
+    el.innerHTML = `
+      <h1 class="title">進步</h1>
+      <div class="stats" style="margin-top:6px">
+        <div class="stat"><b>${total}</b><small>累計訓練</small></div>
+        <div class="stat"><b>${allVol >= 10000 ? fmt(Math.round(allVol / 100) / 10) + 'k' : fmtBig(allVol)}</b><small>累計總量 kg</small></div>
+        <div class="stat"><b>${prTotal}</b><small>破紀錄次數</small></div>
+      </div>
+      <div class="section-title"><span>各動作最佳（估算 1RM）</span></div>
+      ${usedParts.length > 1 ? `<div class="chips">${['', ...usedParts].map((p) => `<button type="button" class="chip${p === prefs.part ? ' is-on' : ''}" data-part="${p}">${p || '全部'}</button>`).join('')}</div>` : ''}
+      ${rows.length ? rows.map(({ e, h }) => {
+        const best = h.reduce((m, x) => (x.best.e > m.best.e ? x : m), h[0]);
+        return `
+        <button type="button" class="card lift" data-eid="${e.id}">
+          <div class="lift__body">
+            <h3 class="lift__name">${esc(e.name)}</h3>
+            <p class="lift__meta">${esc(e.part)} · ${h.length} 次 · 最重 ${fmt(Math.max(...h.map((x) => x.maxW)))} kg</p>
+          </div>
+          ${sparkline(h.map((x) => x.best.e))}
+          <div class="lift__pr"><b>${fmt(Math.round(best.best.e * 2) / 2)}</b><small>${fmt(best.best.w)}×${best.best.r}</small></div>
+        </button>`;
+      }).join('') : '<div class="empty"><b>還沒有資料</b>完成第一場訓練後，這裡會長出曲線。</div>'}
+    `;
+    el.querySelectorAll('.chip').forEach((c) => { c.onclick = () => { prefs.part = c.dataset.part; savePrefs(); renderProgress(); }; });
+    el.querySelectorAll('.lift').forEach((b) => { b.onclick = () => showExercise(exById(b.dataset.eid)); });
+  }
+
+  function sparkline(vals) {
+    if (vals.length < 2) return '<svg class="spark" viewBox="0 0 72 28"></svg>';
+    const v = vals.slice(-10);
+    const min = Math.min(...v), max = Math.max(...v);
+    const span = max - min || 1;
+    const d = v.map((x, i) => `${i ? 'L' : 'M'}${(i / (v.length - 1) * 68 + 2).toFixed(1)},${(26 - (x - min) / span * 24).toFixed(1)}`).join('');
+    return `<svg class="spark" viewBox="0 0 72 28" aria-hidden="true"><path d="${d}"/></svg>`;
+  }
+
+  function chart(h) {
+    const W = 520, H = 200, L = 40, R = 12, T = 14, B = 26;
+    const vals = h.map((x) => x.best.e);
+    let min = Math.min(...vals), max = Math.max(...vals);
+    if (max - min < 5) { min -= 2.5; max += 2.5; }
+    const pad5 = (max - min) * 0.1;
+    min = Math.max(0, min - pad5); max += pad5;
+    const x = (i) => L + (h.length === 1 ? (W - L - R) / 2 : i / (h.length - 1) * (W - L - R));
+    const y = (v) => T + (1 - (v - min) / (max - min)) * (H - T - B);
+    const ticks = [0, 0.5, 1].map((f) => min + (max - min) * f);
+    let running = 0;
+    const pts = h.map((p, i) => {
+      const isPr = p.best.e > running + 0.01;
+      if (isPr) running = p.best.e;
+      return `<circle class="pt${isPr && i ? ' is-pr' : ''}" cx="${x(i).toFixed(1)}" cy="${y(p.best.e).toFixed(1)}" r="4"><title>${dateLabel(p.w.start)}：${fmt(p.best.w)}×${p.best.r}</title></circle>`;
+    }).join('');
+    const line = h.map((p, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(p.best.e).toFixed(1)}`).join('');
+    const area = h.length > 1 ? `<path class="area" d="${line}L${x(h.length - 1).toFixed(1)},${H - B}L${x(0).toFixed(1)},${H - B}Z"/>` : '';
+    const first = new Date(h[0].w.start), last = new Date(h[h.length - 1].w.start);
+    return `
+      <svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="估算 1RM 走勢">
+        ${ticks.map((t) => `<line class="grid" x1="${L}" x2="${W - R}" y1="${y(t).toFixed(1)}" y2="${y(t).toFixed(1)}"/><text class="axis" x="${L - 6}" y="${(y(t) + 4).toFixed(1)}" text-anchor="end">${Math.round(t)}</text>`).join('')}
+        ${area}<path class="line" d="${line}"/>${pts}
+        <text class="axis" x="${L}" y="${H - 6}">${first.getMonth() + 1}/${first.getDate()}</text>
+        ${h.length > 1 ? `<text class="axis" x="${W - R}" y="${H - 6}" text-anchor="end">${last.getMonth() + 1}/${last.getDate()}</text>` : ''}
+      </svg>`;
+  }
+
+  function showExercise(e) {
+    const h = exHistory(e.id);
+    const best = h.reduce((m, x) => (x.best.e > m.best.e ? x : m), h[0]);
+    openInfo(esc(e.name), `
+      <div class="kv">
+        <div class="stat"><b>${fmt(Math.round(best.best.e * 2) / 2)}</b><small>估算 1RM kg</small></div>
+        <div class="stat"><b>${fmt(Math.max(...h.map((x) => x.maxW)))}</b><small>最重 kg</small></div>
+        <div class="stat"><b>${h.length}</b><small>次訓練</small></div>
+      </div>
+      <label class="field" style="flex-direction:row;align-items:center;gap:10px">
+        <span>部位</span>
+        <select class="input" id="exPart" style="width:auto;height:38px">${PARTS.map((p) => `<option${p === e.part ? ' selected' : ''}>${p}</option>`).join('')}</select>
+      </label>
+      ${chart(h)}
+      <p class="sub" style="margin:0 0 12px;font-size:12.5px">每點是那次的最佳組換算的 1RM（Epley 公式），黃點是破紀錄。</p>
+      ${h.slice().reverse().map((x) => `
+        <div class="detail-ex">
+          <h3>${dateLabel(x.w.start)} <small style="color:var(--dim);font-weight:600">${esc(x.w.name)} · ${fmtBig(x.vol)} kg</small></h3>
+          <ol>${x.sets.map((s) => `<li><b>${fmt(s.w)}</b> kg × <b>${s.r}</b></li>`).join('')}</ol>
+        </div>`).join('')}
+    `, [
+      ['關閉', 'btn--primary', () => {}]
+    ]);
+    $('#exPart').onchange = (ev) => { e.part = ev.target.value; save(); render(); };
+  }
+
+  /* ---------- 通用對話框 ---------- */
+  function openInfo(title, body, actions) {
+    $('#infoTitle').innerHTML = title;
+    $('#infoBody').innerHTML = body;
+    const box = $('#infoActions');
+    box.innerHTML = '';
+    for (const [label, cls, fn] of actions) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = `btn ${cls}`;
+      b.textContent = label;
+      b.onclick = () => { $('#infoDialog').close(); fn(); };
+      box.appendChild(b);
+    }
+    const dlg = $('#infoDialog');
+    if (dlg.open) dlg.close();
+    dlg.showModal();
+    $('#infoBody').scrollTop = 0;
+  }
+
+  function toast(text) {
+    const t = $('#toast');
+    t.textContent = text;
+    t.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.hidden = true; }, 2400);
+  }
+
+  /* ---------- 外觀 ---------- */
+  function applyTheme() {
+    const root = document.documentElement;
+    if (prefs.theme) root.dataset.theme = prefs.theme; else delete root.dataset.theme;
+    const dark = prefs.theme ? prefs.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+    $('#themeBtn use').setAttribute('href', dark ? '#i-sun' : '#i-moon');
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.content = dark ? '#14150e' : '#eef3d8';
+  }
+
+  /* ---------- 匯出／匯入 ---------- */
+  let downloads = null;
+  async function exportJson() {
+    const data = { version: 1, app: 'pinky-lift', exportedAt: new Date().toISOString(), exercises: state.exercises, routines: state.routines, workouts: state.workouts };
+    if (!downloads) { toast('這個檢視不能下載檔案'); return; }
+    try {
+      await downloads.save({ filename: `lift-backup-${todayIso()}.json`, data: JSON.stringify(data, null, 2) });
+      toast('備份已下載');
+    } catch (err) {
+      if (err && err.code === 'declined') return;
+      toast(err && err.code === 'rate_limited' ? '下載視窗已經開著了' : '這裡無法下載檔案');
+    }
+  }
+  function importJson(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result);
+        if (!data || data.app !== 'pinky-lift' || !Array.isArray(data.workouts)) throw new Error('format');
+        // 以 id 去重；同名動作合併成同一個
+        const idMap = {};
+        for (const e of data.exercises || []) {
+          const same = state.exercises.find((x) => x.id === e.id) || state.exercises.find((x) => x.name === e.name);
+          if (same) idMap[e.id] = same.id;
+          else { state.exercises.push({ id: e.id, name: e.name, part: e.part || '其他' }); idMap[e.id] = e.id; }
+        }
+        const remap = (id) => idMap[id] || id;
+        let added = 0;
+        for (const r of data.routines || []) {
+          if (state.routines.some((x) => x.id === r.id)) continue;
+          state.routines.push({ ...r, items: (r.items || []).map((it) => ({ ...it, exId: remap(it.exId) })) });
+        }
+        for (const w of data.workouts) {
+          if (state.workouts.some((x) => x.id === w.id)) continue;
+          state.workouts.push({ ...w, items: (w.items || []).map((it) => ({ ...it, exId: remap(it.exId) })) });
+          added++;
+        }
+        save(state.workouts.map((w) => w.start));
+        render();
+        toast(`匯入完成：新增 ${added} 筆訓練`);
+      } catch (err) {
+        toast('這不是練勾勾的備份檔');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  /* ---------- 事件 ---------- */
+  function setupEvents() {
+    document.querySelectorAll('.nav__btn').forEach((b) => { b.onclick = () => goto(b.dataset.view); });
+
+    $('#themeBtn').onclick = () => {
+      const dark = prefs.theme ? prefs.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+      prefs.theme = dark ? 'light' : 'dark';
+      savePrefs();
+      applyTheme();
+    };
+    matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
+
+    const panel = $('#morePanel');
+    $('#moreBtn').onclick = (e) => {
+      e.stopPropagation();
+      panel.hidden = !panel.hidden;
+      $('#moreBtn').setAttribute('aria-expanded', String(!panel.hidden));
+    };
+    document.addEventListener('click', (e) => { if (!panel.hidden && !panel.contains(e.target)) panel.hidden = true; });
+    panel.addEventListener('click', (e) => { if (e.target.closest('button,a')) setTimeout(() => { panel.hidden = true; }, 0); });
+
+    $('#restBtn').onclick = () => {
+      prefs.rest = REST_OPTIONS[(REST_OPTIONS.indexOf(prefs.rest) + 1) % REST_OPTIONS.length];
+      savePrefs(); render();
+      toast(prefs.rest ? `每組之間休息 ${prefs.rest} 秒` : '休息計時已關閉');
+    };
+    $('#stepBtn').onclick = () => {
+      prefs.step = STEP_OPTIONS[(STEP_OPTIONS.indexOf(prefs.step) + 1) % STEP_OPTIONS.length];
+      savePrefs(); render();
+      toast(`達標後建議加 ${fmt(prefs.step)} kg`);
+    };
+    $('#exportBtn').onclick = exportJson;
+    $('#importBtn').onclick = () => $('#importFile').click();
+    $('#importFile').onchange = (e) => { if (e.target.files[0]) importJson(e.target.files[0]); e.target.value = ''; };
+    $('#clearAllBtn').onclick = async () => {
+      if (!(await ask('刪除所有訓練紀錄、課表與動作？這無法復原，建議先匯出備份。', '全部刪除', true))) return;
+      const months = state.workouts.map((w) => w.start);
+      stopRest();
+      seed();
+      save(months); // 那些月份現在是空的 → 雲端文件刪除
+      render();
+      toast('已全部刪除，回到預設課表');
+    };
+
+    $('#restMinus').onclick = () => adjustRest(-15);
+    $('#restPlus').onclick = () => adjustRest(15);
+    $('#restSkip').onclick = stopRest;
+
+    document.querySelectorAll('[data-close]').forEach((b) => { b.onclick = () => b.closest('dialog').close(); });
+    document.querySelectorAll('dialog').forEach((d) => {
+      d.addEventListener('click', (e) => { if (e.target === d) d.close(); }); // 點背景關閉
+    });
+
+    // 選動作
+    $('#pickSearch').addEventListener('input', renderPicker);
+    $('#pickSearch').addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      const first = $('#pickList [data-new], #pickList [data-id]');
+      if (first) first.click();
+    });
+    $('#pickParts').addEventListener('click', (e) => {
+      const c = e.target.closest('[data-part]');
+      if (!c) return;
+      pickPart = c.dataset.part;
+      renderPicker();
+    });
+    $('#pickList').addEventListener('click', (e) => {
+      let ex = null;
+      if (e.target.closest('[data-new]')) {
+        ex = findOrCreateEx($('#pickSearch').value, $('#pickNewPart').value);
+        save();
+      } else {
+        const b = e.target.closest('[data-id]');
+        if (b) ex = exById(b.dataset.id);
+      }
+      if (!ex) return;
+      $('#pickDialog').close();
+      if (pickCallback) pickCallback(ex);
+    });
+
+    // 課表編輯
+    $('#routineForm').addEventListener('submit', saveRoutine);
+    $('#rAdd').onclick = () => openPicker((ex) => {
+      routineDraft.items.push({ exId: ex.id, sets: 3, reps: 8, weight: 0 });
+      renderRoutineItems();
+    });
+    $('#rItems').addEventListener('input', (e) => {
+      const row = e.target.closest('.ritem');
+      if (!row || !e.target.dataset.f) return;
+      routineDraft.items[Number(row.dataset.i)][e.target.dataset.f] = e.target.value;
+    });
+    $('#rItems').addEventListener('click', (e) => {
+      if (!e.target.closest('[data-act="del"]')) return;
+      routineDraft.items.splice(Number(e.target.closest('.ritem').dataset.i), 1);
+      renderRoutineItems();
+    });
+    $('#rDelete').onclick = async () => {
+      if (!(await ask('刪除這份課表？訓練紀錄不受影響。', '刪除課表', true))) return;
+      state.routines = state.routines.filter((r) => r.id !== routineDraft.id);
+      save();
+      $('#routineDialog').close();
+      render();
+      toast('課表已刪除');
+    };
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) { flushMeta(); return; }
+      tick();
+      // 回到頁面時從帳號重新讀一次（例如剛在另一台裝置練完）；有還沒寫完的就先不讀
+      if (cloud && pulled && !metaTimer) pull(false).catch(() => {});
+    });
+    window.addEventListener('pagehide', flushMeta);
+  }
+
+  load();
+  applyTheme();
+  setupEvents();
+  render();
+  tickTimer = setInterval(tick, 250);
+  connectCloud();
+  if (window.claude && typeof window.claude.use === 'function') {
+    window.claude.use('downloads').then((d) => { downloads = d; $('#exportBtn').hidden = !d; }).catch(() => {});
+  }
+})();
+</script>
