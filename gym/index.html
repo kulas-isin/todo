@@ -319,7 +319,14 @@ h1.title { margin: 0 2px 4px; font-size: 26px; font-weight: 800; letter-spacing:
 .ex__foot .btn { flex: 1; }
 
 .live-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
-.live-actions .btn--primary { grid-column: 1 / -1; }
+.live-actions .btn--primary, .live-actions .btn--danger { grid-column: 1 / -1; }
+.live-actions .btn--danger { justify-self: center; background: transparent; }
+.ex__ss {
+  display: inline-block; margin: 0 0 4px; padding: 2px 9px;
+  font-size: 12px; font-weight: 700; border-radius: 999px;
+  background: var(--brand); color: var(--on-brand);
+}
+.pick__routine { width: 100%; text-align: left; border: 0; cursor: pointer; }
 
 /* ---------- 休息計時 ---------- */
 .rest {
@@ -453,13 +460,14 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
 }
 .ritem__more label { display: inline-flex; align-items: center; gap: 4px; }
 .ritem__more input[type="number"] { width: 52px; height: 32px; }
+.ritem .ritem__ss { width: 44px; height: 32px; }
 .ritem .ritem__note { flex: 1 1 160px; height: 32px; text-align: left; padding: 0 10px; font-weight: 500; }
 .input--area { height: auto; padding: 10px 14px; resize: vertical; line-height: 1.5; }
 .live__note {
   margin: -4px 2px 14px; padding: 10px 14px; font-size: 13.5px; line-height: 1.6;
   background: var(--brand-wash); color: var(--text); border-radius: var(--r-md);
 }
-.ex__note { margin: 2px 0 0; font-size: 13px; font-weight: 600; color: var(--brand); }
+.ex__note { margin: 2px 0 0; font-size: 13px; font-weight: 600; color: var(--brand); white-space: pre-line; }
 .ex__rp {
   display: inline-block; margin: 4px 0 0 4px; padding: 2px 9px;
   font-size: 12px; font-weight: 700; border-radius: 999px;
@@ -637,7 +645,7 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
           <input type="number" class="input" id="rRestAfter" inputmode="numeric" min="0" max="900" placeholder="例如 240" style="max-width:160px">
         </label>
         <div class="field">
-          <span>動作（組數 × 次數 × 起始重量，重量留空會自動帶上次的。有填「暫停休息湊 N 下」時，第 1 組是啟動組）</span>
+          <span>動作（組數 × 次數 × 起始重量，重量留空會自動帶上次的。有填「暫停休息湊 N 下」時，第 1 組是啟動組；「超級組」填同一個代號（例如 A）的動作會輪流做，一輪做完才休息）</span>
           <div id="rItems"></div>
           <button type="button" class="btn btn--sm" id="rAdd" style="margin-top:8px"><svg class="ico"><use href="#i-plus"/></svg>加動作</button>
         </div>
@@ -714,6 +722,16 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
         ['啞鈴抱髖側平舉', '啟動組後同動作，暫停休息湊 20 下'],
         ['繩索拉伸前平舉', '啟動組後同動作，暫停休息湊 20 下'],
         ['臉拉', '啟動組：舉過頭頂的臉拉 → 接著傳統臉拉']
+      ]
+    },
+    rearSuperset: {
+      name: '中後束超級組（收尾）',
+      after: '100 次肩部訓練',
+      note: '凳子調到約 70 度，胸口趴在椅背上，拿一對不用很重的啞鈴。兩個動作連著做算一輪，中間不休息；全程肩胛骨打開、不後縮，專練中後束。',
+      restAfter: 0,
+      items: [
+        { name: '上斜俯身側前平舉', sets: 3, reps: 10, rest: 60, ss: 'A', note: '把啞鈴往側前方甩出去，手臂微彎，肩胛骨不後縮' },
+        { name: '上斜俯身後束划船', sets: 3, reps: 10, rest: 60, ss: 'A', note: '肩胛骨保持打開不後縮，手肘往外帶，做 10 下' }
       ]
     }
   };
@@ -811,6 +829,8 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
   // 暫停休息（rest-pause）：第一組是啟動組，之後的小組加總要湊滿 rp 下
   function rpDone(it) { return it.sets.reduce((n, s, i) => n + (i > 0 && s.done ? s.r : 0), 0); }
   function rpMet(it) { return !!it.rp && it.sets.length > 0 && it.sets[0].done && rpDone(it) >= it.rp; }
+  // 超級組：同一個 ss 的動作輪流做，一輪做完才休息
+  function ssGroup(it) { return it.ss ? state.active.items.filter((x) => x.ss === it.ss) : [it]; }
   function splitReps(total, n) {
     const out = [];
     for (let i = 0; i < n; i++) out.push(Math.floor(total / n) + (i < total % n ? 1 : 0));
@@ -867,10 +887,14 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
       state.builtins.push(key);
       changed = true;
       if (state.routines.some((x) => x.name === def.name)) continue;
-      state.routines.unshift({
+      const routine = {
         id: uid(), name: def.name, note: def.note, restAfter: def.restAfter,
-        items: def.items.map(([n, note]) => ({ exId: findOrCreateEx(n, '肩').id, sets: 4, reps: 12, weight: 0, rp: 20, rest: 15, note }))
-      });
+        items: def.items.map((d) => (Array.isArray(d)
+          ? { exId: findOrCreateEx(d[0], '肩').id, sets: 4, reps: 12, weight: 0, rp: 20, rest: 15, note: d[1] }
+          : { exId: findOrCreateEx(d.name, '肩').id, sets: d.sets, reps: d.reps, weight: 0, rest: d.rest, ss: d.ss, note: d.note }))
+      };
+      const at = def.after ? state.routines.findIndex((x) => x.name === def.after) : -1;
+      if (at >= 0) state.routines.splice(at + 1, 0, routine); else state.routines.unshift(routine);
     }
     return changed;
   }
@@ -1020,8 +1044,9 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
   }
 
   /* ---------- 訓練流程 ---------- */
-  function makeItem(exId, target) {
+  function makeItem(exId, target, ssPrefix) {
     const t = target || {};
+    const ss = t.ss ? (ssPrefix || 'w') + ':' + String(t.ss).replace(/^.*:/, '') : '';
     const sug = suggestion(exId, t);
     if (t.rp) {
       const w = sug.weight || t.weight || 0;
@@ -1042,7 +1067,7 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
         done: false
       });
     }
-    return { exId, target: t.reps || 0, rest: t.rest || 0, note: t.note || '', bump: !!(t.sets && sug.bump), sets };
+    return { exId, target: t.reps || 0, rest: t.rest || 0, ss, note: t.note || '', bump: !!(t.sets && sug.bump), sets };
   }
 
   function startWorkout(routine, copyFrom) {
@@ -1054,7 +1079,7 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
       items = routine.items.filter((it) => exById(it.exId)).map((it) => makeItem(it.exId, it));
     } else if (copyFrom) {
       name = copyFrom.name;
-      items = copyFrom.items.map((it) => makeItem(it.exId, { sets: it.sets.length, reps: it.target || 0, rp: it.rp || 0, rest: it.rest || 0, note: it.note || '' }));
+      items = copyFrom.items.map((it) => makeItem(it.exId, { sets: it.sets.length, reps: it.target || 0, rp: it.rp || 0, rest: it.rest || 0, ss: it.ss || '', note: it.note || '' }));
     }
     const src = routine || copyFrom || {};
     state.active = {
@@ -1126,10 +1151,21 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
       }
       const exDone = (x) => x.sets.every((y) => y.done) || rpMet(x);
       const isLast = state.active.items.every(exDone);
+      const group = ssGroup(it);
+      const partner = group.length > 1 ? group.slice(group.indexOf(it) + 1).concat(group.slice(0, group.indexOf(it))).find((x) => x.sets[si] && !x.sets[si].done) : null;
       if (isLast) { stopRest(); toast('全部完成！按「完成訓練」存檔'); }
-      else if (prefs.rest > 0) {
-        if (exDone(it)) startRest(state.active.restAfter || prefs.rest, '換下一個動作', true);
-        else startRest(it.rest || prefs.rest, it.rp ? '暫停休息，深呼吸' : '組間休息');
+      else if (partner) {
+        // 超級組：這一輪還沒做完，不休息，直接接下一個動作
+        stopRest();
+        toast(`不休息，接著做「${exName(partner.exId)}」`);
+        save();
+        renderTrain();
+        const card = document.querySelector(`.ex[data-ii="${state.active.items.indexOf(partner)}"]`);
+        if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      } else if (prefs.rest > 0) {
+        if (group.every(exDone)) startRest(state.active.restAfter || prefs.rest, '換下一個動作', true);
+        else startRest(it.rest || prefs.rest, it.rp ? '暫停休息，深呼吸' : group.length > 1 ? '這輪做完，休息一下' : '組間休息');
       }
     }
     save();
@@ -1309,8 +1345,9 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
       ${wk.items.length ? wk.items.map(exCardHtml).join('') : '<div class="empty"><b>還沒有動作</b>按下面「加動作」開始。</div>'}
       <div class="live-actions">
         <button type="button" class="btn" data-act="add-ex"><svg class="ico"><use href="#i-plus"/></svg>加動作</button>
-        <button type="button" class="btn btn--danger" data-act="discard">放棄</button>
+        <button type="button" class="btn" data-act="add-routine"><svg class="ico"><use href="#i-clipboard"/></svg>接一份課表</button>
         <button type="button" class="btn btn--primary" data-act="finish"><svg class="ico"><use href="#i-check"/></svg>完成訓練</button>
+        <button type="button" class="btn btn--danger btn--sm" data-act="discard">放棄這場訓練</button>
       </div>
     `;
   }
@@ -1324,6 +1361,7 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
         <div class="ex__head">
           <div class="ex__title">
             <h3 class="ex__name">${esc(exName(it.exId))}</h3>
+            ${it.ss ? (() => { const g = ssGroup(it); return g.length > 1 ? `<span class="ex__ss">超級組 ${g.indexOf(it) + 1}/${g.length} · ${g.indexOf(it) < g.length - 1 ? `做完接「${esc(exName(g[g.indexOf(it) + 1].exId))}」` : '做完這輪才休息'}</span>` : ''; })() : ''}
             ${it.note ? `<p class="ex__note">${esc(it.note)}</p>` : ''}
             <p class="ex__last">${esc(lastSummary(last))}</p>
             ${it.bump ? `<span class="ex__hint">${it.rp ? `上次啟動組超過 ${it.target} 下` : '上次全組達標'} → 今天 +${fmt(prefs.step)} kg</span>` : ''}
@@ -1367,6 +1405,7 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
       if (cards.length) cards[cards.length - 1].scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
     el.querySelector('[data-act="discard"]').onclick = () => discardWorkout(false);
+    el.querySelector('[data-act="add-routine"]').onclick = openAppendRoutine;
     el.querySelector('[data-act="finish"]').onclick = finishWorkout;
 
     el.querySelectorAll('.ex').forEach((card) => {
@@ -1421,9 +1460,35 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
     });
   }
 
+  // 練到一半接上另一份課表（例如練完主課表，再接收尾的超級組）
+  function openAppendRoutine() {
+    if (!state.routines.length) { toast('還沒有課表'); return; }
+    openInfo('接一份課表', `
+      <p class="sub" style="margin:0 0 10px">選一份課表，它的動作會加到這場訓練的最後面。</p>
+      ${state.routines.map((r) => `<button type="button" class="card pick__routine routine" data-rid="${r.id}" style="margin-top:8px"><div class="routine__body"><h3 class="routine__name">${esc(r.name)}</h3><p class="routine__meta">${esc(r.items.map((it) => exName(it.exId)).join('・'))}</p></div></button>`).join('')}
+    `, [['取消', '', () => {}]]);
+    $('#infoBody').querySelectorAll('[data-rid]').forEach((b) => {
+      b.onclick = () => {
+        const r = state.routines.find((x) => x.id === b.dataset.rid);
+        const wk = state.active;
+        if (!r || !wk) return;
+        const prefix = uid();
+        const first = wk.items.length;
+        for (const it of r.items) if (exById(it.exId)) wk.items.push(makeItem(it.exId, it, prefix));
+        if (r.note && wk.items[first] && !wk.items[first].note.includes(r.note)) wk.items[first].note = r.note + (wk.items[first].note ? '\n' + wk.items[first].note : '');
+        save();
+        $('#infoDialog').close();
+        renderTrain();
+        toast(`已接上「${r.name}」`);
+        const card = document.querySelector(`.ex[data-ii="${first}"]`);
+        if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      };
+    });
+  }
+
   /* ---------- 畫面：課表 ---------- */
   function routineCard(r) {
-    const names = r.items.map((it) => (it.rp ? `${exName(it.exId)} 啟動組＋${it.rp}下` : `${exName(it.exId)} ${it.sets}×${it.reps}`)).join('・');
+    const names = r.items.map((it) => (it.rp ? `${exName(it.exId)} 啟動組＋${it.rp}下` : `${exName(it.exId)} ${it.sets}×${it.reps}`) + (it.ss ? `（超級組 ${it.ss}）` : '')).join('・');
     return `
       <div class="card routine" data-rid="${r.id}">
         <div class="routine__body">
@@ -1483,6 +1548,7 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
           <div class="ritem__more">
             <label>暫停休息湊 <input type="number" inputmode="numeric" min="0" max="100" value="${it.rp || ''}" placeholder="—" data-f="rp" aria-label="暫停休息目標次數"> 下</label>
             <label>組間 <input type="number" inputmode="numeric" min="0" max="900" value="${it.rest || ''}" placeholder="預設" data-f="rest" aria-label="組間休息秒數"> 秒</label>
+            <label>超級組 <input type="text" class="ritem__ss" maxlength="4" value="${esc(it.ss || '')}" placeholder="—" data-f="ss" aria-label="超級組代號（同代號的動作輪流做）"></label>
             <input type="text" class="ritem__note" maxlength="80" value="${esc(it.note || '')}" placeholder="備註（選填）" data-f="note" aria-label="備註">
           </div>
         </div>`).join('');
@@ -1498,6 +1564,7 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
       weight: num(it.weight),
       rp: Math.round(num(it.rp)),
       rest: Math.round(num(it.rest)),
+      ss: String(it.ss || '').trim().toUpperCase(),
       note: String(it.note || '').trim()
     }));
     const note = $('#rNote').value.trim();
