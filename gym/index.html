@@ -666,6 +666,19 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
 .iv__actions .btn:not(.btn--primary) { background: rgba(127, 127, 127, .25); color: var(--on-ink); }
 .ex.is-live { border-color: var(--brand); box-shadow: 0 0 0 2px var(--brand); }
 
+.edit-ex { margin: 0 0 18px; }
+.edit-ex h3 { margin: 0 0 6px; font-size: 15px; font-weight: 700; }
+.edit-all { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 13px; font-weight: 600; color: var(--brand); }
+.edit-all input { width: 90px; height: 36px; padding: 0 10px; text-align: center; font-weight: 700; background: var(--brand-wash); border: 1.5px solid transparent; border-radius: 10px; }
+.edit-set { display: grid; grid-template-columns: 28px minmax(0, 1fr) 40px minmax(0, 1fr); align-items: center; gap: 6px; margin: 0 0 6px; }
+.edit-set input {
+  width: 100%; min-width: 0; height: 38px; padding: 0 8px; text-align: center;
+  font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums;
+  background: var(--surface-2); border: 1.5px solid transparent; border-radius: 10px;
+}
+.edit-set input:focus, .edit-all input:focus { outline: none; border-color: var(--brand); }
+.edit-set .set__x { font-size: 12px; }
+
 /* ---------- 手機 ---------- */
 @media (max-width: 640px) {
   .nav {
@@ -2106,8 +2119,59 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
         state.workouts = state.workouts.filter((x) => x.id !== w.id);
         save([w.start]); render(); toast('已刪除');
       }],
+      ['編輯', '', () => editWorkout(w)],
       ['再練一次', 'btn--primary', () => startWorkout(null, w)]
     ]);
+  }
+
+  // 補填或修改已完成紀錄的重量與次數（例如練的時候忘了輸入重量）
+  function editWorkout(w) {
+    openInfo(`編輯「${esc(w.name)}」`, `
+      <p class="sub" style="margin:0 0 12px">${dateLabel(w.start)}。每個動作可以先在「全部組」填一次重量，再個別調整。</p>
+      ${w.items.map((it, ii) => `
+        <div class="edit-ex" data-ii="${ii}">
+          <h3>${esc(exName(it.exId))}</h3>
+          <label class="edit-all">全部組 <input type="number" inputmode="decimal" step="0.5" min="0" placeholder="kg" data-all aria-label="${esc(exName(it.exId))} 全部組的重量"> kg</label>
+          ${it.sets.map((x, si) => `
+            <div class="edit-set" data-si="${si}">
+              <span class="set__no">${it.rp ? (si === 0 ? '啟' : 'R' + si) : si + 1}</span>
+              <input type="number" inputmode="decimal" step="0.5" min="0" value="${x.w || ''}" placeholder="0" data-f="w" aria-label="第 ${si + 1} 組重量">
+              <span class="set__x">kg ×</span>
+              <input type="number" inputmode="numeric" step="1" min="0" value="${x.r || ''}" placeholder="0" data-f="r" aria-label="第 ${si + 1} 組次數">
+            </div>`).join('')}
+        </div>`).join('')}
+    `, [
+      ['取消', '', () => showWorkout(w)],
+      ['儲存', 'btn--primary', () => {
+        $('#infoBody').querySelectorAll('.edit-ex').forEach((box) => {
+          const it = w.items[Number(box.dataset.ii)];
+          box.querySelectorAll('.edit-set').forEach((row) => {
+            const x = it.sets[Number(row.dataset.si)];
+            x.w = num(row.querySelector('[data-f="w"]').value);
+            x.r = Math.round(num(row.querySelector('[data-f="r"]').value));
+          });
+        });
+        // 重新判斷這次有沒有破紀錄（只跟更早的訓練比）
+        w.prs = w.items.filter((it) => {
+          const now = bestOf(it.sets);
+          let before = null;
+          for (const o of state.workouts) {
+            if (o.id === w.id || o.start >= w.start) continue;
+            for (const oi of o.items) if (oi.exId === it.exId) { const b = bestOf(oi.sets); if (b && (!before || b.e > before.e)) before = b; }
+          }
+          return now && before && now.e > before.e + 0.01;
+        }).map((it) => it.exId);
+        save([w.start]);
+        render();
+        toast('紀錄已更新');
+        showWorkout(w);
+      }]
+    ]);
+    $('#infoBody').querySelectorAll('[data-all]').forEach((inp) => {
+      inp.addEventListener('input', () => {
+        inp.closest('.edit-ex').querySelectorAll('[data-f="w"]').forEach((x) => { x.value = inp.value; });
+      });
+    });
   }
 
   function showSummary(w, prs) {
