@@ -8,7 +8,7 @@
 /* =========================================================
    練勾勾 Lift — 樣式
    版面：白底大圓角卡片，粉彩色塊放數據，炭黑卡片放本週圖表。
-   紅色是主色；「配色」可以換搭配的粉彩（冰藍奶茶／薄荷奶油／粉紫／炭灰）。
+   「配色」可切換六組：主色＋深色卡片＋兩個粉彩色塊都跟著換。
    ========================================================= */
 
 :root {
@@ -19,23 +19,23 @@
   --line: rgba(22, 24, 32, .09);
   --text: #1c1e24;
   --dim: #868a94;
-  --brand: #e63946;
-  --brand-wash: #fde6e7;
   --on-brand: #ffffff;
-  --ink: #262a33;
   --on-ink: #ffffff;
-  --ink-dim: #9aa0ab;
-  --tile-1: #dcecf2;
-  --tile-2: #fde5c4;
   --accent: #e9a91c;
   --accent-wash: #fcf0d2;
-  --danger: #8f3a35;
+  --danger: #a23d34;
   --danger-wash: #f5e5e3;
   --ok: #2b9d67;
   --ok-wash: #dcf2e6;
-  --hero-1: #ee4450;
-  --hero-2: #c1121f;
   --on-hero: #ffffff;
+  --brand: #f2614c;
+  --brand-wash: #fde4df;
+  --ink: #1f3150;
+  --ink-dim: #9fb0cc;
+  --tile-1: #dde7f6;
+  --tile-2: #ffe3d6;
+  --hero-1: #36598f;
+  --hero-2: #1f3150;
   /* 字體：圓潤的幾何無襯線（含數字），中文用系統字 */
   --font: "Plus Jakarta Sans", "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", ui-sans-serif, system-ui, sans-serif;
   --font-num: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
@@ -47,9 +47,11 @@
   --shadow-lg: 0 24px 60px rgba(20, 22, 30, .18);
   --ease: cubic-bezier(.22, .68, .36, 1);
 }
-:root[data-palette="mint"] { --brand: #e5383b; --brand-wash: #fde4e4; --tile-1: #d6f0e2; --tile-2: #fbf0c2; --ink: #1f2a27; }
-:root[data-palette="lilac"] { --brand: #e11d48; --brand-wash: #fde2e8; --tile-1: #e8e3fb; --tile-2: #fde0e3; --ink: #2a2540; }
-:root[data-palette="coal"] { --brand: #d90429; --brand-wash: #fbe0e3; --tile-1: #ebebee; --tile-2: #f6dadc; --ink: #1d1d21; }
+:root[data-palette="forest"] { --brand: #23936a; --brand-wash: #dbf1e7; --ink: #1f3d33; --ink-dim: #9dbcaf; --tile-1: #dcefe5; --tile-2: #fde4c8; --hero-1: #2aa477; --hero-2: #1a6a4d; }
+:root[data-palette="grape"] { --brand: #6d4dff; --brand-wash: #ece7ff; --ink: #2f2552; --ink-dim: #b1a7d6; --tile-1: #e9e4ff; --tile-2: #ffe2d9; --hero-1: #7c5cff; --hero-2: #4b33b8; }
+:root[data-palette="teal"] { --brand: #0b8f9b; --brand-wash: #d8f2f4; --ink: #0f3d47; --ink-dim: #8fb7bf; --tile-1: #d6f0f2; --tile-2: #fde8c4; --hero-1: #11a3b0; --hero-2: #0b6f7a; }
+:root[data-palette="sunset"] { --brand: #e8650f; --brand-wash: #ffe8d4; --ink: #3a2a5e; --ink-dim: #b6aad6; --tile-1: #ffe9d2; --tile-2: #e7e1fb; --hero-1: #f7931e; --hero-2: #e4572e; }
+:root[data-palette="red"] { --brand: #e63946; --brand-wash: #fde6e7; --ink: #262a33; --ink-dim: #9aa0ab; --tile-1: #dcecf2; --tile-2: #fde5c4; --hero-1: #ee4450; --hero-2: #c1121f; }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -60,51 +62,43 @@
     --line: rgba(255, 255, 255, .08);
     --text: #f2f3f5;
     --dim: #8f949e;
-    --brand: #ff4d5a;
-    --brand-wash: #3d1a1e;
-    --ink: #2b2f38;
-    --ink-dim: #a3a8b3;
-    --tile-1: #1d2a31;
-    --tile-2: #3a2b1b;
+    --on-brand: #ffffff;
     --accent: #f2c14e;
     --accent-wash: #43361a;
     --danger: #e6a39b;
     --danger-wash: #3d2422;
     --ok: #5fd09a;
     --ok-wash: #1d3d2e;
-    --hero-1: #d6232f;
-    --hero-2: #8c0e18;
+    --brand: #ff8a78; --brand-wash: #43251f; --ink: #22344f; --ink-dim: #a3b3cd; --tile-1: #1b2638; --tile-2: #3b2620; --hero-1: #2c4a7a; --hero-2: #1a2a45;
   }
-  :root[data-palette="mint"]:not([data-theme="light"]) { --tile-1: #1b2d25; --tile-2: #34301a; --ink: #26332f; }
-  :root[data-palette="lilac"]:not([data-theme="light"]) { --tile-1: #26223a; --tile-2: #3a2127; --ink: #2f2a45; }
-  :root[data-palette="coal"]:not([data-theme="light"]) { --tile-1: #24262b; --tile-2: #3a1f22; --ink: #2a2a30; }
+  :root[data-palette="forest"]:not([data-theme="light"]) { --brand: #4cc896; --brand-wash: #163a2d; --ink: #1f3a31; --ink-dim: #9dbcaf; --tile-1: #19302a; --tile-2: #3a2d1d; --hero-1: #238a63; --hero-2: #164d39; }
+  :root[data-palette="grape"]:not([data-theme="light"]) { --brand: #a28bff; --brand-wash: #2c2450; --ink: #2f2752; --ink-dim: #b5abd8; --tile-1: #241f3d; --tile-2: #3b2522; --hero-1: #5b40d6; --hero-2: #35237f; }
+  :root[data-palette="teal"]:not([data-theme="light"]) { --brand: #3cc6d1; --brand-wash: #123a40; --ink: #133c45; --ink-dim: #96bec6; --tile-1: #15303a; --tile-2: #3b2f1a; --hero-1: #0e8a95; --hero-2: #095159; }
+  :root[data-palette="sunset"]:not([data-theme="light"]) { --brand: #ff9a4d; --brand-wash: #45291a; --ink: #352a55; --ink-dim: #b6aad6; --tile-1: #3a2a1b; --tile-2: #262138; --hero-1: #d9661c; --hero-2: #a83a1c; }
+  :root[data-palette="red"]:not([data-theme="light"]) { --brand: #ff4d5a; --brand-wash: #3d1a1e; --ink: #2b2f38; --ink-dim: #a3a8b3; --tile-1: #1d2a31; --tile-2: #3a2b1b; --hero-1: #d6232f; --hero-2: #8c0e18; }
 }
 :root[data-theme="dark"] {
-  color-scheme: dark;
-  --bg: #111215;
-  --surface: #1a1c21;
-  --surface-2: #23262c;
-  --line: rgba(255, 255, 255, .08);
-  --text: #f2f3f5;
-  --dim: #8f949e;
-  --brand: #ff4d5a;
-  --brand-wash: #3d1a1e;
-  --ink: #2b2f38;
-  --ink-dim: #a3a8b3;
-  --tile-1: #1d2a31;
-  --tile-2: #3a2b1b;
-  --accent: #f2c14e;
-  --accent-wash: #43361a;
-  --danger: #e6a39b;
-  --danger-wash: #3d2422;
-  --ok: #5fd09a;
-  --ok-wash: #1d3d2e;
-  --hero-1: #d6232f;
-  --hero-2: #8c0e18;
+    color-scheme: dark;
+    --bg: #111215;
+    --surface: #1a1c21;
+    --surface-2: #23262c;
+    --line: rgba(255, 255, 255, .08);
+    --text: #f2f3f5;
+    --dim: #8f949e;
+    --on-brand: #ffffff;
+    --accent: #f2c14e;
+    --accent-wash: #43361a;
+    --danger: #e6a39b;
+    --danger-wash: #3d2422;
+    --ok: #5fd09a;
+    --ok-wash: #1d3d2e;
+    --brand: #ff8a78; --brand-wash: #43251f; --ink: #22344f; --ink-dim: #a3b3cd; --tile-1: #1b2638; --tile-2: #3b2620; --hero-1: #2c4a7a; --hero-2: #1a2a45;
 }
-:root[data-palette="mint"][data-theme="dark"] { --tile-1: #1b2d25; --tile-2: #34301a; --ink: #26332f; }
-:root[data-palette="lilac"][data-theme="dark"] { --tile-1: #26223a; --tile-2: #3a2127; --ink: #2f2a45; }
-:root[data-palette="coal"][data-theme="dark"] { --tile-1: #24262b; --tile-2: #3a1f22; --ink: #2a2a30; }
+:root[data-palette="forest"][data-theme="dark"] { --brand: #4cc896; --brand-wash: #163a2d; --ink: #1f3a31; --ink-dim: #9dbcaf; --tile-1: #19302a; --tile-2: #3a2d1d; --hero-1: #238a63; --hero-2: #164d39; }
+:root[data-palette="grape"][data-theme="dark"] { --brand: #a28bff; --brand-wash: #2c2450; --ink: #2f2752; --ink-dim: #b5abd8; --tile-1: #241f3d; --tile-2: #3b2522; --hero-1: #5b40d6; --hero-2: #35237f; }
+:root[data-palette="teal"][data-theme="dark"] { --brand: #3cc6d1; --brand-wash: #123a40; --ink: #133c45; --ink-dim: #96bec6; --tile-1: #15303a; --tile-2: #3b2f1a; --hero-1: #0e8a95; --hero-2: #095159; }
+:root[data-palette="sunset"][data-theme="dark"] { --brand: #ff9a4d; --brand-wash: #45291a; --ink: #352a55; --ink-dim: #b6aad6; --tile-1: #3a2a1b; --tile-2: #262138; --hero-1: #d9661c; --hero-2: #a83a1c; }
+:root[data-palette="red"][data-theme="dark"] { --brand: #ff4d5a; --brand-wash: #3d1a1e; --ink: #2b2f38; --ink-dim: #a3a8b3; --tile-1: #1d2a31; --tile-2: #3a2b1b; --hero-1: #d6232f; --hero-2: #8c0e18; }
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -162,7 +156,7 @@ body::before {
 }
 .avatar img { width: 100%; height: 100%; object-fit: cover; }
 .avatar .ico { width: 22px; height: 22px; }
-.swatches { display: flex; gap: 6px; padding: 4px 8px 0; }
+.swatches { display: grid; grid-template-columns: repeat(3, auto); justify-content: start; gap: 6px; padding: 4px 8px 0; }
 .pop__panel .swatches button {
   padding: 5px; gap: 0; border-radius: 999px; border: 2px solid transparent; background: var(--surface-2);
 }
@@ -723,12 +717,14 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
         <div class="pop__panel" id="morePanel" role="menu" hidden>
           <p class="sync" id="syncLabel">連線中…</p>
           <div class="swatches" role="group" aria-label="配色">
-            <button type="button" data-palette="ice" aria-label="紅＋冰藍奶茶"><i style="background:#e63946"></i><i style="background:#dcecf2"></i><i style="background:#fde5c4"></i></button>
-            <button type="button" data-palette="mint" aria-label="紅＋薄荷奶油"><i style="background:#e5383b"></i><i style="background:#d6f0e2"></i><i style="background:#fbf0c2"></i></button>
-            <button type="button" data-palette="lilac" aria-label="紅＋粉紫"><i style="background:#e11d48"></i><i style="background:#e8e3fb"></i><i style="background:#fde0e3"></i></button>
-            <button type="button" data-palette="coal" aria-label="紅＋炭灰"><i style="background:#d90429"></i><i style="background:#ebebee"></i><i style="background:#1d1d21"></i></button>
+            <button type="button" data-palette="navy" aria-label="海軍藍＋珊瑚" title="海軍藍＋珊瑚"><i style="background:#f2614c"></i><i style="background:#1f3150"></i><i style="background:#dde7f6"></i><i style="background:#ffe3d6"></i></button>
+            <button type="button" data-palette="forest" aria-label="森林綠＋杏桃" title="森林綠＋杏桃"><i style="background:#23936a"></i><i style="background:#1f3d33"></i><i style="background:#dcefe5"></i><i style="background:#fde4c8"></i></button>
+            <button type="button" data-palette="grape" aria-label="葡萄紫＋蜜桃" title="葡萄紫＋蜜桃"><i style="background:#6d4dff"></i><i style="background:#2f2552"></i><i style="background:#e9e4ff"></i><i style="background:#ffe2d9"></i></button>
+            <button type="button" data-palette="teal" aria-label="湖水青＋琥珀" title="湖水青＋琥珀"><i style="background:#0b8f9b"></i><i style="background:#0f3d47"></i><i style="background:#d6f0f2"></i><i style="background:#fde8c4"></i></button>
+            <button type="button" data-palette="sunset" aria-label="橘子汽水＋薰衣草" title="橘子汽水＋薰衣草"><i style="background:#e8650f"></i><i style="background:#3a2a5e"></i><i style="background:#ffe9d2"></i><i style="background:#e7e1fb"></i></button>
+            <button type="button" data-palette="red" aria-label="紅＋炭黑" title="紅＋炭黑"><i style="background:#e63946"></i><i style="background:#262a33"></i><i style="background:#dcecf2"></i><i style="background:#fde5c4"></i></button>
           </div>
-          <p class="swatches__label" id="paletteLabel">配色：紅＋冰藍奶茶</p>
+          <p class="swatches__label" id="paletteLabel">配色：海軍藍＋珊瑚</p>
           <button type="button" role="menuitem" id="restBtn"><svg class="ico"><use href="#i-timer"/></svg><span id="restLabel">休息：90 秒</span></button>
           <button type="button" role="menuitem" id="stepBtn"><svg class="ico"><use href="#i-trend"/></svg><span id="stepLabel">加重：2.5 kg</span></button>
           <button type="button" role="menuitem" id="exportBtn" hidden><svg class="ico"><use href="#i-download"/></svg>匯出備份</button>
@@ -925,8 +921,8 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
   };
 
   let state = { exercises: [], routines: [], workouts: [], active: null, builtins: [] };
-  let prefs = { view: 'train', theme: null, palette: 'ice', rest: 90, step: 2.5, part: '' };
-  const PALETTES = { ice: '紅＋冰藍奶茶', mint: '紅＋薄荷奶油', lilac: '紅＋粉紫', coal: '紅＋炭灰' };
+  let prefs = { view: 'train', theme: null, palette: 'navy', rest: 90, step: 2.5, part: '' };
+  const PALETTES = { navy: '海軍藍＋珊瑚', forest: '森林綠＋杏桃', grape: '葡萄紫＋蜜桃', teal: '湖水青＋琥珀', sunset: '橘子汽水＋薰衣草', red: '紅＋炭黑' };
   let viewer = { name: '', avatarUrl: '' };
   let toastTimer = null;
   let tickTimer = null;
@@ -2267,7 +2263,7 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
   function applyTheme() {
     const root = document.documentElement;
     if (prefs.theme) root.dataset.theme = prefs.theme; else delete root.dataset.theme;
-    if (!PALETTES[prefs.palette]) prefs.palette = 'ice';
+    if (!PALETTES[prefs.palette]) prefs.palette = 'navy'; // 舊版的配色名稱一律換成新的預設
     root.dataset.palette = prefs.palette;
     document.querySelectorAll('.swatches [data-palette]').forEach((b) => b.classList.toggle('is-on', b.dataset.palette === prefs.palette));
     $('#paletteLabel').textContent = `配色：${PALETTES[prefs.palette]}`;
