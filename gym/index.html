@@ -28,6 +28,10 @@
   --ok: #2b9d67;
   --ok-wash: #dcf2e6;
   --on-hero: #ffffff;
+  /* 本週訓練量卡片：用深色調的淺色版，不再是整塊深色 */
+  --dash: color-mix(in srgb, var(--ink) 12%, #ffffff);
+  --on-dash: var(--ink);
+  --dash-dim: color-mix(in srgb, var(--ink) 55%, #ffffff);
   --brand: #f2614c;
   --brand-wash: #fde4df;
   --ink: #1f3150;
@@ -70,6 +74,9 @@
     --danger-wash: #3d2422;
     --ok: #5fd09a;
     --ok-wash: #1d3d2e;
+    --dash: color-mix(in srgb, var(--ink) 55%, var(--surface));
+    --on-dash: var(--text);
+    --dash-dim: var(--dim);
     --brand: #ff8a78; --brand-wash: #43251f; --ink: #22344f; --ink-dim: #a3b3cd; --tile-1: #1b2638; --tile-2: #3b2620; --hero-1: #2c4a7a; --hero-2: #1a2a45;
   }
   :root[data-palette="forest"]:not([data-theme="light"]) { --brand: #4cc896; --brand-wash: #163a2d; --ink: #1f3a31; --ink-dim: #9dbcaf; --tile-1: #19302a; --tile-2: #3a2d1d; --hero-1: #238a63; --hero-2: #164d39; }
@@ -94,6 +101,9 @@
     --danger-wash: #3d2422;
     --ok: #5fd09a;
     --ok-wash: #1d3d2e;
+    --dash: color-mix(in srgb, var(--ink) 55%, var(--surface));
+    --on-dash: var(--text);
+    --dash-dim: var(--dim);
     --brand: #ff8a78; --brand-wash: #43251f; --ink: #22344f; --ink-dim: #a3b3cd; --tile-1: #1b2638; --tile-2: #3b2620; --hero-1: #2c4a7a; --hero-2: #1a2a45;
 }
 :root[data-palette="forest"][data-theme="dark"] { --brand: #4cc896; --brand-wash: #163a2d; --ink: #1f3a31; --ink-dim: #9dbcaf; --tile-1: #19302a; --tile-2: #3a2d1d; --hero-1: #238a63; --hero-2: #164d39; }
@@ -582,27 +592,27 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
 
 .inkcard {
   margin-top: 14px; padding: 24px 22px 16px; border-radius: 34px;
-  background: var(--ink); color: var(--on-ink);
+  background: var(--dash); color: var(--on-dash);
 }
 .inkcard__top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .inkcard__big { font-size: 40px; font-weight: 600; letter-spacing: -.02em; line-height: 1; font-variant-numeric: tabular-nums; }
-.inkcard__big small { font-size: 15px; font-weight: 500; color: var(--ink-dim); margin-left: 6px; letter-spacing: 0; }
-.inkcard__label { margin: 8px 0 0; font-size: 14px; color: var(--ink-dim); }
+.inkcard__big small { font-size: 15px; font-weight: 500; color: var(--dash-dim); margin-left: 6px; letter-spacing: 0; }
+.inkcard__label { margin: 8px 0 0; font-size: 14px; color: var(--dash-dim); }
 .inkcard__pill {
   display: inline-flex; align-items: center; gap: 6px; flex: none;
   padding: 10px 16px; border-radius: 999px; font-size: 14px; font-weight: 600;
-  background: var(--tile-1); color: var(--text);
+  background: var(--surface); color: var(--text);
 }
 .inkcard__pill .ico { width: 16px; height: 16px; }
 .wkchart { width: 100%; height: auto; display: block; margin-top: 10px; }
-.wkchart .grid { stroke: var(--ink-dim); stroke-opacity: .35; stroke-dasharray: 3 5; }
-.wkchart .now { stroke: var(--on-ink); stroke-width: 1.5; }
-.wkchart .cur { fill: none; stroke: var(--on-ink); stroke-width: 2; stroke-linecap: round; }
-.wkchart .prev { fill: none; stroke: var(--chart-prev, var(--tile-2)); stroke-width: 1.6; stroke-linecap: round; opacity: .85; }
+.wkchart .grid { stroke: var(--dash-dim); stroke-opacity: .45; stroke-dasharray: 3 5; }
+.wkchart .now { stroke: var(--on-dash); stroke-width: 1.5; stroke-opacity: .5; }
+.wkchart .cur { fill: none; stroke: var(--on-dash); stroke-width: 2.4; stroke-linecap: round; }
+.wkchart .prev { fill: none; stroke: var(--chart-prev, var(--brand)); stroke-width: 1.6; stroke-linecap: round; opacity: .85; }
 .wkchart .dot { fill: var(--brand); }
-.wkchart text { fill: var(--ink-dim); font-size: 12px; font-family: var(--font); }
-.wkchart text.is-today { fill: var(--on-ink); font-weight: 700; }
-.wkchart__legend { display: flex; gap: 14px; margin-top: 4px; font-size: 12px; color: var(--ink-dim); }
+.wkchart text { fill: var(--dash-dim); font-size: 12px; font-family: var(--font); }
+.wkchart text.is-today { fill: var(--on-dash); font-weight: 700; }
+.wkchart__legend { display: flex; gap: 14px; margin-top: 4px; font-size: 12px; color: var(--dash-dim); }
 .wkchart__legend i { display: inline-block; width: 14px; height: 2px; vertical-align: middle; margin-right: 6px; border-radius: 2px; }
 
 .tiles { display: grid; grid-template-columns: 1.45fr 1fr; gap: 12px; margin-top: 12px; }
@@ -1660,7 +1670,7 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
           ${diff !== null ? `<span class="inkcard__pill">${diff >= 0 ? '+' : ''}${diff}% <svg class="ico"${diff < 0 ? ' style="transform:scaleY(-1)"' : ''}><use href="#i-trend"/></svg></span>` : ''}
         </div>
         ${weekChart(wi)}
-        <div class="wkchart__legend"><span><i style="background:var(--on-ink)"></i>本週</span><span><i style="background:var(--chart-prev, var(--tile-2))"></i>上週</span></div>
+        <div class="wkchart__legend"><span><i style="background:var(--on-dash)"></i>本週</span><span><i style="background:var(--chart-prev, var(--brand))"></i>上週</span></div>
       </section>
 
       <div class="tiles">
