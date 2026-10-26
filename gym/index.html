@@ -8,7 +8,7 @@
 /* =========================================================
    練勾勾 Lift — 樣式
    版面：白底大圓角卡片，粉彩色塊放數據，炭黑卡片放本週圖表。
-   「配色」可切換六組：主色＋深色卡片＋兩個粉彩色塊都跟著換。
+   「配色」可切換七組：主色＋深色卡片＋兩個粉彩色塊都跟著換。
    ========================================================= */
 
 :root {
@@ -52,6 +52,7 @@
 :root[data-palette="teal"] { --brand: #0b8f9b; --brand-wash: #d8f2f4; --ink: #0f3d47; --ink-dim: #8fb7bf; --tile-1: #d6f0f2; --tile-2: #fde8c4; --hero-1: #11a3b0; --hero-2: #0b6f7a; }
 :root[data-palette="sunset"] { --brand: #e8650f; --brand-wash: #ffe8d4; --ink: #3a2a5e; --ink-dim: #b6aad6; --tile-1: #ffe9d2; --tile-2: #e7e1fb; --hero-1: #f7931e; --hero-2: #e4572e; }
 :root[data-palette="red"] { --brand: #e63946; --brand-wash: #fde6e7; --ink: #262a33; --ink-dim: #9aa0ab; --tile-1: #dcecf2; --tile-2: #fde5c4; --hero-1: #ee4450; --hero-2: #c1121f; }
+:root[data-palette="harbor"] { --brand: #bf092f; --brand-wash: #f8dde2; --ink: #132440; --ink-dim: #9fb0c8; --tile-1: #d8eeee; --tile-2: #dce7f0; --hero-1: #bf092f; --hero-2: #16476a; --ok: #3b9797; --ok-wash: #d8eeee; --chart-prev: #3b9797; }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -76,6 +77,7 @@
   :root[data-palette="teal"]:not([data-theme="light"]) { --brand: #3cc6d1; --brand-wash: #123a40; --ink: #133c45; --ink-dim: #96bec6; --tile-1: #15303a; --tile-2: #3b2f1a; --hero-1: #0e8a95; --hero-2: #095159; }
   :root[data-palette="sunset"]:not([data-theme="light"]) { --brand: #ff9a4d; --brand-wash: #45291a; --ink: #352a55; --ink-dim: #b6aad6; --tile-1: #3a2a1b; --tile-2: #262138; --hero-1: #d9661c; --hero-2: #a83a1c; }
   :root[data-palette="red"]:not([data-theme="light"]) { --brand: #ff4d5a; --brand-wash: #3d1a1e; --ink: #2b2f38; --ink-dim: #a3a8b3; --tile-1: #1d2a31; --tile-2: #3a2b1b; --hero-1: #d6232f; --hero-2: #8c0e18; }
+  :root[data-palette="harbor"]:not([data-theme="light"]) { --brand: #ef3b5c; --brand-wash: #3d1520; --ink: #1c3358; --ink-dim: #a3b4cc; --tile-1: #163236; --tile-2: #172c40; --hero-1: #b3123a; --hero-2: #16476a; --ok: #5cc2c2; --ok-wash: #163236; --chart-prev: #5cc2c2; }
 }
 :root[data-theme="dark"] {
     color-scheme: dark;
@@ -99,6 +101,7 @@
 :root[data-palette="teal"][data-theme="dark"] { --brand: #3cc6d1; --brand-wash: #123a40; --ink: #133c45; --ink-dim: #96bec6; --tile-1: #15303a; --tile-2: #3b2f1a; --hero-1: #0e8a95; --hero-2: #095159; }
 :root[data-palette="sunset"][data-theme="dark"] { --brand: #ff9a4d; --brand-wash: #45291a; --ink: #352a55; --ink-dim: #b6aad6; --tile-1: #3a2a1b; --tile-2: #262138; --hero-1: #d9661c; --hero-2: #a83a1c; }
 :root[data-palette="red"][data-theme="dark"] { --brand: #ff4d5a; --brand-wash: #3d1a1e; --ink: #2b2f38; --ink-dim: #a3a8b3; --tile-1: #1d2a31; --tile-2: #3a2b1b; --hero-1: #d6232f; --hero-2: #8c0e18; }
+:root[data-palette="harbor"][data-theme="dark"] { --brand: #ef3b5c; --brand-wash: #3d1520; --ink: #1c3358; --ink-dim: #a3b4cc; --tile-1: #163236; --tile-2: #172c40; --hero-1: #b3123a; --hero-2: #16476a; --ok: #5cc2c2; --ok-wash: #163236; --chart-prev: #5cc2c2; }
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -595,7 +598,7 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
 .wkchart .grid { stroke: var(--ink-dim); stroke-opacity: .35; stroke-dasharray: 3 5; }
 .wkchart .now { stroke: var(--on-ink); stroke-width: 1.5; }
 .wkchart .cur { fill: none; stroke: var(--on-ink); stroke-width: 2; stroke-linecap: round; }
-.wkchart .prev { fill: none; stroke: var(--tile-2); stroke-width: 1.6; stroke-linecap: round; opacity: .85; }
+.wkchart .prev { fill: none; stroke: var(--chart-prev, var(--tile-2)); stroke-width: 1.6; stroke-linecap: round; opacity: .85; }
 .wkchart .dot { fill: var(--brand); }
 .wkchart text { fill: var(--ink-dim); font-size: 12px; font-family: var(--font); }
 .wkchart text.is-today { fill: var(--on-ink); font-weight: 700; }
@@ -717,6 +720,7 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
         <div class="pop__panel" id="morePanel" role="menu" hidden>
           <p class="sync" id="syncLabel">連線中…</p>
           <div class="swatches" role="group" aria-label="配色">
+            <button type="button" data-palette="harbor" aria-label="緋紅＋深海" title="緋紅＋深海"><i style="background:#bf092f"></i><i style="background:#132440"></i><i style="background:#16476a"></i><i style="background:#3b9797"></i></button>
             <button type="button" data-palette="navy" aria-label="海軍藍＋珊瑚" title="海軍藍＋珊瑚"><i style="background:#f2614c"></i><i style="background:#1f3150"></i><i style="background:#dde7f6"></i><i style="background:#ffe3d6"></i></button>
             <button type="button" data-palette="forest" aria-label="森林綠＋杏桃" title="森林綠＋杏桃"><i style="background:#23936a"></i><i style="background:#1f3d33"></i><i style="background:#dcefe5"></i><i style="background:#fde4c8"></i></button>
             <button type="button" data-palette="grape" aria-label="葡萄紫＋蜜桃" title="葡萄紫＋蜜桃"><i style="background:#6d4dff"></i><i style="background:#2f2552"></i><i style="background:#e9e4ff"></i><i style="background:#ffe2d9"></i></button>
@@ -724,7 +728,7 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
             <button type="button" data-palette="sunset" aria-label="橘子汽水＋薰衣草" title="橘子汽水＋薰衣草"><i style="background:#e8650f"></i><i style="background:#3a2a5e"></i><i style="background:#ffe9d2"></i><i style="background:#e7e1fb"></i></button>
             <button type="button" data-palette="red" aria-label="紅＋炭黑" title="紅＋炭黑"><i style="background:#e63946"></i><i style="background:#262a33"></i><i style="background:#dcecf2"></i><i style="background:#fde5c4"></i></button>
           </div>
-          <p class="swatches__label" id="paletteLabel">配色：海軍藍＋珊瑚</p>
+          <p class="swatches__label" id="paletteLabel">配色：緋紅＋深海</p>
           <button type="button" role="menuitem" id="restBtn"><svg class="ico"><use href="#i-timer"/></svg><span id="restLabel">休息：90 秒</span></button>
           <button type="button" role="menuitem" id="stepBtn"><svg class="ico"><use href="#i-trend"/></svg><span id="stepLabel">加重：2.5 kg</span></button>
           <button type="button" role="menuitem" id="exportBtn" hidden><svg class="ico"><use href="#i-download"/></svg>匯出備份</button>
@@ -921,8 +925,8 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
   };
 
   let state = { exercises: [], routines: [], workouts: [], active: null, builtins: [] };
-  let prefs = { view: 'train', theme: null, palette: 'navy', rest: 90, step: 2.5, part: '' };
-  const PALETTES = { navy: '海軍藍＋珊瑚', forest: '森林綠＋杏桃', grape: '葡萄紫＋蜜桃', teal: '湖水青＋琥珀', sunset: '橘子汽水＋薰衣草', red: '紅＋炭黑' };
+  let prefs = { view: 'train', theme: null, palette: 'harbor', rest: 90, step: 2.5, part: '' };
+  const PALETTES = { harbor: '緋紅＋深海', navy: '海軍藍＋珊瑚', forest: '森林綠＋杏桃', grape: '葡萄紫＋蜜桃', teal: '湖水青＋琥珀', sunset: '橘子汽水＋薰衣草', red: '紅＋炭黑' };
   let viewer = { name: '', avatarUrl: '' };
   let toastTimer = null;
   let tickTimer = null;
@@ -1091,6 +1095,8 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
     else seed();
     if (ensureBuiltins()) LS.set(STORE_KEY, JSON.stringify(state));
     try { Object.assign(prefs, JSON.parse(LS.get(PREF_KEY) || '{}')); } catch (err) { /* 用預設 */ }
+    // 新增「緋紅＋深海」時讓既有使用者先看一次，之後照自己的選擇
+    if (!prefs.paletteSeen || prefs.paletteSeen < 2) { prefs.palette = 'harbor'; prefs.paletteSeen = 2; savePrefs(); }
     if (!VIEWS.includes(prefs.view)) prefs.view = 'train';
   }
   function seed() {
@@ -1654,7 +1660,7 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
           ${diff !== null ? `<span class="inkcard__pill">${diff >= 0 ? '+' : ''}${diff}% <svg class="ico"${diff < 0 ? ' style="transform:scaleY(-1)"' : ''}><use href="#i-trend"/></svg></span>` : ''}
         </div>
         ${weekChart(wi)}
-        <div class="wkchart__legend"><span><i style="background:var(--on-ink)"></i>本週</span><span><i style="background:var(--tile-2)"></i>上週</span></div>
+        <div class="wkchart__legend"><span><i style="background:var(--on-ink)"></i>本週</span><span><i style="background:var(--chart-prev, var(--tile-2))"></i>上週</span></div>
       </section>
 
       <div class="tiles">
@@ -2263,7 +2269,7 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
   function applyTheme() {
     const root = document.documentElement;
     if (prefs.theme) root.dataset.theme = prefs.theme; else delete root.dataset.theme;
-    if (!PALETTES[prefs.palette]) prefs.palette = 'navy'; // 舊版的配色名稱一律換成新的預設
+    if (!PALETTES[prefs.palette]) prefs.palette = 'harbor'; // 舊版的配色名稱一律換成新的預設
     root.dataset.palette = prefs.palette;
     document.querySelectorAll('.swatches [data-palette]').forEach((b) => b.classList.toggle('is-on', b.dataset.palette === prefs.palette));
     $('#paletteLabel').textContent = `配色：${PALETTES[prefs.palette]}`;
