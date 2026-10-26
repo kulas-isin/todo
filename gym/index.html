@@ -141,7 +141,7 @@ button { cursor: pointer; }
 .app {
   max-width: 720px;
   margin: 0 auto;
-  padding-block: clamp(18px, 3.5vw, 30px) 120px;
+  padding-block: clamp(18px, 3.5vw, 30px) calc(170px + env(safe-area-inset-bottom, 0px));
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
 }
@@ -204,29 +204,90 @@ body::before {
 .pop__panel button:hover, .pop__panel a:hover { background: var(--surface-2); }
 .pop__panel .danger { color: var(--danger); }
 
-/* ---------- 分頁列 ---------- */
+/* ---------- 分頁列：貼底極簡（B）＋滑動指示線 ----------
+   選中時：上方紅線用「拉長再縮回」的方式滑過去、圖示後方冒出淡紅圓、圖示彈跳一下。 */
 .nav {
-  display: flex; gap: 6px; padding: 6px; margin-bottom: 20px;
-  background: var(--dash); border: 1px solid var(--line); border-radius: 999px; box-shadow: var(--shadow-md);
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+  /* 寬螢幕時四個按鈕維持在 720px 內 */
+  padding: 0 max(8px, env(safe-area-inset-right, 0px), calc((100% - 720px) / 2)) env(safe-area-inset-bottom, 0px) max(8px, env(safe-area-inset-left, 0px), calc((100% - 720px) / 2));
+  background: var(--surface); border-top: 1px solid var(--line);
+  box-shadow: 0 -6px 24px rgba(20, 22, 30, .05);
 }
 .nav__btn {
-  position: relative; flex: 1;
-  display: flex; align-items: center; justify-content: center; gap: 7px;
-  padding: 10px 8px; font-size: 14.5px; font-weight: 600;
-  color: var(--dim); background: transparent; border: 0; border-radius: 999px;
-  transition: all .2s var(--ease);
+  position: relative; height: 64px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  font-size: 11.5px; font-weight: 600; letter-spacing: .02em;
+  color: var(--dim); background: transparent; border: 0; border-radius: 0;
+  transition: color .25s var(--ease);
+  -webkit-tap-highlight-color: transparent;
 }
-.nav__btn { color: var(--dash-dim); }
-.nav__btn:hover { color: var(--on-dash); }
-.nav__btn.is-on { background: var(--surface); color: var(--brand); box-shadow: 0 2px 8px rgba(20, 22, 30, .08); }
-.nav__btn .ico { width: 18px; height: 18px; }
+.nav__btn:hover { color: var(--text); }
+.nav__btn.is-on { color: var(--brand); }
+.nav__icon { position: relative; width: 44px; height: 30px; display: grid; place-items: center; }
+.nav__icon::before {
+  content: ""; position: absolute; inset: 0; border-radius: 999px; background: var(--brand-wash);
+  transform: scale(.3); opacity: 0;
+  transition: transform .45s cubic-bezier(.34, 1.56, .64, 1), opacity .2s var(--ease);
+}
+.nav__btn.is-on .nav__icon::before { transform: scale(1); opacity: 1; }
+.nav__icon .ico { position: relative; width: 22px; height: 22px; }
+.nav__btn.pop .nav__icon .ico { animation: navPop .5s cubic-bezier(.34, 1.56, .64, 1); }
+@keyframes navPop {
+  0% { transform: translateY(0) scale(1); }
+  30% { transform: translateY(-5px) scale(1.18) rotate(-8deg); }
+  60% { transform: translateY(1px) scale(.94) rotate(4deg); }
+  100% { transform: translateY(0) scale(1) rotate(0); }
+}
+.nav__ind {
+  position: absolute; top: -1px; left: 0; width: 28px; height: 3px;
+  border-radius: 0 0 3px 3px; background: var(--brand); pointer-events: none;
+}
 .nav__dot {
-  position: absolute; top: 7px; right: 16px; width: 7px; height: 7px;
-  border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--dash);
+  position: absolute; top: 9px; right: calc(50% - 22px); width: 8px; height: 8px;
+  border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--surface);
 }
 
-.view { animation: viewIn .22s var(--ease); }
+.view { animation: viewIn .26s var(--ease); }
+.view[data-dir="r"] { animation-name: viewR; }
+.view[data-dir="l"] { animation-name: viewL; }
 @keyframes viewIn { from { opacity: 0; transform: translateY(6px); } }
+@keyframes viewR { from { opacity: 0; transform: translateX(22px); } }
+@keyframes viewL { from { opacity: 0; transform: translateX(-22px); } }
+
+/* ---------- 訓練中迷你計時列（D）：離開訓練分頁時出現 ---------- */
+.mini {
+  position: fixed; z-index: 39;
+  left: max(12px, env(safe-area-inset-left, 0px)); right: max(12px, env(safe-area-inset-right, 0px));
+  bottom: calc(74px + env(safe-area-inset-bottom, 0px));
+  max-width: 560px; margin: 0 auto;
+  display: flex; align-items: center; gap: 12px; padding: 9px 9px 9px 10px;
+  background: var(--surface); color: var(--text); text-align: left;
+  border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow-lg);
+  font: inherit; cursor: pointer;
+}
+.mini:not([hidden]) { animation: miniIn .5s cubic-bezier(.34, 1.56, .64, 1); }
+@keyframes miniIn { from { opacity: 0; transform: translateY(26px) scale(.92); } }
+.mini__ring {
+  --p: 0; width: 46px; height: 46px; flex: none; border-radius: 50%;
+  display: grid; place-items: center;
+  background: conic-gradient(var(--brand) calc(var(--p) * 1%), var(--brand-wash) 0);
+}
+.mini__ring span {
+  width: 37px; height: 37px; border-radius: 50%; background: var(--surface);
+  display: grid; place-items: center; font-size: 12px; font-weight: 700; color: var(--brand);
+  font-variant-numeric: tabular-nums;
+}
+.mini__body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.mini__body small { font-size: 12px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mini__body b { font-size: 14.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mini__go {
+  flex: none; height: 40px; padding: 0 14px; border-radius: 999px;
+  display: grid; place-items: center; background: var(--brand-wash); color: var(--brand);
+  font-size: 13.5px; font-weight: 700;
+}
+.mini.is-over .mini__ring { animation: miniPulse 1s ease-in-out infinite; }
+@keyframes miniPulse { 50% { transform: scale(1.08); } }
 
 h1.title { margin: 6px 2px 4px; font-size: 30px; font-weight: 600; letter-spacing: -.02em; line-height: 1.2; text-wrap: balance; }
 .sub { margin: 0 2px 16px; color: var(--dim); font-size: 14px; }
@@ -366,7 +427,7 @@ h1.title { margin: 6px 2px 4px; font-size: 30px; font-weight: 600; letter-spacin
 /* ---------- 休息計時 ---------- */
 .rest {
   position: fixed; left: 50%; transform: translateX(-50%);
-  bottom: calc(20px + env(safe-area-inset-bottom)); z-index: 45;
+  bottom: calc(76px + env(safe-area-inset-bottom)); z-index: 45;
   width: min(560px, calc(100% - 24px));
   display: flex; align-items: center; gap: 10px;
   padding: 10px 10px 10px 16px;
@@ -528,13 +589,13 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
 
 .toast {
   position: fixed; left: 50%; transform: translateX(-50%);
-  bottom: calc(24px + env(safe-area-inset-bottom)); z-index: 60;
+  bottom: calc(80px + env(safe-area-inset-bottom)); z-index: 60;
   max-width: calc(100% - 32px);
   padding: 11px 18px; border-radius: 999px;
   background: var(--ink); color: var(--on-ink);
   font-size: 14.5px; font-weight: 600; box-shadow: var(--shadow-lg);
 }
-.rest:not([hidden]) ~ .toast { bottom: calc(86px + env(safe-area-inset-bottom)); }
+.rest:not([hidden]) ~ .toast, .mini:not([hidden]) ~ .toast { bottom: calc(146px + env(safe-area-inset-bottom)); }
 
 /* ---------- 首頁 ---------- */
 .hello { margin: 18px 2px 20px; }
@@ -681,19 +742,6 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
 
 /* ---------- 手機 ---------- */
 @media (max-width: 640px) {
-  .nav {
-    position: fixed;
-    left: calc(12px + env(safe-area-inset-left, 0px)); right: calc(12px + env(safe-area-inset-right, 0px));
-    bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 40;
-    margin: 0; box-shadow: var(--shadow-md);
-  }
-  .nav__btn { flex-direction: column; gap: 3px; font-size: 11.5px; padding: 8px 4px; }
-  .nav__btn .ico { width: 21px; height: 21px; }
-  .nav__dot { top: 5px; right: calc(50% - 18px); }
-  .app { padding-bottom: calc(160px + env(safe-area-inset-bottom)); }
-  .rest { bottom: calc(88px + env(safe-area-inset-bottom)); }
-  .toast { bottom: calc(92px + env(safe-area-inset-bottom)); }
-  .rest:not([hidden]) ~ .toast { bottom: calc(152px + env(safe-area-inset-bottom)); }
   dialog.sheet {
     width: 100%; max-width: 100%; margin: auto 0 0;
     border-radius: var(--r-lg) var(--r-lg) 0 0;
@@ -770,18 +818,19 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
     </header>
 
     <nav class="nav" id="nav" role="tablist" aria-label="主要分頁">
+      <i class="nav__ind" id="navInd" aria-hidden="true"></i>
       <button type="button" class="nav__btn" data-view="train" role="tab">
-        <svg class="ico"><use href="#i-dumbbell"/></svg><span>訓練</span>
+        <span class="nav__icon"><svg class="ico"><use href="#i-dumbbell"/></svg></span><span>訓練</span>
         <i class="nav__dot" id="navDot" hidden></i>
       </button>
       <button type="button" class="nav__btn" data-view="routines" role="tab">
-        <svg class="ico"><use href="#i-clipboard"/></svg><span>課表</span>
+        <span class="nav__icon"><svg class="ico"><use href="#i-clipboard"/></svg></span><span>課表</span>
       </button>
       <button type="button" class="nav__btn" data-view="log" role="tab">
-        <svg class="ico"><use href="#i-history"/></svg><span>紀錄</span>
+        <span class="nav__icon"><svg class="ico"><use href="#i-history"/></svg></span><span>紀錄</span>
       </button>
       <button type="button" class="nav__btn" data-view="progress" role="tab">
-        <svg class="ico"><use href="#i-trend"/></svg><span>進步</span>
+        <span class="nav__icon"><svg class="ico"><use href="#i-trend"/></svg></span><span>進步</span>
       </button>
     </nav>
 
@@ -790,6 +839,12 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
     <section class="view" id="viewLog" role="tabpanel" aria-label="紀錄" hidden></section>
     <section class="view" id="viewProgress" role="tabpanel" aria-label="進步" hidden></section>
   </div>
+
+  <button type="button" class="mini" id="mini" hidden>
+    <span class="mini__ring" id="miniRing"><span id="miniTime">0:00</span></span>
+    <span class="mini__body"><small id="miniTop">進行中</small><b id="miniNext"></b></span>
+    <span class="mini__go">回到訓練</span>
+  </button>
 
   <div class="rest" id="rest" hidden>
     <i class="rest__fill" id="restFill"></i>
@@ -1539,11 +1594,13 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
       if (t) t.textContent = clock(Date.now() - state.active.start);
       ivTick();
     }
+    miniTick();
     const r = restState();
     const bar = $('#rest');
     if (!r || !state.active) { bar.hidden = true; return; }
     const left = r.end - Date.now();
-    bar.hidden = false;
+    // 不在訓練分頁時，休息倒數改由迷你計時列顯示
+    bar.hidden = prefs.view !== 'train';
     if (left <= 0) {
       bar.classList.add('is-over');
       $('#restTime').textContent = '0:00';
@@ -1562,6 +1619,47 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
     $('#restTime').textContent = clock(left);
     $('#restText').textContent = r.label || '休息中';
     $('#restFill').style.width = `${Math.min(100, (1 - left / r.total) * 100)}%`;
+  }
+
+  // 離開訓練分頁時的迷你計時列：休息倒數／間歇倒數／訓練經過時間，加上下一組是什麼
+  function nextSetText(wk) {
+    for (const it of wk.items) {
+      const si = it.sets.findIndex((x) => !x.done);
+      if (si >= 0 && !rpMet(it)) {
+        const x = it.sets[si];
+        const no = it.rp ? (si === 0 ? '啟動組' : `R${si}`) : `第 ${si + 1} 組`;
+        return `下一組：${exName(it.exId)} ${no}${x.w ? ` ${fmt(x.w)}×${x.r}` : x.r ? ` ×${x.r}` : ''}`;
+      }
+    }
+    return wk.items.length ? '全部做完了，回去按完成訓練' : '還沒有動作，回去加一個';
+  }
+  function miniTick() {
+    const mini = $('#mini');
+    const wk = state.active;
+    const show = !!wk && prefs.view !== 'train';
+    if (mini.hidden === show) mini.hidden = !show;
+    if (!show) return;
+    const now = Date.now();
+    const r = restState();
+    let pct = 0, time = clock(now - wk.start), top = `${wk.name} · 進行中`, over = false;
+    if (wk.iv && wk.iv.phase !== 'ready' && wk.iv.phase !== 'done') {
+      const left = wk.iv.running ? wk.iv.endAt - now : wk.iv.left;
+      const dur = ivDur(wk, wk.iv.phase) || 1;
+      pct = Math.min(100, Math.max(0, (1 - left / dur) * 100));
+      time = clock(left);
+      top = `${wk.name} · ${IV_LABEL[wk.iv.phase]}${wk.iv.running ? '' : '（暫停）'}`;
+    } else if (r) {
+      const left = r.end - now;
+      over = left <= 0;
+      pct = over ? 100 : Math.min(100, (1 - left / r.total) * 100);
+      time = over ? '0:00' : clock(left);
+      top = `${wk.name} · ${over ? '休息結束！' : r.label || '休息中'}`;
+    }
+    mini.classList.toggle('is-over', over);
+    $('#miniRing').style.setProperty('--p', pct.toFixed(1));
+    $('#miniTime').textContent = time;
+    $('#miniTop').textContent = top;
+    $('#miniNext').textContent = nextSetText(wk);
   }
 
   function buzz(pattern) { try { if (navigator.vibrate) navigator.vibrate(pattern); } catch (err) { /* 不支援 */ } }
@@ -1588,10 +1686,43 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
 
   /* ---------- 畫面：共用 ---------- */
   function goto(view) {
+    const from = VIEWS.indexOf(prefs.view), to = VIEWS.indexOf(view);
+    const el = document.getElementById('view' + view[0].toUpperCase() + view.slice(1));
+    if (el) el.dataset.dir = to > from ? 'r' : to < from ? 'l' : '';
+    const btn = document.querySelector(`.nav__btn[data-view="${view}"]`);
+    if (btn && view !== prefs.view) {
+      btn.classList.remove('pop');
+      void btn.offsetWidth; // 重新觸發彈跳動畫
+      btn.classList.add('pop');
+      buzz(8);
+    }
     prefs.view = view;
     savePrefs();
     render();
     window.scrollTo({ top: 0 });
+  }
+
+  // 上方紅線：先往目標方向拉長、再縮回目標，像橡皮筋
+  let indAt = null;
+  function moveIndicator(animate) {
+    const ind = $('#navInd'), nav = $('#nav');
+    const btn = document.querySelector(`.nav__btn[data-view="${prefs.view}"]`);
+    if (!ind || !btn) return;
+    const nr = nav.getBoundingClientRect(), br = btn.getBoundingClientRect();
+    const w = 28;
+    const x = br.left - nr.left + (br.width - w) / 2;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (animate && indAt !== null && Math.abs(indAt - x) > 1 && !reduce && ind.animate) {
+      const lo = Math.min(indAt, x), span = Math.abs(indAt - x) + w;
+      ind.animate([
+        { transform: `translateX(${indAt}px)`, width: `${w}px` },
+        { transform: `translateX(${x > indAt ? indAt : lo}px)`, width: `${span}px`, offset: .45 },
+        { transform: `translateX(${x}px)`, width: `${w}px` }
+      ], { duration: 460, easing: 'cubic-bezier(.65, 0, .35, 1)' });
+    }
+    ind.style.transform = `translateX(${x}px)`;
+    ind.style.width = `${w}px`;
+    indAt = x;
   }
 
   function render() {
@@ -1605,6 +1736,7 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
       b.setAttribute('aria-selected', on ? 'true' : 'false');
     });
     $('#navDot').hidden = !state.active;
+    moveIndicator(true);
     $('#restLabel').textContent = prefs.rest ? `休息：${prefs.rest} 秒` : '休息計時：關';
     $('#stepLabel').textContent = `加重：${fmt(prefs.step)} kg`;
     if (prefs.view === 'train') renderTrain();
@@ -2407,7 +2539,12 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
 
   /* ---------- 事件 ---------- */
   function setupEvents() {
-    document.querySelectorAll('.nav__btn').forEach((b) => { b.onclick = () => goto(b.dataset.view); });
+    document.querySelectorAll('.nav__btn').forEach((b) => {
+      b.onclick = () => goto(b.dataset.view);
+      b.addEventListener('animationend', () => b.classList.remove('pop'));
+    });
+    $('#mini').onclick = () => goto('train');
+    window.addEventListener('resize', () => moveIndicator(false));
 
     $('#themeBtn').onclick = () => {
       const dark = prefs.theme ? prefs.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
