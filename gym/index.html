@@ -3,94 +3,108 @@
 <meta name="description" content="重訓紀錄：動作、組數、次數、重量，逐組打勾。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
 <style>
 /* =========================================================
    練勾勾 Lift — 樣式
-   紅色系：主色是槓片紅，金色留給破紀錄，綠色代表做完的組。
-   預設跟隨系統明暗，可手動切換。
+   版面：白底大圓角卡片，粉彩色塊放數據，炭黑卡片放本週圖表。
+   紅色是主色；「配色」可以換搭配的粉彩（冰藍奶茶／薄荷奶油／粉紫／炭灰）。
    ========================================================= */
 
-:root, :root[data-theme="light"] {
+:root {
   color-scheme: light;
-  --bg: #f7ebe8;
-  --bg-2: #fdf5f3;
+  --bg: #f7f7f9;
   --surface: #ffffff;
-  --surface-2: #fbf0ee;
-  --line: rgba(60, 20, 18, .1);
-  --text: #2b1614;
-  --dim: #8c6763;
-  --brand: #d3232c;
-  --brand-wash: #fbe1df;
+  --surface-2: #f1f1f4;
+  --line: rgba(22, 24, 32, .09);
+  --text: #1c1e24;
+  --dim: #868a94;
+  --brand: #e63946;
+  --brand-wash: #fde6e7;
   --on-brand: #ffffff;
-  --accent: #d99a12;
-  --accent-wash: #fbeed0;
-  --danger: #7d3a35;
-  --danger-wash: #f1e1df;
-  --ok: #2f9e6a;
-  --ok-wash: #dcf1e6;
-  --hero-1: #e5383b;
-  --hero-2: #a4161a;
+  --ink: #262a33;
+  --on-ink: #ffffff;
+  --ink-dim: #9aa0ab;
+  --tile-1: #dcecf2;
+  --tile-2: #fde5c4;
+  --accent: #e9a91c;
+  --accent-wash: #fcf0d2;
+  --danger: #8f3a35;
+  --danger-wash: #f5e5e3;
+  --ok: #2b9d67;
+  --ok-wash: #dcf2e6;
+  --hero-1: #ee4450;
+  --hero-2: #c1121f;
   --on-hero: #ffffff;
+  /* 字體：圓潤的幾何無襯線（含數字），中文用系統字 */
+  --font: "Plus Jakarta Sans", "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", ui-sans-serif, system-ui, sans-serif;
+  --font-num: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --r-sm: 14px;
+  --r-md: 20px;
+  --r-lg: 28px;
+  --shadow-sm: 0 1px 2px rgba(20, 22, 30, .04);
+  --shadow-md: 0 8px 24px rgba(20, 22, 30, .08);
+  --shadow-lg: 0 24px 60px rgba(20, 22, 30, .18);
+  --ease: cubic-bezier(.22, .68, .36, 1);
 }
+:root[data-palette="mint"] { --brand: #e5383b; --brand-wash: #fde4e4; --tile-1: #d6f0e2; --tile-2: #fbf0c2; --ink: #1f2a27; }
+:root[data-palette="lilac"] { --brand: #e11d48; --brand-wash: #fde2e8; --tile-1: #e8e3fb; --tile-2: #fde0e3; --ink: #2a2540; }
+:root[data-palette="coal"] { --brand: #d90429; --brand-wash: #fbe0e3; --tile-1: #ebebee; --tile-2: #f6dadc; --ink: #1d1d21; }
+
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --bg: #170d0c;
-    --bg-2: #211211;
-    --surface: #271716;
-    --surface-2: #331e1c;
-    --line: rgba(255, 255, 255, .09);
-    --text: #f7e9e7;
-    --dim: #b49490;
-    --brand: #ff4d55;
-    --brand-wash: #4b1c1f;
-    --on-brand: #ffffff;
+    --bg: #111215;
+    --surface: #1a1c21;
+    --surface-2: #23262c;
+    --line: rgba(255, 255, 255, .08);
+    --text: #f2f3f5;
+    --dim: #8f949e;
+    --brand: #ff4d5a;
+    --brand-wash: #3d1a1e;
+    --ink: #2b2f38;
+    --ink-dim: #a3a8b3;
+    --tile-1: #1d2a31;
+    --tile-2: #3a2b1b;
     --accent: #f2c14e;
     --accent-wash: #43361a;
     --danger: #e6a39b;
     --danger-wash: #3d2422;
     --ok: #5fd09a;
     --ok-wash: #1d3d2e;
-    --hero-1: #c81d25;
-    --hero-2: #7a0c13;
-    --on-hero: #ffffff;
+    --hero-1: #d6232f;
+    --hero-2: #8c0e18;
   }
+  :root[data-palette="mint"]:not([data-theme="light"]) { --tile-1: #1b2d25; --tile-2: #34301a; --ink: #26332f; }
+  :root[data-palette="lilac"]:not([data-theme="light"]) { --tile-1: #26223a; --tile-2: #3a2127; --ink: #2f2a45; }
+  :root[data-palette="coal"]:not([data-theme="light"]) { --tile-1: #24262b; --tile-2: #3a1f22; --ink: #2a2a30; }
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #170d0c;
-  --bg-2: #211211;
-  --surface: #271716;
-  --surface-2: #331e1c;
-  --line: rgba(255, 255, 255, .09);
-  --text: #f7e9e7;
-  --dim: #b49490;
-  --brand: #ff4d55;
-  --brand-wash: #4b1c1f;
-  --on-brand: #ffffff;
+  --bg: #111215;
+  --surface: #1a1c21;
+  --surface-2: #23262c;
+  --line: rgba(255, 255, 255, .08);
+  --text: #f2f3f5;
+  --dim: #8f949e;
+  --brand: #ff4d5a;
+  --brand-wash: #3d1a1e;
+  --ink: #2b2f38;
+  --ink-dim: #a3a8b3;
+  --tile-1: #1d2a31;
+  --tile-2: #3a2b1b;
   --accent: #f2c14e;
   --accent-wash: #43361a;
   --danger: #e6a39b;
   --danger-wash: #3d2422;
   --ok: #5fd09a;
   --ok-wash: #1d3d2e;
-  --hero-1: #c81d25;
-  --hero-2: #7a0c13;
-  --on-hero: #ffffff;
+  --hero-1: #d6232f;
+  --hero-2: #8c0e18;
 }
-
-:root {
-  /* 字體：數字用窄體（像槓片和計分板），其餘用系統中文字 */
-  --font-num: "Barlow Condensed", "Arial Narrow", ui-sans-serif, system-ui, sans-serif;
-  --r-sm: 12px;
-  --r-md: 18px;
-  --r-lg: 26px;
-  --shadow-sm: 0 2px 6px rgba(20, 30, 40, .05), 0 8px 20px rgba(20, 30, 40, .05);
-  --shadow-md: 0 6px 14px rgba(20, 30, 40, .07), 0 18px 40px rgba(20, 30, 40, .08);
-  --shadow-lg: 0 20px 50px rgba(20, 30, 40, .18);
-  --ease: cubic-bezier(.22, .68, .36, 1);
-}
+:root[data-palette="mint"][data-theme="dark"] { --tile-1: #1b2d25; --tile-2: #34301a; --ink: #26332f; }
+:root[data-palette="lilac"][data-theme="dark"] { --tile-1: #26223a; --tile-2: #3a2127; --ink: #2f2a45; }
+:root[data-palette="coal"][data-theme="dark"] { --tile-1: #24262b; --tile-2: #3a1f22; --ink: #2a2a30; }
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -99,10 +113,8 @@ html, body { min-height: 100%; }
 body {
   margin: 0;
   background: var(--bg);
-  background-image: radial-gradient(120% 900px at 50% -160px, var(--bg-2) 0%, transparent 100%);
-  background-repeat: no-repeat;
   color: var(--text);
-  font: 400 16px/1.55 "Noto Sans TC", "PingFang TC", "Hiragino Sans", "Microsoft JhengHei", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font: 400 16px/1.55 var(--font);
   -webkit-text-size-adjust: 100%;
   -webkit-font-smoothing: antialiased;
 }
@@ -136,15 +148,28 @@ body::before {
 
 /* ---------- 標頭 ---------- */
 .bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
-.brand { display: flex; align-items: center; gap: 10px; }
-.brand__mark {
-  width: 34px; height: 34px; display: grid; place-items: center;
-  color: var(--on-brand); background: var(--brand);
-  border-radius: 11px; box-shadow: var(--shadow-sm);
+.bar__right { display: flex; align-items: center; gap: 8px; }
+.square-btn {
+  width: 52px; height: 52px; display: grid; place-items: center;
+  background: var(--surface-2); color: var(--text); border: 0; border-radius: 16px;
+  transition: transform .15s var(--ease);
 }
-.brand__mark .ico { width: 19px; height: 19px; stroke-width: 2.6; }
-.brand__name { font-size: 17px; font-weight: 800; letter-spacing: .04em; }
-.tools { display: flex; gap: 4px; }
+.square-btn:active { transform: scale(.95); }
+.square-btn .ico { width: 22px; height: 22px; }
+.avatar {
+  width: 52px; height: 52px; border-radius: 50%; overflow: hidden; flex: none;
+  display: grid; place-items: center; background: var(--brand); color: var(--on-brand);
+}
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
+.avatar .ico { width: 22px; height: 22px; }
+.swatches { display: flex; gap: 6px; padding: 4px 8px 0; }
+.pop__panel .swatches button {
+  padding: 5px; gap: 0; border-radius: 999px; border: 2px solid transparent; background: var(--surface-2);
+}
+.pop__panel .swatches button.is-on { border-color: var(--brand); }
+.swatches i { width: 12px; height: 12px; border-radius: 50%; display: block; margin-left: -3px; box-shadow: 0 0 0 1.5px var(--surface); }
+.swatches i:first-child { margin-left: 0; }
+.swatches__label { margin: 4px 12px 6px; font-size: 12px; color: var(--dim); }
 
 .ghost-btn {
   width: 40px; height: 40px; display: grid; place-items: center;
@@ -158,7 +183,7 @@ body::before {
 
 .pop { position: relative; }
 .pop__panel {
-  position: absolute; right: 0; top: calc(100% + 6px); z-index: 50;
+  position: absolute; left: 0; top: calc(100% + 6px); z-index: 50;
   min-width: 210px; padding: 6px;
   background: var(--surface); border-radius: var(--r-md); box-shadow: var(--shadow-lg);
   display: flex; flex-direction: column;
@@ -175,7 +200,7 @@ body::before {
 /* ---------- 分頁列 ---------- */
 .nav {
   display: flex; gap: 6px; padding: 6px; margin-bottom: 20px;
-  background: var(--surface); border-radius: 999px; box-shadow: var(--shadow-sm);
+  background: var(--ink); border-radius: 999px; box-shadow: var(--shadow-md);
 }
 .nav__btn {
   position: relative; flex: 1;
@@ -184,28 +209,30 @@ body::before {
   color: var(--dim); background: transparent; border: 0; border-radius: 999px;
   transition: all .2s var(--ease);
 }
-.nav__btn:hover { color: var(--text); }
+.nav__btn { color: var(--ink-dim); }
+.nav__btn:hover { color: var(--on-ink); }
 .nav__btn.is-on { background: var(--brand); color: var(--on-brand); }
 .nav__btn .ico { width: 18px; height: 18px; }
 .nav__dot {
   position: absolute; top: 7px; right: 16px; width: 7px; height: 7px;
-  border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--surface);
+  border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--ink);
 }
 
 .view { animation: viewIn .22s var(--ease); }
 @keyframes viewIn { from { opacity: 0; transform: translateY(6px); } }
 
-h1.title { margin: 0 2px 4px; font-size: 26px; font-weight: 800; letter-spacing: -.02em; line-height: 1.2; }
+h1.title { margin: 6px 2px 4px; font-size: 30px; font-weight: 600; letter-spacing: -.02em; line-height: 1.2; text-wrap: balance; }
 .sub { margin: 0 2px 16px; color: var(--dim); font-size: 14px; }
 .section-title {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  margin: 22px 2px 10px; font-size: 13px; font-weight: 700; letter-spacing: .1em; color: var(--dim);
+  margin: 26px 2px 12px; font-size: 20px; font-weight: 600; letter-spacing: -.01em; color: var(--text);
 }
+.section-title .ghost-btn { width: 36px; height: 36px; }
 
 /* ---------- 卡片 ---------- */
 .card {
   background: var(--surface); border-radius: var(--r-lg);
-  box-shadow: var(--shadow-sm); padding: 16px 18px;
+  border: 1px solid var(--line); padding: 16px 18px;
 }
 .card + .card { margin-top: 12px; }
 
@@ -251,7 +278,7 @@ h1.title { margin: 0 2px 4px; font-size: 26px; font-weight: 800; letter-spacing:
 
 .empty {
   text-align: center; color: var(--dim); padding: 28px 16px; font-size: 14.5px;
-  background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--shadow-sm);
+  background: var(--surface); border-radius: var(--r-lg); border: 1px solid var(--line);
 }
 .empty b { display: block; color: var(--text); font-size: 16px; margin-bottom: 4px; }
 
@@ -335,7 +362,7 @@ h1.title { margin: 0 2px 4px; font-size: 26px; font-weight: 800; letter-spacing:
   width: min(560px, calc(100% - 24px));
   display: flex; align-items: center; gap: 10px;
   padding: 10px 10px 10px 16px;
-  background: var(--text); color: var(--bg);
+  background: var(--ink); color: var(--on-ink);
   border-radius: 999px; box-shadow: var(--shadow-lg);
   overflow: hidden;
 }
@@ -495,10 +522,140 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
   bottom: calc(24px + env(safe-area-inset-bottom)); z-index: 60;
   max-width: calc(100% - 32px);
   padding: 11px 18px; border-radius: 999px;
-  background: var(--text); color: var(--bg);
+  background: var(--ink); color: var(--on-ink);
   font-size: 14.5px; font-weight: 600; box-shadow: var(--shadow-lg);
 }
 .rest:not([hidden]) ~ .toast { bottom: calc(86px + env(safe-area-inset-bottom)); }
+
+/* ---------- 首頁 ---------- */
+.hello { margin: 18px 2px 20px; }
+.hello h1 { margin: 0; font-size: clamp(32px, 9vw, 42px); font-weight: 500; letter-spacing: -.03em; line-height: 1.15; text-wrap: balance; }
+.hello p { margin: 6px 0 0; font-size: 17px; color: var(--dim); }
+
+.challenge {
+  display: flex; align-items: center; gap: 14px; width: 100%;
+  padding: 22px 20px; border: 0; border-radius: var(--r-lg);
+  background: var(--tile-1); color: var(--text); text-align: left;
+  transition: transform .15s var(--ease);
+}
+.challenge:active { transform: scale(.985); }
+.challenge__icon {
+  width: 52px; height: 52px; border-radius: 50%; flex: none;
+  display: grid; place-items: center; background: var(--ink); color: var(--on-ink);
+}
+.challenge__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.challenge__body small { font-size: 13px; font-weight: 500; }
+.challenge__body small b { color: var(--brand); font-weight: 700; }
+.challenge__body strong { font-size: 21px; font-weight: 700; letter-spacing: -.01em; line-height: 1.25; }
+.challenge__go {
+  width: 64px; height: 56px; border-radius: 18px; flex: none;
+  display: grid; place-items: center; background: var(--surface); color: var(--dim);
+}
+
+.rows { display: flex; flex-direction: column; gap: 10px; }
+.row {
+  display: flex; align-items: center; gap: 14px; width: 100%;
+  padding: 6px 16px 6px 6px; text-align: left;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 26px;
+  transition: transform .15s var(--ease);
+}
+.row:active { transform: scale(.985); }
+.row__tile {
+  width: 84px; height: 76px; flex: none; border-radius: 22px;
+  display: grid; place-items: center; color: var(--text);
+}
+.row__tile .ico { width: 26px; height: 26px; stroke-width: 2.4; }
+.row__tile--1 { background: var(--tile-2); }
+.row__tile--2 { background: var(--tile-1); }
+.row__body { flex: 1; min-width: 0; }
+.row__name { display: block; font-size: 16px; font-weight: 600; line-height: 1.3; }
+.row__meta { display: block; margin-top: 2px; font-size: 12.5px; color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row__val { flex: none; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.row__check {
+  width: 26px; height: 26px; flex: none; border-radius: 50%;
+  display: grid; place-items: center; border: 2px solid var(--line);
+}
+.row__check.is-on { background: var(--ink); border-color: var(--ink); color: var(--on-ink); }
+.row__check .ico { width: 14px; height: 14px; stroke-width: 3; }
+.row__edit { flex: none; }
+.row__tile, .row__check { border-style: solid; cursor: pointer; }
+.row__tile { border: 0; }
+.row__check { background: transparent; color: inherit; }
+.row__body { color: inherit; font: inherit; cursor: pointer; }
+
+.inkcard {
+  margin-top: 14px; padding: 24px 22px 16px; border-radius: 34px;
+  background: var(--ink); color: var(--on-ink);
+}
+.inkcard__top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.inkcard__big { font-size: 40px; font-weight: 600; letter-spacing: -.02em; line-height: 1; font-variant-numeric: tabular-nums; }
+.inkcard__big small { font-size: 15px; font-weight: 500; color: var(--ink-dim); margin-left: 6px; letter-spacing: 0; }
+.inkcard__label { margin: 8px 0 0; font-size: 14px; color: var(--ink-dim); }
+.inkcard__pill {
+  display: inline-flex; align-items: center; gap: 6px; flex: none;
+  padding: 10px 16px; border-radius: 999px; font-size: 14px; font-weight: 600;
+  background: var(--tile-1); color: var(--text);
+}
+.inkcard__pill .ico { width: 16px; height: 16px; }
+.wkchart { width: 100%; height: auto; display: block; margin-top: 10px; }
+.wkchart .grid { stroke: var(--ink-dim); stroke-opacity: .35; stroke-dasharray: 3 5; }
+.wkchart .now { stroke: var(--on-ink); stroke-width: 1.5; }
+.wkchart .cur { fill: none; stroke: var(--on-ink); stroke-width: 2; stroke-linecap: round; }
+.wkchart .prev { fill: none; stroke: var(--tile-2); stroke-width: 1.6; stroke-linecap: round; opacity: .85; }
+.wkchart .dot { fill: var(--brand); }
+.wkchart text { fill: var(--ink-dim); font-size: 12px; font-family: var(--font); }
+.wkchart text.is-today { fill: var(--on-ink); font-weight: 700; }
+.wkchart__legend { display: flex; gap: 14px; margin-top: 4px; font-size: 12px; color: var(--ink-dim); }
+.wkchart__legend i { display: inline-block; width: 14px; height: 2px; vertical-align: middle; margin-right: 6px; border-radius: 2px; }
+
+.tiles { display: grid; grid-template-columns: 1.45fr 1fr; gap: 12px; margin-top: 12px; }
+.tile {
+  position: relative; overflow: hidden; border-radius: 30px; padding: 20px 18px;
+  min-height: 190px; display: flex; flex-direction: column;
+}
+.tile--1 { background: var(--tile-1); flex-direction: row; align-items: center; gap: 8px; }
+.tile--2 { background: var(--tile-2); align-items: center; text-align: center; }
+.tile__ring { width: 46%; max-width: 120px; flex: none; color: var(--text); }
+.tile__ring path { fill: none; stroke: currentColor; stroke-width: 1.6; }
+.tile__ring path + path { stroke: var(--brand); opacity: .7; }
+.tile__body { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; }
+.tile__num { font-size: 38px; font-weight: 600; letter-spacing: -.02em; line-height: 1; font-variant-numeric: tabular-nums; }
+.tile__num .heart { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--brand); vertical-align: top; margin: 6px 0 0 6px; box-shadow: 0 0 0 5px var(--surface); }
+.tile__label { font-size: 14px; color: var(--dim); margin-top: 4px; }
+.tile__pill {
+  margin-top: 14px; padding: 9px 14px; border-radius: 18px;
+  background: var(--ink); color: var(--on-ink); font-size: 14px; font-weight: 600; line-height: 1.2;
+}
+.tile__pill small { display: block; font-size: 10.5px; font-weight: 500; color: var(--ink-dim); }
+.tile__icon {
+  width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--surface); color: var(--text); margin-bottom: 14px;
+}
+.tile__wave { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 60px; }
+.tile__wave path { fill: var(--surface); opacity: .55; }
+.tile--2 .tile__num, .tile--2 .tile__label { position: relative; }
+
+/* ---------- 間歇計時 ---------- */
+.iv {
+  margin: 0 0 14px; padding: 20px; border-radius: 30px;
+  background: var(--ink); color: var(--on-ink);
+}
+.iv__top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.iv__phase {
+  padding: 6px 14px; border-radius: 999px; font-size: 13px; font-weight: 700;
+  background: var(--brand); color: var(--on-brand);
+}
+.iv__phase.is-rest { background: var(--tile-1); color: var(--text); }
+.iv__round { font-size: 13px; color: var(--ink-dim); font-variant-numeric: tabular-nums; }
+.iv__time { margin: 10px 0 2px; font-size: 64px; font-weight: 600; letter-spacing: -.03em; line-height: 1; font-variant-numeric: tabular-nums; }
+.iv__now { margin: 0; font-size: 17px; font-weight: 700; line-height: 1.35; }
+.iv__next { margin: 4px 0 0; font-size: 13px; color: var(--ink-dim); }
+.iv__bar { height: 6px; margin: 14px 0; border-radius: 999px; background: rgba(127, 127, 127, .3); overflow: hidden; }
+.iv__bar i { display: block; height: 100%; width: 0; background: var(--brand); transition: width .25s linear; }
+.iv__actions { display: flex; gap: 10px; }
+.iv__actions .btn { flex: 1; }
+.iv__actions .btn:not(.btn--primary) { background: rgba(127, 127, 127, .25); color: var(--on-ink); }
+.ex.is-live { border-color: var(--brand); box-shadow: 0 0 0 2px var(--brand); }
 
 /* ---------- 手機 ---------- */
 @media (max-width: 640px) {
@@ -550,31 +707,40 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
     <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><path d="M12 3v12"/></symbol>
     <symbol id="i-timer" viewBox="0 0 24 24"><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></symbol>
     <symbol id="i-back" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
+    <symbol id="i-chevrons" viewBox="0 0 24 24"><path d="m6 17 5-5-5-5"/><path d="m13 17 5-5-5-5"/></symbol>
+    <symbol id="i-flame" viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></symbol>
+    <symbol id="i-skip" viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" x2="19" y1="5" y2="19"/></symbol>
   </svg>
 
   <div class="app">
     <header class="bar">
-      <div class="brand">
-        <span class="brand__mark"><svg class="ico"><use href="#i-dumbbell"/></svg></span>
-        <span class="brand__name">練勾勾</span>
+      <div class="pop">
+        <button type="button" class="square-btn" id="moreBtn" aria-haspopup="true" aria-expanded="false" aria-label="選單">
+          <svg class="ico"><use href="#i-more"/></svg>
+        </button>
+        <div class="pop__panel" id="morePanel" role="menu" hidden>
+          <p class="sync" id="syncLabel">連線中…</p>
+          <div class="swatches" role="group" aria-label="配色">
+            <button type="button" data-palette="ice" aria-label="紅＋冰藍奶茶"><i style="background:#e63946"></i><i style="background:#dcecf2"></i><i style="background:#fde5c4"></i></button>
+            <button type="button" data-palette="mint" aria-label="紅＋薄荷奶油"><i style="background:#e5383b"></i><i style="background:#d6f0e2"></i><i style="background:#fbf0c2"></i></button>
+            <button type="button" data-palette="lilac" aria-label="紅＋粉紫"><i style="background:#e11d48"></i><i style="background:#e8e3fb"></i><i style="background:#fde0e3"></i></button>
+            <button type="button" data-palette="coal" aria-label="紅＋炭灰"><i style="background:#d90429"></i><i style="background:#ebebee"></i><i style="background:#1d1d21"></i></button>
+          </div>
+          <p class="swatches__label" id="paletteLabel">配色：紅＋冰藍奶茶</p>
+          <button type="button" role="menuitem" id="restBtn"><svg class="ico"><use href="#i-timer"/></svg><span id="restLabel">休息：90 秒</span></button>
+          <button type="button" role="menuitem" id="stepBtn"><svg class="ico"><use href="#i-trend"/></svg><span id="stepLabel">加重：2.5 kg</span></button>
+          <button type="button" role="menuitem" id="exportBtn" hidden><svg class="ico"><use href="#i-download"/></svg>匯出備份</button>
+          <button type="button" role="menuitem" id="importBtn"><svg class="ico"><use href="#i-upload"/></svg>匯入備份</button>
+          <button type="button" role="menuitem" id="clearAllBtn" class="danger"><svg class="ico"><use href="#i-trash"/></svg>刪除全部資料</button>
+        </div>
       </div>
-      <div class="tools">
+      <div class="bar__right">
         <button type="button" class="ghost-btn" id="themeBtn" aria-label="切換淺色或深色">
           <svg class="ico"><use href="#i-moon"/></svg>
         </button>
-        <div class="pop">
-          <button type="button" class="ghost-btn" id="moreBtn" aria-haspopup="true" aria-expanded="false" aria-label="更多功能">
-            <svg class="ico"><use href="#i-more"/></svg>
-          </button>
-          <div class="pop__panel" id="morePanel" role="menu" hidden>
-            <p class="sync" id="syncLabel">連線中…</p>
-            <button type="button" role="menuitem" id="restBtn"><svg class="ico"><use href="#i-timer"/></svg><span id="restLabel">休息：90 秒</span></button>
-            <button type="button" role="menuitem" id="stepBtn"><svg class="ico"><use href="#i-trend"/></svg><span id="stepLabel">加重：2.5 kg</span></button>
-            <button type="button" role="menuitem" id="exportBtn" hidden><svg class="ico"><use href="#i-download"/></svg>匯出備份</button>
-            <button type="button" role="menuitem" id="importBtn"><svg class="ico"><use href="#i-upload"/></svg>匯入備份</button>
-            <button type="button" role="menuitem" id="clearAllBtn" class="danger"><svg class="ico"><use href="#i-trash"/></svg>刪除全部資料</button>
-          </div>
-        </div>
+        <span class="avatar" aria-hidden="true"><img id="avatarImg" alt="" hidden><svg class="ico" id="avatarIco"><use href="#i-dumbbell"/></svg></span>
       </div>
     </header>
 
@@ -641,9 +807,16 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
           <textarea class="input input--area" id="rNote" rows="2" maxlength="300"></textarea>
         </label>
         <label class="field">
-          <span>換動作時休息幾秒（留空用預設）</span>
+          <span>換動作時休息幾秒（間歇課表是輪間休息；留空用預設）</span>
           <input type="number" class="input" id="rRestAfter" inputmode="numeric" min="0" max="900" placeholder="例如 240" style="max-width:160px">
         </label>
+        <div class="field">
+          <span>間歇計時（選填）：每個動作做幾秒、休幾秒，自動換動作；組數就是輪數</span>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <label style="display:flex;gap:6px;align-items:center">做 <input type="number" class="input" id="rWork" inputmode="numeric" min="0" max="600" placeholder="—" style="width:80px"> 秒</label>
+            <label style="display:flex;gap:6px;align-items:center">休 <input type="number" class="input" id="rRest" inputmode="numeric" min="0" max="600" placeholder="—" style="width:80px"> 秒</label>
+          </div>
+        </div>
         <div class="field">
           <span>動作（組數 × 次數 × 起始重量，重量留空會自動帶上次的。有填「暫停休息湊 N 下」時，第 1 組是啟動組；「超級組」填同一個代號（例如 A）的動作會輪流做，一輪做完才休息）</span>
           <div id="rItems"></div>
@@ -733,11 +906,28 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
         { name: '上斜俯身側前平舉', sets: 3, reps: 10, rest: 60, ss: 'A', note: '把啞鈴往側前方甩出去，手臂微彎，肩胛骨不後縮' },
         { name: '上斜俯身後束划船', sets: 3, reps: 10, rest: 60, ss: 'A', note: '肩胛骨保持打開不後縮，手肘往外帶，做 10 下' }
       ]
+    },
+    interval6: {
+      name: '6 分鐘啞鈴肩部間歇',
+      after: '中後束超級組（收尾）',
+      note: '6 個動作各做 50 秒、休息 10 秒，一輪 6 分鐘不停。做 3–4 輪就是完整的啞鈴肩部訓練，也可以只做 1 輪，當肩部日的收尾。',
+      restAfter: 60,
+      interval: { work: 50, rest: 10, roundRest: 60 },
+      items: [
+        { name: '站姿交替肩推', sets: 3, reps: 0, note: '左右手輪流往上推' },
+        { name: '錘式前平舉＋掌心向前切片', sets: 3, reps: 0, note: '錘式握法前平舉，接著掌心向前做切片動作' },
+        { name: '屈臂側平舉＋空中潛水', sets: 3, reps: 0, note: '手肘彎著側平舉，接著做空中潛水的組合' },
+        { name: '俯身反向飛鳥＋反握前平舉', sets: 3, reps: 0, note: '身體前傾做反向飛鳥，接著反握前平舉' },
+        { name: '坐姿 Z 字阿諾推舉', sets: 3, reps: 0, note: 'Z 字推舉姿勢：坐在地上、雙腿伸直，不靠背' },
+        { name: '坐姿 Z 字錘式側脈衝', sets: 3, reps: 0, note: '同樣坐姿，啞鈴錘式握法往側邊小幅度快速脈衝' }
+      ]
     }
   };
 
   let state = { exercises: [], routines: [], workouts: [], active: null, builtins: [] };
-  let prefs = { view: 'train', theme: null, rest: 90, step: 2.5, part: '' };
+  let prefs = { view: 'train', theme: null, palette: 'ice', rest: 90, step: 2.5, part: '' };
+  const PALETTES = { ice: '紅＋冰藍奶茶', mint: '紅＋薄荷奶油', lilac: '紅＋粉紫', coal: '紅＋炭灰' };
+  let viewer = { name: '', avatarUrl: '' };
   let toastTimer = null;
   let tickTimer = null;
   let audioCtx = null;
@@ -888,7 +1078,7 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
       changed = true;
       if (state.routines.some((x) => x.name === def.name)) continue;
       const routine = {
-        id: uid(), name: def.name, note: def.note, restAfter: def.restAfter,
+        id: uid(), name: def.name, note: def.note, restAfter: def.restAfter, interval: def.interval || null,
         items: def.items.map((d) => (Array.isArray(d)
           ? { exId: findOrCreateEx(d[0], '肩').id, sets: 4, reps: 12, weight: 0, rp: 20, rest: 15, note: d[1] }
           : { exId: findOrCreateEx(d.name, '肩').id, sets: d.sets, reps: d.reps, weight: 0, rest: d.rest, ss: d.ss, note: d.note }))
@@ -981,6 +1171,7 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
       const id = user ? await user.id() : null;
       if (!db || !id) throw new Error('no-db');
       cloud = { coll: db.collection('data/users/' + id) };
+      user.me().then((m) => { viewer = m || viewer; renderAvatar(); if (prefs.view === 'train' && !state.active) renderTrain(); }).catch(() => {});
       await pull(true);
     } catch (err) {
       cloud = null;
@@ -1082,9 +1273,12 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
       items = copyFrom.items.map((it) => makeItem(it.exId, { sets: it.sets.length, reps: it.target || 0, rp: it.rp || 0, rest: it.rest || 0, ss: it.ss || '', note: it.note || '' }));
     }
     const src = routine || copyFrom || {};
+    const interval = src.interval && src.interval.work > 0 ? { ...src.interval } : null;
+    if (interval) items.forEach((it) => it.sets.forEach((x) => { if (!x.done) x.r = 0; }));
     state.active = {
       id: uid(), name, routineId: routine ? routine.id : (copyFrom ? copyFrom.routineId : null), start: Date.now(), items,
-      note: src.note || '', restAfter: src.restAfter || 0
+      note: src.note || '', restAfter: src.restAfter || 0, interval,
+      iv: interval ? { phase: 'ready', idx: 0, round: 0, running: false, endAt: 0, left: interval.work * 1000 } : null
     };
     save();
     goto('train');
@@ -1106,7 +1300,8 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
     if (undone > 0 && !(await ask(`還有 ${undone} 組沒打勾，沒勾的不會記錄。確定完成？`, '完成訓練'))) return;
     if (state.active !== wk) return;
 
-    const done = { id: wk.id, name: wk.name, routineId: wk.routineId, note: wk.note || '', restAfter: wk.restAfter || 0, start: wk.start, end: Date.now(), items };
+    const done = { id: wk.id, name: wk.name, routineId: wk.routineId, note: wk.note || '', restAfter: wk.restAfter || 0, interval: wk.interval || null, start: wk.start, end: Date.now(), items };
+    releaseWake();
     const prs = [];
     for (const it of items) {
       const before = recordFor(it.exId, done.id);
@@ -1129,6 +1324,7 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
     state.active = null;
     save();
     stopRest();
+    releaseWake();
     render();
     toast('已放棄');
   }
@@ -1137,6 +1333,7 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
     const it = state.active.items[ii];
     const s = it.sets[si];
     s.done = !s.done;
+    if (s.done && state.active.interval) { buzz(25); sfx('tick'); save(); renderTrain(); return; }
     if (s.done) {
       if (!(s.r > 0)) s.r = it.target || 1;
       buzz(25);
@@ -1172,6 +1369,123 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
     renderTrain();
   }
 
+  /* ---------- 間歇計時（做 N 秒、休 M 秒，自動換動作） ---------- */
+  const IV_LABEL = { ready: '準備', work: '做！', rest: '休息', round: '輪間休息', done: '完成' };
+  let wakeLock = null;
+  let lastBeep = -1;
+  function ivRounds(wk) { return Math.max(1, ...wk.items.map((it) => it.sets.length)); }
+  function ivDur(wk, phase) {
+    const c = wk.interval;
+    return (phase === 'work' || phase === 'ready' ? c.work : phase === 'rest' ? c.rest : phase === 'round' ? c.roundRest : 0) * 1000;
+  }
+  async function holdWake() { try { if (navigator.wakeLock && !wakeLock) wakeLock = await navigator.wakeLock.request('screen'); } catch (err) { wakeLock = null; } }
+  function releaseWake() { try { if (wakeLock) wakeLock.release(); } catch (err) { /* 略過 */ } wakeLock = null; }
+
+  function ivToggle() {
+    const wk = state.active, iv = wk.iv;
+    if (iv.phase === 'done') return;
+    if (iv.running) {
+      iv.running = false;
+      iv.left = Math.max(0, iv.endAt - Date.now());
+      releaseWake();
+    } else {
+      if (iv.phase === 'ready') { iv.phase = 'work'; sfx('go'); }
+      iv.running = true;
+      iv.endAt = Date.now() + iv.left;
+      holdWake();
+    }
+    save();
+    renderTrain();
+  }
+  function ivSkip() {
+    const iv = state.active.iv;
+    if (iv.phase === 'done') return;
+    if (iv.phase === 'ready') iv.phase = 'work';
+    iv.running = true;
+    iv.endAt = Date.now();
+    holdWake();
+    ivTick();
+  }
+
+  // 一段結束：工作段結束就把那一組打勾，然後進到下一段
+  function ivAdvance(quiet) {
+    const wk = state.active, iv = wk.iv;
+    const n = wk.items.length, rounds = ivRounds(wk);
+    if (iv.phase === 'work') {
+      const s = wk.items[iv.idx] && wk.items[iv.idx].sets[iv.round];
+      if (s) s.done = true;
+      if (iv.idx >= n - 1 && iv.round >= rounds - 1) {
+        iv.phase = 'done';
+        iv.running = false;
+        releaseWake();
+        sfx('pr'); buzz([200, 100, 200, 100, 300]);
+        toast('間歇全部完成！按「完成訓練」存檔');
+        return false;
+      }
+      iv.phase = iv.idx >= n - 1 ? 'round' : 'rest';
+      if (!quiet) { sfx('ding'); buzz(200); }
+    } else {
+      if (iv.phase === 'round') { iv.round++; iv.idx = 0; } else iv.idx++;
+      iv.phase = 'work';
+      if (!quiet) { sfx('go'); buzz([100, 60, 100]); }
+    }
+    iv.endAt += ivDur(wk, iv.phase);
+    return true;
+  }
+
+  function ivTick() {
+    const wk = state.active;
+    if (!wk || !wk.interval || !wk.iv) return;
+    const iv = wk.iv;
+    const now = Date.now();
+    let changed = false;
+    if (iv.running) {
+      for (let guard = 0; guard < 200 && iv.running && now >= iv.endAt; guard++) {
+        changed = true;
+        if (!ivAdvance(now - iv.endAt > 2000)) break;
+      }
+    }
+    if (changed) { lastBeep = -1; save(); renderTrain(); return; }
+    const left = iv.running ? iv.endAt - now : iv.left;
+    const dur = ivDur(wk, iv.phase) || 1;
+    const sec = Math.ceil(left / 1000);
+    if (iv.running && sec <= 3 && sec >= 1 && sec !== lastBeep) { lastBeep = sec; sfx('beep'); }
+    const t = document.getElementById('ivTime');
+    if (t) t.textContent = iv.phase === 'done' ? '0:00' : clock(left);
+    const bar = document.getElementById('ivBar');
+    if (bar) bar.style.width = `${iv.phase === 'done' ? 100 : Math.min(100, Math.max(0, (1 - left / dur) * 100))}%`;
+  }
+
+  function ivHtml(wk) {
+    const iv = wk.iv, n = wk.items.length, rounds = ivRounds(wk);
+    const name = (i) => (wk.items[i] ? exName(wk.items[i].exId) : '');
+    let now = '', next = '';
+    if (iv.phase === 'ready') { now = name(0); next = `按開始，先做 ${wk.interval.work} 秒`; }
+    else if (iv.phase === 'work') {
+      now = name(iv.idx);
+      next = iv.idx < n - 1 ? `接下來：${name(iv.idx + 1)}` : iv.round < rounds - 1 ? `接下來：輪間休息 ${wk.interval.roundRest} 秒` : '最後一個動作，撐住！';
+    } else if (iv.phase === 'rest') { now = `下一個：${name(iv.idx + 1)}`; next = '喘口氣，準備好啞鈴'; }
+    else if (iv.phase === 'round') { now = `第 ${iv.round + 2} 輪從「${name(0)}」開始`; next = '喝口水'; }
+    else { now = `${rounds} 輪全部完成`; next = '可以填上每組做了幾下，再按完成訓練'; }
+    const isRest = iv.phase === 'rest' || iv.phase === 'round';
+    const left = iv.running ? iv.endAt - Date.now() : iv.left;
+    return `
+      <section class="iv" aria-label="間歇計時">
+        <div class="iv__top">
+          <span class="iv__phase${isRest ? ' is-rest' : ''}">${IV_LABEL[iv.phase]}</span>
+          <span class="iv__round">第 ${Math.min(iv.round + 1, rounds)} / ${rounds} 輪 · 動作 ${Math.min(iv.idx + 1, n)} / ${n}</span>
+        </div>
+        <div class="iv__time" id="ivTime">${iv.phase === 'done' ? '0:00' : clock(left)}</div>
+        <p class="iv__now">${esc(now)}</p>
+        <p class="iv__next">${esc(next)}</p>
+        <div class="iv__bar"><i id="ivBar"></i></div>
+        ${iv.phase === 'done' ? '' : `<div class="iv__actions">
+          <button type="button" class="btn btn--primary" data-act="iv-toggle"><svg class="ico"><use href="#${iv.running ? 'i-pause' : 'i-play'}"/></svg>${iv.running ? '暫停' : iv.phase === 'ready' ? '開始' : '繼續'}</button>
+          <button type="button" class="btn" data-act="iv-skip"><svg class="ico"><use href="#i-skip"/></svg>跳過這段</button>
+        </div>`}
+      </section>`;
+  }
+
   /* ---------- 休息計時 ---------- */
   let restMem = null; // localStorage 不能用時的備援
   function restState() { try { return JSON.parse(LS.get(REST_KEY) || 'null') || restMem; } catch (err) { return restMem; } }
@@ -1196,6 +1510,7 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
     if (state.active) {
       const t = document.getElementById('liveTime');
       if (t) t.textContent = clock(Date.now() - state.active.start);
+      ivTick();
     }
     const r = restState();
     const bar = $('#rest');
@@ -1227,7 +1542,8 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
     try {
       audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
       const now = audioCtx.currentTime;
-      const notes = kind === 'ding' ? [[880, 0], [1175, 0.16], [1568, 0.32]] : kind === 'pr' ? [[523, 0], [659, 0.1], [784, 0.2], [1047, 0.3]] : [[660, 0]];
+      const notes = kind === 'ding' ? [[880, 0], [1175, 0.16], [1568, 0.32]] : kind === 'pr' ? [[523, 0], [659, 0.1], [784, 0.2], [1047, 0.3]]
+        : kind === 'go' ? [[784, 0], [1175, 0.12]] : kind === 'beep' ? [[988, 0]] : [[660, 0]];
       for (const [f, at] of notes) {
         const o = audioCtx.createOscillator();
         const g = audioCtx.createGain();
@@ -1279,6 +1595,7 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
       days.push(isoOf(d));
     }
     const thisWeek = state.workouts.filter((w) => w.start >= mon.getTime());
+    const lastWeek = state.workouts.filter((w) => w.start >= mon.getTime() - 7 * 86400000 && w.start < mon.getTime());
     const trained = new Set(thisWeek.map((w) => isoOf(new Date(w.start))));
     // 連續幾週都有練（本週還沒練不算斷）
     let streak = 0;
@@ -1291,7 +1608,7 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
       streak++;
       cursor.setDate(cursor.getDate() - 7);
     }
-    return { days, trained, thisWeek, streak };
+    return { days, trained, thisWeek, lastWeek, streak };
   }
 
   /* ---------- 畫面：訓練 ---------- */
@@ -1301,32 +1618,137 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
 
     const wi = weekInfo();
     const today = todayIso();
-    const vol = wi.thisWeek.reduce((s, w) => s + workoutVolume(w), 0);
     const last = sortedWorkouts()[0];
     const hour = new Date().getHours();
-    const hello = hour < 5 ? '這麼晚還要練？' : hour < 11 ? '早安，今天練什麼？' : hour < 18 ? '午安，今天練什麼？' : '晚安，今天練什麼？';
     const trainedToday = wi.trained.has(today);
+    const first = (viewer.name || '').split(/\s+/)[0];
+    const hi = hour < 5 ? '夜深了' : hour < 11 ? '早安' : hour < 18 ? '午安' : '晚安';
+    const next = nextRoutine();
+    const vol = wi.thisWeek.reduce((n, w) => n + workoutVolume(w), 0);
+    // 跟上週「同樣到星期幾為止」比，週一不會因為才剛開始就變 -100%
+    const sameSpan = Date.now() - 7 * 86400000;
+    const prevVol = wi.lastWeek.filter((w) => w.start <= sameSpan).reduce((n, w) => n + workoutVolume(w), 0);
+    const diff = prevVol > 0 ? Math.round((vol - prevVol) / prevVol * 100) : null;
 
     el.innerHTML = `
-      <h1 class="title">${trainedToday ? '今天練過了，讚' : hello}</h1>
-      <p class="sub">${last ? `上次訓練：${dateLabel(last.start)} ${esc(last.name)}` : '每一組都是一個小約定：做完就打勾。'}</p>
-      <div class="card">
-        <div class="weekdots">
-          ${wi.days.map((d, i) => `<div class="weekdot${wi.trained.has(d) ? ' is-done' : ''}${d === today ? ' is-today' : ''}"><i>${wi.trained.has(d) ? '✓' : Number(d.slice(8))}</i>${WEEKDAY[i]}</div>`).join('')}
+      <div class="hello">
+        <h1>${esc(hi)}${first ? `，${esc(first)}` : ''}</h1>
+        <p>${trainedToday ? '今天練過了，還要再來一份嗎？' : '準備好接受挑戰了嗎？'}</p>
+      </div>
+      ${next ? `
+      <button type="button" class="challenge" data-act="challenge" data-rid="${next.id}">
+        <span class="challenge__icon"><svg class="ico"><use href="#i-dumbbell"/></svg></span>
+        <span class="challenge__body">
+          <small>今天的挑戰 <b>${next.lastAt ? `上次 ${dateLabel(next.lastAt)}` : '還沒練過'}</b></small>
+          <strong>${esc(next.r.name)}</strong>
+        </span>
+        <span class="challenge__go" aria-hidden="true"><svg class="ico"><use href="#i-chevrons"/></svg></span>
+      </button>` : ''}
+
+      <h2 class="section-title"><span>你的課表</span><button type="button" class="ghost-btn" data-act="all-routines" aria-label="管理課表"><svg class="ico"><use href="#i-arrow"/></svg></button></h2>
+      ${state.routines.length ? `<div class="rows">${state.routines.map((r, i) => routineCard(r, i, false)).join('')}</div>` : '<div class="empty"><b>還沒有課表</b>先建一份，或直接空白開始。</div>'}
+      <button type="button" class="btn btn--block" data-act="blank" style="margin-top:12px"><svg class="ico"><use href="#i-play"/></svg>空白開始（邊練邊加動作）</button>
+
+      <section class="inkcard" aria-label="本週訓練量">
+        <div class="inkcard__top">
+          <div>
+            <div class="inkcard__big">${fmtBig(vol)}<small>kg</small></div>
+            <p class="inkcard__label">本週訓練量${last ? ` · 上次 ${dateLabel(last.start)}` : ''}</p>
+          </div>
+          ${diff !== null ? `<span class="inkcard__pill">${diff >= 0 ? '+' : ''}${diff}% <svg class="ico"${diff < 0 ? ' style="transform:scaleY(-1)"' : ''}><use href="#i-trend"/></svg></span>` : ''}
         </div>
-        <div class="stats">
-          <div class="stat"><b>${wi.thisWeek.length}</b><small>本週次數</small></div>
-          <div class="stat"><b>${fmtBig(vol)}</b><small>本週總量 kg</small></div>
-          <div class="stat"><b>${wi.streak}</b><small>連續週數</small></div>
+        ${weekChart(wi)}
+        <div class="wkchart__legend"><span><i style="background:var(--on-ink)"></i>本週</span><span><i style="background:var(--tile-2)"></i>上週</span></div>
+      </section>
+
+      <div class="tiles">
+        <div class="tile tile--1">
+          ${blobRing()}
+          <div class="tile__body">
+            <span class="tile__num">${wi.streak}<i class="heart"></i></span>
+            <span class="tile__label">連續週數</span>
+            <span class="tile__pill">${state.workouts.length} 次<small>累計訓練</small></span>
+          </div>
+        </div>
+        <div class="tile tile--2">
+          <span class="tile__icon"><svg class="ico"><use href="#i-flame"/></svg></span>
+          <span class="tile__num">${wi.thisWeek.length}</span>
+          <span class="tile__label">本週訓練</span>
+          <svg class="tile__wave" viewBox="0 0 200 60" preserveAspectRatio="none" aria-hidden="true"><path d="M0 40 C 20 20, 40 22, 60 34 S 100 10, 120 22 S 160 46, 200 18 L200 60 L0 60 Z"/></svg>
         </div>
       </div>
-      <div class="section-title"><span>選一份課表開始</span><button type="button" class="btn btn--sm" data-act="new-routine"><svg class="ico"><use href="#i-plus"/></svg>新課表</button></div>
-      ${state.routines.length ? state.routines.map(routineCard).join('') : '<div class="empty"><b>還沒有課表</b>先建一份，或直接空白開始。</div>'}
-      <button type="button" class="btn btn--block" data-act="blank" style="margin-top:14px"><svg class="ico"><use href="#i-play"/></svg>空白開始（邊練邊加動作）</button>
     `;
     bindRoutineCards(el);
     el.querySelector('[data-act="blank"]').onclick = () => startWorkout(null);
-    el.querySelector('[data-act="new-routine"]').onclick = () => openRoutine(null);
+    el.querySelector('[data-act="all-routines"]').onclick = () => goto('routines');
+    const ch = el.querySelector('[data-act="challenge"]');
+    if (ch) ch.onclick = () => startWorkout(state.routines.find((x) => x.id === ch.dataset.rid));
+  }
+
+  // 輪替：最久沒練（或沒練過）的課表當今天的挑戰
+  function nextRoutine() {
+    let best = null;
+    for (const r of state.routines) {
+      const lastAt = state.workouts.filter((w) => w.routineId === r.id).reduce((m, w) => Math.max(m, w.start), 0);
+      if (!best || lastAt < best.lastAt) best = { r, id: r.id, lastAt };
+    }
+    return best;
+  }
+
+  // 本週每天的訓練量（白線）對上週（奶茶線），平滑曲線
+  function weekChart(wi) {
+    const W = 340, H = 150, T = 12, B = 30, L = 12, R = 12;
+    const mon = mondayOf(new Date()).getTime();
+    const perDay = (from) => {
+      const out = [0, 0, 0, 0, 0, 0, 0];
+      for (const w of state.workouts) {
+        const d = Math.floor((w.start - from) / 86400000);
+        if (d >= 0 && d < 7) out[d] += workoutVolume(w);
+      }
+      return out;
+    };
+    const cur = perDay(mon);
+    const prev = perDay(mon - 7 * 86400000);
+    const todayIdx = (new Date().getDay() + 6) % 7;
+    const max = Math.max(1, ...cur, ...prev);
+    const x = (i) => L + i * (W - L - R) / 6;
+    const y = (v) => T + (1 - v / max) * (H - T - B);
+    const curve = (vals, upto) => {
+      const pts = vals.slice(0, upto + 1).map((v, i) => [x(i), y(v)]);
+      return pts.map((p, i) => {
+        if (!i) return `M${p[0].toFixed(1)},${p[1].toFixed(1)}`;
+        const q = pts[i - 1], dx = (p[0] - q[0]) / 2;
+        return `C${(q[0] + dx).toFixed(1)},${q[1].toFixed(1)} ${(p[0] - dx).toFixed(1)},${p[1].toFixed(1)} ${p[0].toFixed(1)},${p[1].toFixed(1)}`;
+      }).join('');
+    };
+    return `
+      <svg class="wkchart" viewBox="0 0 ${W} ${H}" role="img" aria-label="本週與上週每天的訓練量">
+        ${WEEKDAY.map((d, i) => `<line class="grid" x1="${x(i)}" x2="${x(i)}" y1="${T}" y2="${H - B}"/>`).join('')}
+        <line class="now" x1="${x(todayIdx)}" x2="${x(todayIdx)}" y1="${T - 6}" y2="${H - B}"/>
+        <path class="prev" d="${curve(prev, 6)}"/>
+        <path class="cur" d="${curve(cur, todayIdx)}"/>
+        ${cur.map((v, i) => (v > 0 && i <= todayIdx ? `<circle class="dot" cx="${x(i)}" cy="${y(v)}" r="4"/>` : '')).join('')}
+        ${WEEKDAY.map((d, i) => `<text x="${x(i)}" y="${H - 8}" text-anchor="middle"${i === todayIdx ? ' class="is-today"' : ''}>${d}</text>`).join('')}
+      </svg>`;
+  }
+
+  // 粉彩方塊裡的波浪圓圈（純裝飾）
+  function blobRing() {
+    const path = (amp, k, rot) => {
+      let d = '';
+      for (let i = 0; i <= 96; i++) {
+        const t = i / 96 * Math.PI * 2;
+        const rr = 40 + amp * Math.sin(k * t + rot);
+        d += `${i ? 'L' : 'M'}${(50 + rr * Math.cos(t)).toFixed(1)},${(50 + rr * Math.sin(t)).toFixed(1)}`;
+      }
+      return d + 'Z';
+    };
+    return `<svg class="tile__ring" viewBox="0 0 100 100" aria-hidden="true"><path d="${path(4, 7, 0)}"/><path d="${path(3.5, 6, 1.3)}"/></svg>`;
+  }
+
+  function renderAvatar() {
+    const img = $('#avatarImg');
+    if (viewer.avatarUrl) { img.src = viewer.avatarUrl; img.hidden = false; $('#avatarIco').hidden = true; }
   }
 
   function activeHtml() {
@@ -1342,6 +1764,7 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
         <span class="live__time" id="liveTime">${clock(Date.now() - wk.start)}</span>
       </div>
       ${wk.note ? `<p class="live__note">${esc(wk.note)}</p>` : ''}
+      ${wk.interval && wk.iv ? ivHtml(wk) : ''}
       ${wk.items.length ? wk.items.map(exCardHtml).join('') : '<div class="empty"><b>還沒有動作</b>按下面「加動作」開始。</div>'}
       <div class="live-actions">
         <button type="button" class="btn" data-act="add-ex"><svg class="ico"><use href="#i-plus"/></svg>加動作</button>
@@ -1357,7 +1780,7 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
     const rec = recordFor(it.exId, state.active.id);
     const n = state.active.items.length;
     return `
-      <div class="card ex" data-ii="${ii}">
+      <div class="card ex${state.active.iv && state.active.iv.phase === 'work' && state.active.iv.idx === ii ? ' is-live' : ''}" data-ii="${ii}">
         <div class="ex__head">
           <div class="ex__title">
             <h3 class="ex__name">${esc(exName(it.exId))}</h3>
@@ -1406,6 +1829,11 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
     });
     el.querySelector('[data-act="discard"]').onclick = () => discardWorkout(false);
     el.querySelector('[data-act="add-routine"]').onclick = openAppendRoutine;
+    const ivt = el.querySelector('[data-act="iv-toggle"]');
+    if (ivt) ivt.onclick = ivToggle;
+    const ivs = el.querySelector('[data-act="iv-skip"]');
+    if (ivs) ivs.onclick = ivSkip;
+    if (wk.iv && wk.iv.running) holdWake();
     el.querySelector('[data-act="finish"]').onclick = finishWorkout;
 
     el.querySelectorAll('.ex').forEach((card) => {
@@ -1487,25 +1915,27 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
   }
 
   /* ---------- 畫面：課表 ---------- */
-  function routineCard(r) {
-    const names = r.items.map((it) => (it.rp ? `${exName(it.exId)} 啟動組＋${it.rp}下` : `${exName(it.exId)} ${it.sets}×${it.reps}`) + (it.ss ? `（超級組 ${it.ss}）` : '')).join('・');
+  function routineCard(r, i, editable) {
+    const n = r.items.length;
+    const kind = r.interval ? `間歇 ${r.interval.work}/${r.interval.rest} 秒` : r.items.some((it) => it.ss) ? '超級組' : r.items.some((it) => it.rp) ? '暫停休息' : `${r.items.reduce((m, it) => m + (it.sets || 0), 0)} 組`;
+    const doneToday = state.workouts.some((w) => w.routineId === r.id && isoOf(new Date(w.start)) === todayIso());
     return `
-      <div class="card routine" data-rid="${r.id}">
-        <div class="routine__body">
-          <h3 class="routine__name">${esc(r.name)}</h3>
-          <p class="routine__meta">${esc(names || '（沒有動作）')}</p>
-        </div>
-        <div class="routine__actions">
-          <button type="button" class="ghost-btn" data-act="edit" aria-label="編輯課表"><svg class="ico"><use href="#i-edit"/></svg></button>
-          <button type="button" class="btn btn--primary btn--sm" data-act="start"><svg class="ico"><use href="#i-play"/></svg>開始</button>
-        </div>
+      <div class="row routine" data-rid="${r.id}">
+        <button type="button" class="row__tile row__tile--${(i % 2) + 1}" data-act="start" aria-label="開始「${esc(r.name)}」"><svg class="ico"><use href="#${r.interval ? 'i-timer' : 'i-dumbbell'}"/></svg></button>
+        <button type="button" class="row__body" data-act="start" style="background:none;border:0;padding:0;text-align:left">
+          <span class="row__name">${esc(r.name)}</span>
+          <span class="row__meta">${n} 個動作 · ${esc(kind)}</span>
+        </button>
+        ${editable ? `<button type="button" class="ghost-btn ghost-btn--sm row__edit" data-act="edit" aria-label="編輯課表"><svg class="ico"><use href="#i-edit"/></svg></button>` : ''}
+        <button type="button" class="row__check${doneToday ? ' is-on' : ''}" data-act="start" aria-label="${doneToday ? '今天練過了，再練一次' : '開始'}" style="padding:0">${doneToday ? '<svg class="ico"><use href="#i-check"/></svg>' : ''}</button>
       </div>`;
   }
   function bindRoutineCards(el) {
     el.querySelectorAll('.routine').forEach((card) => {
       const r = state.routines.find((x) => x.id === card.dataset.rid);
-      card.querySelector('[data-act="edit"]').onclick = () => openRoutine(r);
-      card.querySelector('[data-act="start"]').onclick = () => startWorkout(r);
+      const edit = card.querySelector('[data-act="edit"]');
+      if (edit) edit.onclick = () => openRoutine(r);
+      card.querySelectorAll('[data-act="start"]').forEach((b) => { b.onclick = () => startWorkout(r); });
     });
   }
 
@@ -1514,7 +1944,7 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
     el.innerHTML = `
       <h1 class="title">課表</h1>
       <p class="sub">把固定要練的動作排好，開始時會自動帶入上次的重量；上次全組達標就建議加重。</p>
-      ${state.routines.length ? state.routines.map(routineCard).join('') : '<div class="empty"><b>還沒有課表</b>建一份常練的組合吧。</div>'}
+      ${state.routines.length ? `<div class="rows">${state.routines.map((r, i) => routineCard(r, i, true)).join('')}</div>` : '<div class="empty"><b>還沒有課表</b>建一份常練的組合吧。</div>'}
       <button type="button" class="btn btn--primary btn--block" data-act="new" style="margin-top:14px"><svg class="ico"><use href="#i-plus"/></svg>新增課表</button>
     `;
     bindRoutineCards(el);
@@ -1530,6 +1960,8 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
     $('#rName').value = routineDraft.name;
     $('#rNote').value = routineDraft.note;
     $('#rRestAfter').value = routineDraft.restAfter;
+    $('#rWork').value = r && r.interval ? r.interval.work : '';
+    $('#rRest').value = r && r.interval ? r.interval.rest : '';
     $('#rDelete').hidden = !r;
     renderRoutineItems();
     $('#routineDialog').showModal();
@@ -1569,11 +2001,13 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
     }));
     const note = $('#rNote').value.trim();
     const restAfter = Math.round(num($('#rRestAfter').value));
+    const work = Math.round(num($('#rWork').value));
+    const interval = work > 0 ? { work, rest: Math.round(num($('#rRest').value)), roundRest: restAfter || 60 } : null;
     if (routineDraft.id) {
       const r = state.routines.find((x) => x.id === routineDraft.id);
-      Object.assign(r, { name, note, restAfter, items });
+      Object.assign(r, { name, note, restAfter, interval, items });
     } else {
-      state.routines.push({ id: uid(), name, note, restAfter, items });
+      state.routines.push({ id: uid(), name, note, restAfter, interval, items });
     }
     save();
     $('#routineDialog').close();
@@ -1833,10 +2267,14 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
   function applyTheme() {
     const root = document.documentElement;
     if (prefs.theme) root.dataset.theme = prefs.theme; else delete root.dataset.theme;
+    if (!PALETTES[prefs.palette]) prefs.palette = 'ice';
+    root.dataset.palette = prefs.palette;
+    document.querySelectorAll('.swatches [data-palette]').forEach((b) => b.classList.toggle('is-on', b.dataset.palette === prefs.palette));
+    $('#paletteLabel').textContent = `配色：${PALETTES[prefs.palette]}`;
     const dark = prefs.theme ? prefs.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
     $('#themeBtn use').setAttribute('href', dark ? '#i-sun' : '#i-moon');
     const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.content = dark ? '#170d0c' : '#f7ebe8';
+    if (meta) meta.content = dark ? '#111215' : '#f7f7f9';
   }
 
   /* ---------- 匯出／匯入 ---------- */
@@ -1907,6 +2345,9 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
     document.addEventListener('click', (e) => { if (!panel.hidden && !panel.contains(e.target)) panel.hidden = true; });
     panel.addEventListener('click', (e) => { if (e.target.closest('button,a')) setTimeout(() => { panel.hidden = true; }, 0); });
 
+    document.querySelectorAll('.swatches [data-palette]').forEach((b) => {
+      b.onclick = (e) => { e.stopPropagation(); prefs.palette = b.dataset.palette; savePrefs(); applyTheme(); if (prefs.view === 'train') renderTrain(); };
+    });
     $('#restBtn').onclick = () => {
       prefs.rest = REST_OPTIONS[(REST_OPTIONS.indexOf(prefs.rest) + 1) % REST_OPTIONS.length];
       savePrefs(); render();
@@ -1993,8 +2434,9 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
     };
 
     document.addEventListener('visibilitychange', () => {
-      if (document.hidden) { flushMeta(); return; }
+      if (document.hidden) { flushMeta(); wakeLock = null; return; }
       tick();
+      if (state.active && state.active.iv && state.active.iv.running) holdWake();
       // 回到頁面時從帳號重新讀一次（例如剛在另一台裝置練完）；有還沒寫完的就先不讀
       if (cloud && pulled && !metaTimer) pull(false).catch(() => {});
     });
