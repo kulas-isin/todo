@@ -28,7 +28,7 @@
   --ok: #2b9d67;
   --ok-wash: #dcf2e6;
   --on-hero: #ffffff;
-  /* 本週訓練量卡片：用深色調的淺色版，不再是整塊深色 */
+  /* 近 7 天訓練量卡片：用深色調的淺色版，不再是整塊深色 */
   --dash: #eaf1fe;
   --on-dash: var(--ink);
   --dash-dim: color-mix(in srgb, var(--ink) 55%, #ffffff);
@@ -1651,10 +1651,12 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
     const first = (viewer.name || '').split(/\s+/)[0];
     const hi = hour < 5 ? '夜深了' : hour < 11 ? '早安' : hour < 18 ? '午安' : '晚安';
     const next = nextRoutine();
-    const vol = wi.thisWeek.reduce((n, w) => n + workoutVolume(w), 0);
-    // 跟上週「同樣到星期幾為止」比，週一不會因為才剛開始就變 -100%
-    const sameSpan = Date.now() - 7 * 86400000;
-    const prevVol = wi.lastWeek.filter((w) => w.start <= sameSpan).reduce((n, w) => n + workoutVolume(w), 0);
+    // 近 7 天（含今天）對前 7 天：週一也不會因為換週就歸零
+    const day0 = new Date(); day0.setHours(0, 0, 0, 0);
+    const from7 = day0.getTime() - 6 * 86400000;
+    const recent = state.workouts.filter((w) => w.start >= from7);
+    const vol = recent.reduce((n, w) => n + workoutVolume(w), 0);
+    const prevVol = state.workouts.filter((w) => w.start >= from7 - 7 * 86400000 && w.start < from7).reduce((n, w) => n + workoutVolume(w), 0);
     const diff = prevVol > 0 ? Math.round((vol - prevVol) / prevVol * 100) : null;
 
     el.innerHTML = `
@@ -1676,16 +1678,16 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
       ${state.routines.length ? `<div class="rows">${state.routines.map((r, i) => routineCard(r, i, false)).join('')}</div>` : '<div class="empty"><b>還沒有課表</b>先建一份，或直接空白開始。</div>'}
       <button type="button" class="btn btn--block" data-act="blank" style="margin-top:12px"><svg class="ico"><use href="#i-play"/></svg>空白開始（邊練邊加動作）</button>
 
-      <section class="inkcard" aria-label="本週訓練量">
+      <section class="inkcard" aria-label="近 7 天訓練量">
         <div class="inkcard__top">
           <div>
             <div class="inkcard__big">${fmtBig(vol)}<small>kg</small></div>
-            <p class="inkcard__label">本週訓練量${last ? ` · 上次 ${dateLabel(last.start)}` : ''}</p>
+            <p class="inkcard__label">近 7 天訓練量${last ? ` · 上次 ${dateLabel(last.start)}` : ''}</p>
           </div>
           ${diff !== null ? `<span class="inkcard__pill">${diff >= 0 ? '+' : ''}${diff}% <svg class="ico"${diff < 0 ? ' style="transform:scaleY(-1)"' : ''}><use href="#i-trend"/></svg></span>` : ''}
         </div>
-        ${weekChart(wi)}
-        <div class="wkchart__legend"><span><i style="background:var(--on-dash)"></i>本週</span><span><i style="background:var(--chart-prev, var(--brand))"></i>上週</span></div>
+        ${weekChart(from7)}
+        <div class="wkchart__legend"><span><i style="background:var(--on-dash)"></i>近 7 天</span><span><i style="background:var(--chart-prev, var(--brand))"></i>前 7 天</span></div>
       </section>
 
       <div class="tiles">
@@ -1699,8 +1701,8 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
         </div>
         <div class="tile tile--2">
           <span class="tile__icon"><svg class="ico"><use href="#i-flame"/></svg></span>
-          <span class="tile__num">${wi.thisWeek.length}</span>
-          <span class="tile__label">本週訓練</span>
+          <span class="tile__num">${recent.length}</span>
+          <span class="tile__label">近 7 天訓練</span>
           <svg class="tile__wave" viewBox="0 0 200 60" preserveAspectRatio="none" aria-hidden="true"><path d="M0 40 C 20 20, 40 22, 60 34 S 100 10, 120 22 S 160 46, 200 18 L200 60 L0 60 Z"/></svg>
         </div>
       </div>
@@ -1723,9 +1725,8 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
   }
 
   // 本週每天的訓練量（白線）對上週（奶茶線），平滑曲線
-  function weekChart(wi) {
+  function weekChart(from) {
     const W = 340, H = 150, T = 12, B = 30, L = 12, R = 12;
-    const mon = mondayOf(new Date()).getTime();
     const perDay = (from) => {
       const out = [0, 0, 0, 0, 0, 0, 0];
       for (const w of state.workouts) {
@@ -1734,9 +1735,10 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
       }
       return out;
     };
-    const cur = perDay(mon);
-    const prev = perDay(mon - 7 * 86400000);
-    const todayIdx = (new Date().getDay() + 6) % 7;
+    const cur = perDay(from);
+    const prev = perDay(from - 7 * 86400000);
+    const todayIdx = 6;
+    const labels = [0, 1, 2, 3, 4, 5, 6].map((i) => (i === 6 ? '今' : WEEKDAY[(new Date(from + i * 86400000).getDay() + 6) % 7]));
     const max = Math.max(1, ...cur, ...prev);
     const x = (i) => L + i * (W - L - R) / 6;
     const y = (v) => T + (1 - v / max) * (H - T - B);
@@ -1749,13 +1751,13 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
       }).join('');
     };
     return `
-      <svg class="wkchart" viewBox="0 0 ${W} ${H}" role="img" aria-label="本週與上週每天的訓練量">
-        ${WEEKDAY.map((d, i) => `<line class="grid" x1="${x(i)}" x2="${x(i)}" y1="${T}" y2="${H - B}"/>`).join('')}
+      <svg class="wkchart" viewBox="0 0 ${W} ${H}" role="img" aria-label="近 7 天與前 7 天每天的訓練量">
+        ${labels.map((d, i) => `<line class="grid" x1="${x(i)}" x2="${x(i)}" y1="${T}" y2="${H - B}"/>`).join('')}
         <line class="now" x1="${x(todayIdx)}" x2="${x(todayIdx)}" y1="${T - 6}" y2="${H - B}"/>
         <path class="prev" d="${curve(prev, 6)}"/>
         <path class="cur" d="${curve(cur, todayIdx)}"/>
         ${cur.map((v, i) => (v > 0 && i <= todayIdx ? `<circle class="dot" cx="${x(i)}" cy="${y(v)}" r="4"/>` : '')).join('')}
-        ${WEEKDAY.map((d, i) => `<text x="${x(i)}" y="${H - 8}" text-anchor="middle"${i === todayIdx ? ' class="is-today"' : ''}>${d}</text>`).join('')}
+        ${labels.map((d, i) => `<text x="${x(i)}" y="${H - 8}" text-anchor="middle"${i === todayIdx ? ' class="is-today"' : ''}>${d}</text>`).join('')}
       </svg>`;
   }
 
