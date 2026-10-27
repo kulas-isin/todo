@@ -957,7 +957,9 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
     ['二頭彎舉', '手臂'], ['錘式彎舉', '手臂'], ['三頭下壓', '手臂'], ['過頭三頭伸展', '手臂'],
     ['棒式', '核心'], ['懸垂舉腿', '核心']
   ];
-  const DEFAULT_ROUTINES = [
+  // 舊版預設的啞鈴／槓鈴課表：新使用者不再建立；既有使用者沒改過的話，換成器械版時一併移除
+  const DEFAULT_ROUTINES = [];
+  const OLD_DEFAULT_ROUTINES = [
     ['推日（胸・肩・三頭）', [['臥推', 4, 8], ['肩推', 3, 8], ['上斜啞鈴臥推', 3, 10], ['側平舉', 3, 15], ['三頭下壓', 3, 12]]],
     ['拉日（背・二頭）', [['硬舉', 3, 5], ['引體向上', 3, 8], ['槓鈴划船', 3, 10], ['臉拉', 3, 15], ['二頭彎舉', 3, 12]]],
     ['腿日', [['深蹲', 4, 6], ['羅馬尼亞硬舉', 3, 10], ['腿推', 3, 12], ['腿彎舉', 3, 12], ['臀推', 3, 10]]]
@@ -1003,6 +1005,69 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
       ]
     }
   };
+
+  // 器械四天課表（依健身房實際器械排）：一次加入多份，依序放在課表最前面
+  const MACHINE_ROUTINES = [
+    {
+      name: '推日（器械）',
+      note: '胸推機握把對準胸口中間，肩胛往後下收。第一次用先輕重量熱身、調好座椅，正式組選最後 1–2 下很吃力的重量。',
+      items: [
+        { name: '胸推機', part: '胸', sets: 3, reps: 10, rest: 90, note: '8–10 下；手肘跟身體約 45–60 度，不要完全打開' },
+        { name: '胸推機（椅子調高）', part: '胸', sets: 3, reps: 10, rest: 90, note: '椅子調高、推向斜上方，代替上斜胸推' },
+        { name: '繩索夾胸', part: '胸', sets: 3, reps: 12, rest: 60, note: '龍門架滑輪與肩同高，像抱大樹往前合，12–15 下' },
+        { name: '坐姿啞鈴肩推', part: '肩', sets: 3, reps: 10, rest: 90, note: '椅背接近直立、背貼緊；啞鈴從耳朵高度往上推（沒有肩推機）' },
+        { name: '站姿側平舉機', part: '肩', sets: 3, reps: 15, rest: 60, note: '轉軸對肩膀，用手肘帶，舉到肩高，不聳肩' },
+        { name: '三頭下壓', part: '手臂', sets: 3, reps: 12, rest: 60, note: '龍門架滑輪最高，手肘夾在身體兩側不動' }
+      ]
+    },
+    {
+      name: '拉日（器械）',
+      note: '練背的划船拉到底夾肩胛；後肩超級組則肩胛「不夾」，重量輕很多。',
+      items: [
+        { name: '滑輪下拉', part: '背', sets: 3, reps: 10, rest: 90, note: '握距比肩寬，拉到上胸，手肘往口袋方向' },
+        { name: 'T 槓划船（窄握）', part: '背', sets: 3, reps: 10, rest: 90, note: '中間平行握把；胸口貼墊不離開，手肘貼身往腰拉，8–10 下' },
+        { name: '坐姿划船', part: '背', sets: 3, reps: 12, rest: 90, note: 'V 型把手；胸挺背直、不前後搖，拉到肚臍上方夾肩胛，10–12 下' },
+        { name: '繩索二頭彎舉', part: '手臂', sets: 3, reps: 12, rest: 60, note: '滑輪最低、直槓掌心朝上；手肘釘在身體兩側' },
+        { name: '反向蝴蝶機', part: '肩', sets: 3, reps: 15, rest: 0, ss: 'A', note: '握把與肩同高、胸口貼墊；手臂微彎畫大弧，肩胛不夾' },
+        { name: 'T 槓划船（寬握）', part: '肩', sets: 3, reps: 10, rest: 90, ss: 'A', note: '外側寬握把，手肘往兩側開，肩胛不夾，練後肩' },
+        { name: '臉拉', part: '肩', sets: 3, reps: 15, rest: 60, note: '龍門架滑輪與眼同高、繩索把手；拉向臉、手肘往外往上' }
+      ]
+    },
+    {
+      name: '腿日 A（哈克深蹲）',
+      note: '腿日 A／B 每週輪流：這週 A、下週 B。腿伸展和腿彎舉在同一台二合一機上，連著做當超級組。',
+      items: [
+        { name: '哈克深蹲', part: '腿', sets: 4, reps: 10, rest: 120, note: '背臀貼墊；腳低窄練前側、高寬練臀；蹲到大腿平行以下，8–10 下' },
+        { name: '臀腿機', part: '臀', sets: 3, reps: 12, rest: 90, note: '用屁股出力，頂到最高夾緊停 1 秒，10–12 下' },
+        { name: '腿伸展', part: '腿', sets: 3, reps: 12, rest: 0, ss: 'A', note: '軟墊在小腿前；膝蓋對轉軸；踢直停 1 秒' },
+        { name: '腿彎舉', part: '腿', sets: 3, reps: 12, rest: 75, ss: 'A', note: '換軟墊到小腿後、壓好大腿墊；慢放 2–3 秒' },
+        { name: '開合機（外展）', part: '臀', sets: 3, reps: 15, rest: 60, note: '身體微前傾，推開停 1 秒，慢慢收回' }
+      ]
+    },
+    {
+      name: '腿日 B（腿推）',
+      note: '腿日 A／B 每週輪流。腿推記得先轉開安全把手，做完轉回去卡住。',
+      items: [
+        { name: '腿推', part: '腿', sets: 4, reps: 10, rest: 120, note: '腳踩踏板中間與肩同寬；屁股不離椅背；膝蓋不鎖死，8–10 下' },
+        { name: '羅馬椅背伸展', part: '臀', sets: 3, reps: 12, rest: 90, note: '上背微圓、用屁股把身體夾起來，到一直線就停，12–15 下' },
+        { name: '腿伸展', part: '腿', sets: 3, reps: 12, rest: 0, ss: 'A', note: '軟墊在小腿前；膝蓋對轉軸；踢直停 1 秒' },
+        { name: '腿彎舉', part: '腿', sets: 3, reps: 12, rest: 75, ss: 'A', note: '換軟墊到小腿後、壓好大腿墊；慢放 2–3 秒' },
+        { name: '開合機（外展）', part: '臀', sets: 3, reps: 15, rest: 60, note: '身體微前傾，推開停 1 秒，慢慢收回' }
+      ]
+    },
+    {
+      name: '肩日（器械版 100 次）',
+      note: '每個動作先做 1 組啟動組（12 下力竭的重量），同重量用暫停休息湊滿 20 下。動作之間休息 3–5 分鐘。',
+      restAfter: 240,
+      items: [
+        { name: '坐姿啞鈴肩推', part: '肩', rp: 20, note: '啟動組後同動作暫停休息（坐姿無法借力）' },
+        { name: '站姿側平舉機', part: '肩', rp: 20, note: '最後一下停在頂端撐住（靜態保持）' },
+        { name: '繩索單手側平舉', part: '肩', rp: 20, note: '滑輪最低，代替抱髖側平舉；左右各做' },
+        { name: '繩索前平舉', part: '肩', rp: 20, note: '滑輪最低、背對機器，舉到眼睛高度' },
+        { name: '臉拉', part: '肩', rp: 20, note: '舉過頭頂的臉拉 → 傳統臉拉' }
+      ]
+    }
+  ];
 
   let state = { exercises: [], routines: [], workouts: [], active: null, builtins: [] };
   let prefs = { view: 'train', theme: null, palette: 'harbor', rest: 90, step: 2.5, part: '' };
@@ -1161,10 +1226,27 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
         id: uid(), name: def.name, note: def.note, restAfter: def.restAfter, interval: def.interval || null,
         items: def.items.map((d) => (Array.isArray(d)
           ? { exId: findOrCreateEx(d[0], '肩').id, sets: 4, reps: 12, weight: 0, rp: 20, rest: 15, note: d[1] }
-          : { exId: findOrCreateEx(d.name, '肩').id, sets: d.sets, reps: d.reps, weight: 0, rest: d.rest, ss: d.ss, note: d.note }))
+          : { exId: findOrCreateEx(d.name, d.part || '肩').id, sets: d.sets, reps: d.reps, weight: 0, rest: d.rest, ss: d.ss, note: d.note }))
       };
       const at = def.after ? state.routines.findIndex((x) => x.name === def.after) : -1;
       if (at >= 0) state.routines.splice(at + 1, 0, routine); else state.routines.unshift(routine);
+    }
+    if (!state.builtins.includes('machine4')) {
+      state.builtins.push('machine4');
+      changed = true;
+      const made = MACHINE_ROUTINES.filter((def) => !state.routines.some((x) => x.name === def.name)).map((def) => ({
+        id: uid(), name: def.name, note: def.note, restAfter: def.restAfter || 0, interval: null,
+        items: def.items.map((d) => (d.rp
+          ? { exId: findOrCreateEx(d.name, d.part).id, sets: 4, reps: 12, weight: 0, rp: d.rp, rest: 15, note: d.note }
+          : { exId: findOrCreateEx(d.name, d.part).id, sets: d.sets, reps: d.reps, weight: 0, rest: d.rest || 0, ss: d.ss || '', note: d.note }))
+      }));
+      // 舊的啞鈴預設課表只有在完全沒改過時才移除
+      const names = (r) => r.items.map((it) => `${exName(it.exId)}:${it.sets}:${it.reps}`).join('|');
+      state.routines = state.routines.filter((r) => {
+        const old = OLD_DEFAULT_ROUTINES.find(([n]) => n === r.name);
+        return !old || names(r) !== old[1].map(([n, sets, reps]) => `${n}:${sets}:${reps}`).join('|');
+      });
+      state.routines.unshift(...made);
     }
     return changed;
   }
