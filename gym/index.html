@@ -565,6 +565,20 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
   background: var(--brand-wash); color: var(--text); border-radius: var(--r-md);
 }
 .ex__note { margin: 2px 0 0; font-size: 13px; font-weight: 600; color: var(--brand); white-space: pre-line; }
+.ex__tipbtn {
+  display: inline-flex; align-items: center; gap: 2px; margin: 6px 0 0; padding: 3px 10px 3px 12px;
+  border: 0; border-radius: 999px; background: var(--dash); color: var(--on-dash);
+  font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer;
+}
+.ex__tipbtn .ico { width: 15px; height: 15px; transition: transform .25s var(--ease); }
+.ex__tipbtn[aria-expanded="true"] .ico { transform: rotate(180deg); }
+.ex__tips {
+  margin: 0 0 10px; padding: 10px 14px 10px 30px; border-radius: 16px;
+  background: var(--dash); color: var(--on-dash); font-size: 13.5px; line-height: 1.6;
+  animation: tipsIn .25s var(--ease);
+}
+.ex__tips li + li { margin-top: 2px; }
+@keyframes tipsIn { from { opacity: 0; transform: translateY(-4px); } }
 .ex__rp {
   display: inline-block; margin: 4px 0 0 4px; padding: 2px 9px;
   font-size: 12px; font-weight: 700; border-radius: 999px;
@@ -1068,6 +1082,34 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
       ]
     }
   ];
+
+  // 動作提示：依動作名稱顯示在訓練中的動作卡片上（第一次做的動作自動展開）
+  const EX_TIPS = {
+    '胸推機': ['座椅調到握把對準胸口中間', '肩胛往後、往下收好，胸口挺起、背貼椅背', '手肘跟身體約 45–60 度，不要完全打開', '推到快打直，慢慢放回、讓胸口被拉開'],
+    '胸推機（椅子調高）': ['椅子調高，往斜上方推，代替上斜胸推', '肩胛收好、背貼椅背', '推到快打直，慢慢放回'],
+    '蝴蝶機夾胸': ['背靠椅背坐，握把轉到前面、跟胸口同高', '手肘微彎、固定住，像抱大樹往中間合', '合起來時胸口擠 1 秒', '慢慢打開，感覺胸口被拉開'],
+    '坐姿啞鈴肩推': ['椅背接近直立，整個背貼緊', '啞鈴從耳朵高度往上推', '手肘稍微在身體前面，不要完全往兩側打開', '推到快打直就好'],
+    '站姿側平舉機': ['重量選輕的：12–15 下很酸但身體不晃', '轉軸對準肩膀', '用手肘帶，舉到肩膀高度就停', '肩膀往下壓、不要聳肩', '慢慢放 3 秒，下面不要放到底休息'],
+    '三頭下壓': ['龍門架滑輪調到最高', '手肘夾在身體兩側，只動前臂', '壓到底停 1 秒，慢慢回來'],
+    '滑輪下拉': ['握距比肩寬，大腿卡好在墊子下', '先把肩膀往下「沉」，再開始拉', '想著用手肘往口袋方向拉，手只是掛鉤', '拉到上胸停 1 秒，慢慢放回'],
+    'T 槓划船（窄握）': ['用中間平行握把，胸墊上緣在鎖骨下', '胸口全程貼墊，離開就是太重', '手肘貼身往腰拉，拉到頂夾肩胛停 1 秒', '放下時讓背被拉開'],
+    'T 槓划船（寬握）': ['用外側寬握把，重量比窄握輕很多', '手肘往兩側打開，拉到上臂跟地面平行', '肩胛不要夾，練的是後肩'],
+    '坐姿划船': ['V 型把手（機器版用直立握把）', '胸挺背直，身體不前後搖', '手肘往後，拉到肚臍上方夾肩胛停 1 秒', '放回時肩膀往前延伸，但背不彎'],
+    '繩索二頭彎舉': ['滑輪最低、直槓，掌心朝上', '手肘釘在身體兩側，只動前臂', '身體不要往後仰、不要甩', '慢慢放 2 秒'],
+    '反向蝴蝶機': ['胸口貼著椅背坐，握把與肩同高', '手臂微彎固定，往兩側畫大弧打開', '肩胛不要夾，練的是後肩', '輕重量，12–15 下後肩很酸就對了'],
+    '臉拉': ['滑輪調到眼睛高度，用繩索把手', '拉向臉，手肘往外、往上，比手高', '雙手停在耳朵兩旁停 1 秒', '重量很輕，身體不要往後仰'],
+    '繩索單手側平舉': ['滑輪最低，從身體前方拉起', '舉到肩膀高度，不聳肩', '另一手扶著機器，身體可以稍微往外斜'],
+    '繩索前平舉': ['滑輪最低、背對機器', '手臂微彎，舉到眼睛高度', '身體不要往後仰借力'],
+    '側平舉': ['先用 3–5 kg，太重就會甩、會聳肩', '身體微微前傾，用手肘帶', '舉到肩膀高度，慢慢放 3 秒'],
+    '哈克深蹲': ['背和屁股貼緊靠墊，肩膀頂住肩墊', '腳低窄多練大腿前側，腳高寬多練屁股', '蹲到大腿至少跟踏板平行', '膝蓋跟腳尖同方向，站起來不鎖死'],
+    '腿推': ['先轉開安全把手，做完要轉回去', '腳踩踏板中間，與肩同寬', '屁股不要離開椅背往上捲', '推出去時膝蓋不要鎖死'],
+    '臀腿機': ['用屁股出力，不是用腰', '頂到最高夾緊停 1 秒', '腰不要拱'],
+    '腿伸展': ['膝蓋對準機器轉軸（紅點）', '軟墊在腳踝上方', '踢直停 1 秒，慢放 2 秒'],
+    '腿彎舉': ['軟墊換到小腿後面，壓好大腿墊', '膝蓋對準轉軸', '彎到底停一下，慢放 2–3 秒'],
+    '開合機（外展）': ['身體稍微往前傾', '推開停 1 秒', '慢慢收回，配重片不要撞'],
+    '羅馬椅背伸展': ['骨盆靠在墊子上緣，腳勾好', '上背微圓，用屁股把身體夾起來', '起來到身體一直線就停，不要往後仰']
+  };
+  const tipsOpen = {};
 
   let state = { exercises: [], routines: [], workouts: [], active: null, builtins: [] };
   let prefs = { view: 'train', theme: null, palette: 'harbor', rest: 90, step: 2.5, part: '' };
@@ -2020,6 +2062,9 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
 
   function exCardHtml(it, ii) {
     const last = lastFor(it.exId);
+    const tips = EX_TIPS[exName(it.exId)];
+    const tipKey = state.active.id + ':' + it.exId;
+    const tipOn = tips ? (tipKey in tipsOpen ? tipsOpen[tipKey] : !last) : false;
     const rec = recordFor(it.exId, state.active.id);
     const n = state.active.items.length;
     return `
@@ -2030,6 +2075,7 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
             ${it.ss ? (() => { const g = ssGroup(it); return g.length > 1 ? `<span class="ex__ss">超級組 ${g.indexOf(it) + 1}/${g.length} · ${g.indexOf(it) < g.length - 1 ? `做完接「${esc(exName(g[g.indexOf(it) + 1].exId))}」` : '做完這輪才休息'}</span>` : ''; })() : ''}
             ${it.note ? `<p class="ex__note">${esc(it.note)}</p>` : ''}
             <p class="ex__last">${esc(lastSummary(last))}</p>
+            ${tips ? `<button type="button" class="ex__tipbtn" data-act="tips" aria-expanded="${tipOn}">動作提示 <svg class="ico"><use href="#i-down"/></svg></button>` : ''}
             ${it.bump ? `<span class="ex__hint">${it.rp ? `上次啟動組超過 ${it.target} 下` : '上次全組達標'} → 今天 +${fmt(prefs.step)} kg</span>` : ''}
             ${it.rp ? `<span class="ex__rp${rpMet(it) ? ' is-met' : ''}">暫停休息 ${rpDone(it)} / ${it.rp} 下</span>` : ''}
           </div>
@@ -2039,6 +2085,7 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
             <button type="button" class="ghost-btn ghost-btn--sm" data-act="remove" aria-label="移除動作"><svg class="ico"><use href="#i-close"/></svg></button>
           </div>
         </div>
+        ${tips && tipOn ? `<ul class="ex__tips">${tips.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>` : ''}
         <div class="sets">
           <div class="set set__hd"><span>組</span><span>重量 kg</span><span></span><span>次數</span><span>✓</span></div>
           ${it.sets.map((s, si) => {
@@ -2092,6 +2139,11 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
           const ref = it.sets[it.sets.length - 1];
           const left = it.rp ? it.rp - rpDone(it) : 0;
           it.sets.push({ w: ref ? ref.w : 0, r: left > 0 ? left : (ref ? ref.r : (it.target || 8)), done: false });
+        }
+        if (act === 'tips') {
+          const key = wk.id + ':' + it.exId;
+          tipsOpen[key] = btn.getAttribute('aria-expanded') !== 'true';
+          return renderTrain();
         }
         if (act === 'del-set') it.sets.pop();
         if (act === 'remove') {
