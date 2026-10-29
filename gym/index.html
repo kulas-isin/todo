@@ -1083,6 +1083,58 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
     }
   ];
 
+  // 上下肢雙分化（每個部位一週練 2 次）：取代器械推／拉／腿日
+  const SPLIT_ROUTINES = [
+    {
+      name: '上肢 A（胸背為主）',
+      note: '雙分化：一 上肢 A、二 下肢 A、四 上肢 B、五 下肢 B。每個動作用雙重進步法：每組都做滿次數上限就加一格重量。',
+      items: [
+        { name: '胸推機', part: '胸', sets: 3, reps: 10, rest: 90, note: '8–10 下；手肘跟身體約 45–60 度，不要完全打開' },
+        { name: '滑輪下拉', part: '背', sets: 3, reps: 10, rest: 90, note: '先把肩膀往下沉，再用手肘往口袋方向拉到上胸，8–10 下' },
+        { name: '坐姿啞鈴肩推', part: '肩', sets: 3, reps: 10, rest: 90, note: '椅背接近直立、背貼緊；手肘稍微往前，8–10 下' },
+        { name: '坐姿划船', part: '背', sets: 3, reps: 12, rest: 90, note: 'V 型把手；拉到肚臍上方夾肩胛停 1 秒，10–12 下' },
+        { name: '站姿側平舉機', part: '肩', sets: 3, reps: 15, rest: 60, note: '重量選輕的，肩膀下沉、慢放 3 秒，12–15 下' },
+        { name: '三頭下壓', part: '手臂', sets: 3, reps: 12, rest: 60, note: '龍門架滑輪最高，手肘夾在身體兩側不動' }
+      ]
+    },
+    {
+      name: '下肢 A（哈克深蹲）',
+      note: '腿伸展和腿彎舉在同一台二合一機上，連著做當超級組。',
+      items: [
+        { name: '哈克深蹲', part: '腿', sets: 4, reps: 10, rest: 120, note: '背臀貼墊；蹲到大腿平行以下，8–10 下' },
+        { name: '臀腿機', part: '臀', sets: 3, reps: 12, rest: 90, note: '用屁股出力，頂到最高夾緊停 1 秒，10–12 下' },
+        { name: '腿伸展', part: '腿', sets: 3, reps: 12, rest: 0, ss: 'A', note: '軟墊在小腿前；膝蓋對轉軸；踢直停 1 秒' },
+        { name: '腿彎舉', part: '腿', sets: 3, reps: 12, rest: 75, ss: 'A', note: '換軟墊到小腿後、壓好大腿墊；慢放 2–3 秒' },
+        { name: '開合機（外展）', part: '臀', sets: 3, reps: 15, rest: 60, note: '身體微前傾，推開停 1 秒，慢慢收回' }
+      ]
+    },
+    {
+      name: '上肢 B（背肩為主）',
+      note: '後肩超級組：反向蝴蝶機做完不休息，接 T 槓寬握，肩胛都不夾。',
+      items: [
+        { name: '胸推機（椅子調高）', part: '胸', sets: 3, reps: 10, rest: 90, note: '椅子調高、推向斜上方，8–10 下' },
+        { name: 'T 槓划船（窄握）', part: '背', sets: 3, reps: 10, rest: 90, note: '中間平行握把；胸口貼墊不離開，拉到頂夾肩胛，8–10 下' },
+        { name: '蝴蝶機夾胸', part: '胸', sets: 3, reps: 12, rest: 60, note: '背靠椅背坐、握把與胸同高；擠 1 秒再慢慢打開，12–15 下' },
+        { name: '站姿側平舉機', part: '肩', sets: 3, reps: 15, rest: 60, note: '重量選輕的，肩膀下沉、慢放 3 秒，12–15 下' },
+        { name: '反向蝴蝶機', part: '肩', sets: 3, reps: 15, rest: 0, ss: 'A', note: '肩膀下沉、身體微前傾；手外側頂住握把，推到手與肩一直線' },
+        { name: 'T 槓划船（寬握）', part: '肩', sets: 3, reps: 10, rest: 90, ss: 'A', note: '外側寬握把，手肘往兩側開，肩胛不夾，練後肩' },
+        { name: '繩索二頭彎舉', part: '手臂', sets: 3, reps: 12, rest: 60, note: '滑輪最低、直槓掌心朝上；手肘釘在身體兩側' }
+      ]
+    },
+    {
+      name: '下肢 B（腿推）',
+      note: '腿推記得先轉開安全把手，做完轉回去卡住。',
+      items: [
+        { name: '腿推', part: '腿', sets: 4, reps: 10, rest: 120, note: '腳踩踏板中間與肩同寬；屁股不離椅背；膝蓋不鎖死，8–10 下' },
+        { name: '羅馬椅背伸展', part: '臀', sets: 3, reps: 12, rest: 90, note: '上背微圓、用屁股把身體夾起來，到一直線就停，12–15 下' },
+        { name: '腿伸展', part: '腿', sets: 3, reps: 12, rest: 0, ss: 'A', note: '軟墊在小腿前；膝蓋對轉軸；踢直停 1 秒' },
+        { name: '腿彎舉', part: '腿', sets: 3, reps: 12, rest: 75, ss: 'A', note: '換軟墊到小腿後、壓好大腿墊；慢放 2–3 秒' },
+        { name: '開合機（外展）', part: '臀', sets: 3, reps: 15, rest: 60, note: '身體微前傾，推開停 1 秒，慢慢收回' }
+      ]
+    }
+  ];
+  const SPLIT_REPLACES = ['推日（器械）', '拉日（器械）', '腿日 A（哈克深蹲）', '腿日 B（腿推）'];
+
   // 動作提示：依動作名稱顯示在訓練中的動作卡片上（第一次做的動作自動展開）
   const EX_TIPS = {
     '胸推機': ['座椅調到握把對準胸口中間', '肩胛往後、往下收好，胸口挺起、背貼椅背', '手肘跟身體約 45–60 度，不要完全打開', '推到快打直，慢慢放回、讓胸口被拉開'],
@@ -1289,6 +1341,22 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
         return !old || names(r) !== old[1].map(([n, sets, reps]) => `${n}:${sets}:${reps}`).join('|');
       });
       state.routines.unshift(...made);
+    }
+    if (!state.builtins.includes('split4')) {
+      // 換成上下肢雙分化：拿掉器械推／拉／腿日，肩日改成選擇性的週六第 5 天
+      state.builtins.push('split4');
+      changed = true;
+      state.routines = state.routines.filter((r) => !SPLIT_REPLACES.includes(r.name));
+      const made = SPLIT_ROUTINES.filter((def) => !state.routines.some((x) => x.name === def.name)).map((def) => ({
+        id: uid(), name: def.name, note: def.note, restAfter: 0, interval: null,
+        items: def.items.map((d) => ({ exId: findOrCreateEx(d.name, d.part).id, sets: d.sets, reps: d.reps, weight: 0, rest: d.rest || 0, ss: d.ss || '', note: d.note }))
+      }));
+      const shoulder = state.routines.find((r) => r.name === '肩日（器械版 100 次）');
+      if (shoulder) {
+        shoulder.note = '選擇性的第 5 天，只能放週六（離週一上肢 A 隔 48 小時），做的話那週週一的肩推、側平舉各減 1 組。' + (shoulder.note ? '\n' + shoulder.note : '');
+        state.routines = state.routines.filter((r) => r !== shoulder);
+      }
+      state.routines.unshift(...made, ...(shoulder ? [shoulder] : []));
     }
     return changed;
   }
