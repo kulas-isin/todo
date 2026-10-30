@@ -572,6 +572,12 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
 }
 .ex__tipbtn .ico { width: 15px; height: 15px; transition: transform .25s var(--ease); }
 .ex__tipbtn[aria-expanded="true"] .ico { transform: rotate(180deg); }
+.ex__coach {
+  margin: 0 0 10px; padding: 10px 14px; border-radius: 16px;
+  background: var(--brand-wash); color: var(--text); font-size: 13.5px; line-height: 1.6;
+}
+.ex__coach b { display: block; font-size: 12px; color: var(--brand); letter-spacing: .04em; }
+.ex__coach p { margin: 2px 0 0; }
 .ex__tips {
   margin: 0 0 10px; padding: 10px 14px 10px 30px; border-radius: 16px;
   background: var(--dash); color: var(--on-dash); font-size: 13.5px; line-height: 1.6;
@@ -1305,6 +1311,8 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
       routines: Array.isArray(raw.routines) ? raw.routines : [],
       workouts: Array.isArray(raw.workouts) ? raw.workouts : [],
       active: raw.active || null,
+      // 教練建議：看完紀錄後寫給「下次做這個動作」的話，{ exId: { text, w?, at } }
+      coach: raw.coach && typeof raw.coach === 'object' ? raw.coach : {},
       builtins: Array.isArray(raw.builtins) ? raw.builtins : []
     };
   }
@@ -1372,7 +1380,7 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
     if (!VIEWS.includes(prefs.view)) prefs.view = 'train';
   }
   function seed() {
-    state = { exercises: [], routines: [], workouts: [], active: null, builtins: [] };
+    state = { exercises: [], routines: [], workouts: [], active: null, builtins: [], coach: {} };
     for (const [name, part] of DEFAULT_EXERCISES) state.exercises.push({ id: uid(), name, part });
     for (const [name, list] of DEFAULT_ROUTINES) {
       state.routines.push({
@@ -1410,7 +1418,7 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
     clearTimeout(metaTimer);
     metaTimer = null;
     chain('meta', () => cloud.coll.doc('meta').set({
-      v: 1, exercises: state.exercises, routines: state.routines, active: state.active, builtins: state.builtins, updatedAt: Date.now()
+      v: 1, exercises: state.exercises, routines: state.routines, active: state.active, builtins: state.builtins, coach: state.coach || {}, updatedAt: Date.now()
     }));
   }
   function writeMonth(key) {
@@ -1510,6 +1518,13 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
 
   /* ---------- 訓練流程 ---------- */
   function makeItem(exId, target, ssPrefix) {
+    const item = makeItemBase(exId, target, ssPrefix);
+    // 教練建議指定了重量：整個動作直接帶這個重量，取代自動加重
+    const c = state.coach && state.coach[exId];
+    if (c && c.w > 0) { item.sets.forEach((x) => { x.w = c.w; }); item.bump = false; }
+    return item;
+  }
+  function makeItemBase(exId, target, ssPrefix) {
     const t = target || {};
     const ss = t.ss ? (ssPrefix || 'w') + ':' + String(t.ss).replace(/^.*:/, '') : '';
     const sug = suggestion(exId, t);
@@ -1583,6 +1598,8 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
       if (now && before.best && now.e > before.best.e + 0.01) prs.push({ exId: it.exId, now, before: before.best });
     }
     done.prs = prs.map((p) => p.exId);
+    // 做過的動作，教練建議就用掉了；等看完新紀錄再寫新的
+    if (state.coach) for (const it of items) delete state.coach[it.exId];
     state.workouts.push(done);
     state.active = null;
     save([done.start]);
@@ -2131,6 +2148,7 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
   function exCardHtml(it, ii) {
     const last = lastFor(it.exId);
     const tips = EX_TIPS[exName(it.exId)];
+    const coach = state.coach && state.coach[it.exId];
     const tipKey = state.active.id + ':' + it.exId;
     const tipOn = tips ? (tipKey in tipsOpen ? tipsOpen[tipKey] : !last) : false;
     const rec = recordFor(it.exId, state.active.id);
@@ -2153,6 +2171,7 @@ dialog.sheet[open] { animation: sheetIn .22s var(--ease); display: flex; flex-di
             <button type="button" class="ghost-btn ghost-btn--sm" data-act="remove" aria-label="移除動作"><svg class="ico"><use href="#i-close"/></svg></button>
           </div>
         </div>
+        ${coach ? `<div class="ex__coach"><b>教練建議${coach.at ? ` · ${esc(coach.at)}` : ''}</b><p>${esc(coach.text)}</p></div>` : ''}
         ${tips && tipOn ? `<ul class="ex__tips">${tips.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>` : ''}
         <div class="sets">
           <div class="set set__hd"><span>組</span><span>重量 kg</span><span></span><span>次數</span><span>✓</span></div>
